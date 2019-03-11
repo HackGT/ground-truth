@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
-import "passport";
+import passport from "passport";
 
 //
 // Config
@@ -38,10 +38,11 @@ class Config implements IConfig.Main {
 		versionHash: fs.existsSync(".git") ? require("git-rev-sync").short() : "",
 		cookieMaxAge: 1000 * 60 * 60 * 24 * 30 * 6, // 6 months
 		cookieSecureOnly: false,
-		mongoURL: "mongodb://localhost/",
+		mongoURL: "mongodb://localhost/auth",
 		passwordResetExpiration: 1000 * 60 * 60, // 1 hour
 		defaultTimezone: "America/New_York"
 	};
+	public loginMethods = ["local", "github", "google", "facebook", "gatech"] as IConfig.Services[];
 	public sessionSecretSet: boolean = false;
 
 	constructor(fileName: string = "config.json") {
@@ -178,8 +179,8 @@ export const COOKIE_OPTIONS = {
 //
 // Database connection
 //
-import * as mongoose from "mongoose";
-mongoose.connect(config.server.mongoURL).catch(err => {
+import mongoose from "mongoose";
+mongoose.connect(config.server.mongoURL, { useNewUrlParser: true }).catch(err => {
 	throw err;
 });
 export { mongoose };
@@ -187,7 +188,7 @@ export { mongoose };
 //
 // Email
 //
-import * as sendgrid from "@sendgrid/mail";
+import sendgrid from "@sendgrid/mail";
 sendgrid.setApiKey(config.email.key);
 import marked from "marked";
 // tslint:disable-next-line:no-var-requires

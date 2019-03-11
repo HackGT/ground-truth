@@ -37,6 +37,7 @@ export namespace IConfig {
 		secrets: Secrets;
 		email: Email;
 		server: Server;
+		loginMethods: Services[];
 	}
 }
 

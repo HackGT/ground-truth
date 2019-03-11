@@ -1,0 +1,98 @@
+h1 {
+	margin-bottom: 64px;
+	text-align: center;
+}
+a > i {
+	margin-right: 10px;
+	transform: scale(1.5);
+}
+a.github {
+	color: white;
+	background-color: #444444;
+}
+a.google {
+	color: white;
+	background-color: #4285F4;
+}
+a.facebook {
+	color: white;
+	background-color: #3b5998;
+}
+a.gatech {
+	color: black;
+	background-color: #eeb211;
+}
+#error, #success {
+	text-align: center;
+	margin-top: 1em;
+	font-size: 2rem;
+	margin-bottom: 1em;
+	color: white;
+	padding: 10px;
+	border-radius: 5px;
+}
+#error {
+	background-color: rgba(255, 65, 54, 0.85);
+}
+#success {
+	background-color: #3D9970;
+}
+#error:empty, #success:empty {
+	display: none;
+}
+
+main {
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+}
+main > div {
+	box-sizing: border-box;
+	width: 100%;
+	display: none;
+}
+main > .active {
+	display: block;
+}
+
+.simple-methods {
+	display: flex !important;
+	flex-direction: column;
+}
+
+.unit {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+}
+.unit > *:first-child {
+	width: 125px;
+}
+#additional-logins {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin-bottom: 10px;
+	font-size: 85%;
+}
+
+/* Desktop styles */
+@media only screen and (min-width: 700px) {
+	main {
+		flex-direction: row;
+	}
+	main > * {
+		width: 50%;
+	}
+	main > .active.border {
+		border-right: 1px dashed #333030;
+		padding-right: 15px;
+	}
+	main > .active:last-of-type {
+		padding-left: 10px;
+	}
+	.unit, #additional-logins {
+		flex-direction: row;
+	}
+}

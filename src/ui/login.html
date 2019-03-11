@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Login - HackGT</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<link rel="stylesheet" href="/css/wing.min.css" />
+	<link rel="stylesheet" href="/css/login.css" />
+
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/brands.css" integrity="sha384-BKw0P+CQz9xmby+uplDwp82Py8x1xtYPK3ORn/ZSoe6Dk3ETP59WCDnX+fI1XCKK" crossorigin="anonymous" />
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/fontawesome.css" integrity="sha384-4aon80D8rXCGx9ayDt85LbyUHeMWd3UiBaWliBlJ53yzm9hqN21A+o1pqoyK04h+" crossorigin="anonymous" />
+
+	<script src="/js/login.js"></script>
+</head>
+
+<body>
+	<div class="container">
+		<h1 class="center">HackGT</h1>
+
+		<section id="error">{{error}}</section>
+		<section id="success">{{success}}</section>
+		<main>
+			{{#ifIn "local" loginMethods}}
+			{{#if localOnly}}
+			<div class="active text-center" id="login">
+				{{else}}
+				<div class="active border text-center" id="login">
+					{{/if}}
+					<h3>Log In</h3>
+					<a href="/login/forgot">Forgot your password?</a>
+					<form action="/auth/login" method="POST">
+						<input type="email" name="email" placeholder="Email" required />
+						<input type="password" name="password" placeholder="Password" required />
+						<input type="submit" value="Log in" />
+					</form>
+					<p>
+						Don't have an account?
+						<br />
+						Connect with an external service or <a href="#" id="signup-link">sign up</a>.
+					</p>
+				</div>
+				{{#if localOnly}}
+				<div class="text-center" id="signup">
+					{{else}}
+					<div class="border text-center" id="signup">
+						{{/if}}
+						<h3>Sign Up</h3>
+						<form action="/auth/signup" method="POST">
+							<input type="text" name="name" placeholder="Name" required />
+							<input type="email" name="email" placeholder="Email" required />
+							<input type="password" name="password" placeholder="Password" required />
+							<input type="submit" value="Sign up" />
+						</form>
+						<p>
+							Already have a local account? <a href="#" id="login-link">Log in</a>.
+						</p>
+					</div>
+					{{/ifIn}}
+					{{#unless localOnly}}
+					<div class="active simple-methods text-center">
+						{{#ifIn "local" loginMethods}}{{else}}
+						<h3>Log In</h3>
+						{{/ifIn}}
+						{{#ifIn "gatech" loginMethods}}
+						<a class="gatech btn" href="/auth/gatech">
+							Connect with Georgia Tech
+						</a>
+						{{/ifIn}}
+						{{#ifIn "github" loginMethods}}
+						<a class="github btn" href="/auth/github">
+							<i class="fab fa-github" aria-hidden="true"></i>
+							Connect with GitHub
+						</a>
+						{{/ifIn}}
+						{{#ifIn "google" loginMethods}}
+						<a class="google btn" href="/auth/google">
+							<i class="fab fa-google" aria-hidden="true"></i>
+							Connect with Google
+						</a>
+						{{/ifIn}}
+						{{#ifIn "facebook" loginMethods}}
+						<a class="facebook btn" href="/auth/facebook">
+							<i class="fab fa-facebook-f" aria-hidden="true"></i>
+							Connect with Facebook
+						</a>
+						{{/ifIn}}
+					</div>
+					{{/unless}}
+		</main>
+	</div>
+</body>
+
+</html>

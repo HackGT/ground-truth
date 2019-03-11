@@ -4,7 +4,9 @@
   "description": "Single sign on for HackGT apps",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b",
+    "start": "node src/app.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,7 @@
     "@types/mongoose": "^5.3.21",
     "@types/morgan": "^1.7.35",
     "@types/node": "^11.11.0",
+    "@types/passport": "^1.0.0",
     "chalk": "^2.4.2",
     "cheerio": "^1.0.0-rc.2",
     "compression": "^1.7.3",
@@ -36,9 +39,11 @@
     "cookie-signature": "^1.1.0",
     "express": "^4.16.4",
     "git-rev-sync": "^1.12.0",
+    "handlebars": "^4.1.0",
     "marked": "^0.6.1",
     "mongoose": "^5.4.18",
     "morgan": "^1.9.1",
+    "passport": "^0.4.0",
     "striptags": "^3.1.1"
   }
 }
