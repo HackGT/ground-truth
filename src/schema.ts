@@ -2,6 +2,7 @@
 // The database schema used by Mongoose
 // Exports TypeScript interfaces to be used for type checking and Mongoose models derived from these interfaces
 import { mongoose } from "./common";
+import { Model } from "mongoose";
 
 // Secrets JSON file schema
 export namespace IConfig {
@@ -31,6 +32,7 @@ export namespace IConfig {
 		mongoURL: string;
 		passwordResetExpiration: number;
 		defaultTimezone: string;
+		name: string;
 	}
 
 	export interface Main {
@@ -41,22 +43,35 @@ export namespace IConfig {
 	}
 }
 
+//
+// DB types
+//
+
+// For stricter type checking of new object creation
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+interface RootDocument {
+	_id: mongoose.Types.ObjectId;
+}
+export function createNew<T extends RootDocument>(model: mongoose.Model<T & mongoose.Document, {}>, doc: Omit<T, "_id">) {
+	return new model(doc);
+}
+
 export interface IUser {
 	_id: mongoose.Types.ObjectId;
 	uuid: string;
 	email: string;
 	name: string;
 	verifiedEmail: boolean;
+	emailVerificationCode?: string;
 	accountConfirmed: boolean;
 
-	local?: Partial<{
+	local?: {
 		hash: string;
 		salt: string;
-		verificationCode: string;
-		resetRequested: boolean;
-		resetCode: string;
-		resetRequestedTime: Date;
-	}>;
+		rounds: number;
+		resetCode?: string;
+		resetRequestedTime?: Date;
+	};
 	services: {
 		[Service in Exclude<IConfig.Services, "local">]?: {
 			id: string;
@@ -88,13 +103,13 @@ export const User = mongoose.model<IUserMongoose>("User", new mongoose.Schema({
 		index: true
 	},
 	verifiedEmail: Boolean,
+	emailVerificationCode: String,
 	accountConfirmed: Boolean,
 
 	local: {
 		hash: String,
 		salt: String,
-		verificationCode: String,
-		resetRequested: Boolean,
+		rounds: Number,
 		resetCode: String,
 		resetRequestedTime: Date
 	},

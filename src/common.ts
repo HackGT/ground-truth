@@ -40,7 +40,8 @@ class Config implements IConfig.Main {
 		cookieSecureOnly: false,
 		mongoURL: "mongodb://localhost/auth",
 		passwordResetExpiration: 1000 * 60 * 60, // 1 hour
-		defaultTimezone: "America/New_York"
+		defaultTimezone: "America/New_York",
+		name: "HackGT",
 	};
 	public loginMethods = ["local", "github", "google", "facebook", "gatech"] as IConfig.Services[];
 	public sessionSecretSet: boolean = false;
@@ -85,76 +86,79 @@ class Config implements IConfig.Main {
 	protected loadFromEnv(): void {
 		// Secrets
 		if (process.env.ADMIN_KEY_SECRET) {
-			this.secrets.adminKey = process.env.ADMIN_KEY_SECRET!;
+			this.secrets.adminKey = process.env.ADMIN_KEY_SECRET;
 		}
 		else {
 			console.warn("Setting random admin key! Cannot use the service-to-service APIs.");
 		}
 		if (process.env.SESSION_SECRET) {
-			this.secrets.session = process.env.SESSION_SECRET!;
+			this.secrets.session = process.env.SESSION_SECRET;
 			this.sessionSecretSet = true;
 		}
 		if (process.env.GITHUB_CLIENT_ID) {
-			this.secrets.oauth.github.id = process.env.GITHUB_CLIENT_ID!;
+			this.secrets.oauth.github.id = process.env.GITHUB_CLIENT_ID;
 		}
 		if (process.env.GITHUB_CLIENT_SECRET) {
-			this.secrets.oauth.github.secret = process.env.GITHUB_CLIENT_SECRET!;
+			this.secrets.oauth.github.secret = process.env.GITHUB_CLIENT_SECRET;
 		}
 		if (process.env.GOOGLE_CLIENT_ID) {
-			this.secrets.oauth.google.id = process.env.GOOGLE_CLIENT_ID!;
+			this.secrets.oauth.google.id = process.env.GOOGLE_CLIENT_ID;
 		}
 		if (process.env.GOOGLE_CLIENT_SECRET) {
-			this.secrets.oauth.google.secret = process.env.GOOGLE_CLIENT_SECRET!;
+			this.secrets.oauth.google.secret = process.env.GOOGLE_CLIENT_SECRET;
 		}
 		if (process.env.FACEBOOK_CLIENT_ID) {
-			this.secrets.oauth.facebook.id = process.env.FACEBOOK_CLIENT_ID!;
+			this.secrets.oauth.facebook.id = process.env.FACEBOOK_CLIENT_ID;
 		}
 		if (process.env.FACEBOOK_CLIENT_SECRET) {
-			this.secrets.oauth.facebook.secret = process.env.FACEBOOK_CLIENT_SECRET!;
+			this.secrets.oauth.facebook.secret = process.env.FACEBOOK_CLIENT_SECRET;
 		}
 		// Email
 		if (process.env.EMAIL_FROM) {
-			this.email.from = process.env.EMAIL_FROM!;
+			this.email.from = process.env.EMAIL_FROM;
 		}
 		if (process.env.EMAIL_KEY) {
-			this.email.key = process.env.EMAIL_KEY!;
+			this.email.key = process.env.EMAIL_KEY;
 		}
 		// Server
-		if (process.env.PRODUCTION && process.env.PRODUCTION!.toLowerCase() === "true") {
+		if (process.env.PRODUCTION && process.env.PRODUCTION.toLowerCase() === "true") {
 			this.server.isProduction = true;
 		}
 		if (process.env.PORT) {
-			let port = parseInt(process.env.PORT!, 10);
+			let port = parseInt(process.env.PORT, 10);
 			if (!isNaN(port) && port > 0) {
 				this.server.port = port;
 			}
 		}
 		if (process.env.VERSION_HASH) {
-			this.server.versionHash = process.env.VERSION_HASH!;
+			this.server.versionHash = process.env.VERSION_HASH;
 		}
 		if (process.env.SOURCE_REV) {
-			this.server.versionHash = process.env.SOURCE_REV!;
+			this.server.versionHash = process.env.SOURCE_REV;
 		}
 		if (process.env.SOURCE_VERSION) {
-			this.server.versionHash = process.env.SOURCE_VERSION!;
+			this.server.versionHash = process.env.SOURCE_VERSION;
 		}
 		if (process.env.COOKIE_MAX_AGE) {
-			let maxAge = parseInt(process.env.COOKIE_MAX_AGE!, 10);
+			let maxAge = parseInt(process.env.COOKIE_MAX_AGE, 10);
 			if (!isNaN(maxAge) && maxAge > 0) {
 				this.server.cookieMaxAge = maxAge;
 			}
 		}
-		if (process.env.COOKIE_SECURE_ONLY && process.env.COOKIE_SECURE_ONLY!.toLowerCase() === "true") {
+		if (process.env.COOKIE_SECURE_ONLY && process.env.COOKIE_SECURE_ONLY.toLowerCase() === "true") {
 			this.server.cookieSecureOnly = true;
 		}
 		if (process.env.MONGO_URL) {
-			this.server.mongoURL = process.env.MONGO_URL!;
+			this.server.mongoURL = process.env.MONGO_URL;
 		}
 		if (process.env.DEFAULT_TIMEZONE) {
 			this.server.defaultTimezone = process.env.DEFAULT_TIMEZONE;
 		}
+		if (process.env.NAME) {
+			this.server.name = process.env.NAME;
+		}
 		if (process.env.PASSWORD_RESET_EXPIRATION) {
-			let expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION!, 10);
+			let expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION, 10);
 			if (!isNaN(expirationTime) && expirationTime > 0) {
 				this.server.passwordResetExpiration = expirationTime;
 			}
@@ -184,6 +188,11 @@ mongoose.connect(config.server.mongoURL, { useNewUrlParser: true }).catch(err =>
 	throw err;
 });
 export { mongoose };
+
+import bodyParser from "body-parser";
+export const postParser = bodyParser.urlencoded({
+	extended: false
+});
 
 //
 // Email
