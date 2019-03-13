@@ -3,12 +3,12 @@ import * as crypto from "crypto";
 import * as http from "http";
 import * as https from "https";
 import * as path from "path";
-import * as passport from "passport";
+import passport from "passport";
 import moment from "moment-timezone";
 import uuid from "uuid/v4";
 
-import { config, renderEmailHTML, renderEmailText, sendMailAsync, postParser } from "./common";
-import { createNew, IConfig, IUser, IUserMongoose, User } from "./schema";
+import { config, renderEmailHTML, renderEmailText, sendMailAsync, postParser } from "../common";
+import { createNew, IConfig, Model, IUser, User } from "../schema";
 import { Request, Response, NextFunction, Router } from "express";
 
 import { Strategy as LocalStrategy } from "passport-local";
@@ -22,7 +22,7 @@ const CASStrategyProvider: StrategyConstructor = require("passport-cas2").Strate
 type Strategy = passport.Strategy & {
 	logout?(request: Request, response: Response, returnURL: string): void;
 };
-type PassportDone = (err: Error | null, user?: IUserMongoose | false, errMessage?: { message: string }) => void;
+type PassportDone = (err: Error | null, user?: Model<IUser> | false, errMessage?: { message: string }) => void;
 type Profile = passport.Profile & {
 	profileUrl?: string;
 	_json: any;
@@ -108,7 +108,7 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 		if (!user) {
 			user = await User.findOne({ email });
 		}
-		let loggedInUser = request.user as IUserMongoose | undefined;
+		let loggedInUser = request.user as Model<IUser> | undefined;
 		if (!user && !loggedInUser) {
 			user = createNew<IUser>(User, {
 				...OAuthStrategy.defaultUserProperties,
@@ -253,7 +253,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 	private async passportCallback(request: Request, username: string, profile: Profile, done: PassportDone) {
 		// GT login will pass long invalid usernames of different capitalizations
 		username = username.toLowerCase().trim();
-		let loggedInUser = request.user as IUserMongoose | undefined;
+		let loggedInUser = request.user as Model<IUser> | undefined;
 		let user = await User.findOne({ [`services.${this.name}.id`]: username });
 		let email = `${username}@${this.emailDomain}`;
 
@@ -657,7 +657,7 @@ function createLink(request: Request, link: string): string {
 	}
 }
 
-export async function sendVerificationEmail(request: Request, user: IUserMongoose) {
+export async function sendVerificationEmail(request: Request, user: Model<IUser>) {
 	// Send verification email (hostname validated by previous middleware)
 	user.emailVerificationCode = crypto.randomBytes(32).toString("hex");
 	await user.save();

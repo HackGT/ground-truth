@@ -2,7 +2,6 @@
 // The database schema used by Mongoose
 // Exports TypeScript interfaces to be used for type checking and Mongoose models derived from these interfaces
 import { mongoose } from "./common";
-import { Model } from "mongoose";
 
 // Secrets JSON file schema
 export namespace IConfig {
@@ -43,10 +42,6 @@ export namespace IConfig {
 	}
 }
 
-//
-// DB types
-//
-
 // For stricter type checking of new object creation
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 interface RootDocument {
@@ -55,9 +50,13 @@ interface RootDocument {
 export function createNew<T extends RootDocument>(model: mongoose.Model<T & mongoose.Document, {}>, doc: Omit<T, "_id">) {
 	return new model(doc);
 }
+export type Model<T extends RootDocument> = T & mongoose.Document;
 
-export interface IUser {
-	_id: mongoose.Types.ObjectId;
+//
+// DB types
+//
+
+export interface IUser extends RootDocument {
 	uuid: string;
 	email: string;
 	name: string;
@@ -82,10 +81,9 @@ export interface IUser {
 		};
 	};
 }
-export type IUserMongoose = IUser & mongoose.Document;
 
 // This is basically a type definition that exists at runtime and is derived manually from the IUser definition above
-export const User = mongoose.model<IUserMongoose>("User", new mongoose.Schema({
+export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 	uuid: {
 		type: String,
 		required: true,
@@ -117,4 +115,61 @@ export const User = mongoose.model<IUserMongoose>("User", new mongoose.Schema({
 }).index({
 	email: "text",
 	name: "text"
+}));
+
+export interface IOAuthClient extends RootDocument {
+	uuid: string;
+	name: string;
+	clientID: string;
+	clientSecret: string;
+	redirectURIs: string[];
+}
+
+export const OAuthClient = mongoose.model<Model<IOAuthClient>>("OAuthClient", new mongoose.Schema({
+	uuid: {
+		type: String,
+		required: true,
+		index: true,
+		unique: true
+	},
+	name: String,
+	clientID: String,
+	clientSecret: String,
+	redirectURIs: [String],
+}));
+
+export interface IAuthorizationCode extends RootDocument {
+	code: string;
+	clientID: string;
+	redirectURI: string;
+	uuid: string;
+}
+
+export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("AuthorizationCode", new mongoose.Schema({
+	code: {
+		type: String,
+		required: true,
+		index: true,
+		unique: true
+	},
+	clientID: String,
+	redirectURI: String,
+	uuid: String,
+}));
+
+export interface IAccessToken extends RootDocument {
+	token: string;
+	clientID: string;
+	uuid: string;
+}
+
+export const AccessToken = mongoose.model<Model<IAccessToken>>("AccessToken", new mongoose.Schema({
+	token: {
+		type: String,
+		required: true,
+		index: true,
+		unique: true
+	},
+	clientID: String,
+	uuid: String,
 }));

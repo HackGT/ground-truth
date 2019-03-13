@@ -3,7 +3,6 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
-import passport from "passport";
 
 //
 // Config
@@ -43,7 +42,7 @@ class Config implements IConfig.Main {
 		defaultTimezone: "America/New_York",
 		name: "HackGT",
 	};
-	public loginMethods = ["local", "github", "google", "facebook", "gatech"] as IConfig.Services[];
+	public loginMethods = ["local"] as IConfig.Services[];
 	public sessionSecretSet: boolean = false;
 
 	constructor(fileName: string = "config.json") {
