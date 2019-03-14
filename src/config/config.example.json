@@ -1,0 +1,33 @@
+{
+	"secrets": {
+		"session": "<a random string>",
+		"oauth": {
+			"github": {
+				"id": "",
+				"secret": ""
+			},
+			"google": {
+				"id": "",
+				"secret": ""
+			},
+			"facebook": {
+				"id": "",
+				"secret": ""
+			}
+		}
+	},
+	"email": {
+		"from": "HackGT Team <hello@hackgt.com>",
+		"host": "smtp.sendgrid.net",
+		"key": "<your API key>",
+		"port": 465
+	},
+	"server": {
+		"isProduction": true,
+		"port": 3000,
+		"cookieMaxAge": 15552000000,
+		"cookieSecureOnly": true,
+		"passwordResetExpiration": 3600000,
+		"mongoURL": "mongodb://localhost/ground-truth"
+	}
+}

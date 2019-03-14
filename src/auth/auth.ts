@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import * as express from "express";
+import { URL } from "url";
 import session from "express-session";
 import bodyParser from "body-parser";
 import connectMongo from "connect-mongo";
@@ -125,7 +126,7 @@ authRouter.get("/validatehost/:nonce", (request, response) => {
 	response.send(crypto.createHmac("sha256", config.secrets.session).update(nonce).digest().toString("hex"));
 });
 
-authRouter.all("/logout", (request, response) => {
+app.all("/logout", (request, response) => {
 	request.logout();
 	response.redirect("/login");
 });
@@ -249,7 +250,7 @@ export function authenticateWithRedirect(request: express.Request, response: exp
 		if (request.session) {
 			request.session.returnTo = request.originalUrl;
 		}
-		response.redirect("/");
+		response.redirect("/login");
 	}
 	else {
 		next();
@@ -259,7 +260,10 @@ export function authenticateWithRedirect(request: express.Request, response: exp
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
-		if (!client || !client.redirectURIs.includes(redirectURI)) {
+		// Redirect URIs are allowed on a same-origin basis
+		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
+		let redirectOrigin = new URL(redirectURI).origin;
+		if (!client || !client.redirectURIs.includes(redirectOrigin)) {
 			done(null, false);
 			return;
 		}

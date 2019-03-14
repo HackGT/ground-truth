@@ -62,3 +62,5 @@ typings/
 
 *.js
 *.d.ts
+
+src/config/config\.json
