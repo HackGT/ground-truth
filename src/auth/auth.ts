@@ -12,7 +12,7 @@ import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
 
 import {
-	config, mongoose, COOKIE_OPTIONS, postParser
+	config, mongoose, COOKIE_OPTIONS, postParser, authenticateWithRedirect
 } from "../common";
 import {
 	createNew, Model,
@@ -20,6 +20,7 @@ import {
 	IAuthorizationCode, AuthorizationCode,
 	IAccessToken, AccessToken, IOAuthClient, OAuthClient,
 } from "../schema";
+import { Template } from "../templates";
 import {
 	RegistrationStrategy, strategies, validateAndCacheHostName, sendVerificationEmail
 } from "./strategies";
@@ -206,11 +207,11 @@ server.deserializeClient(async (uuid, done) => {
 	}
 });
 
-server.grant(oauth2orize.grant.code(async (client, redirectURI, user: IUser, ares, done) => {
+server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, user: IUser, ares, done) => {
 	const code = crypto.randomBytes(16).toString("hex");
 	try {
 		await createNew<IAuthorizationCode>(AuthorizationCode, {
-			clientID: client.id,
+			clientID: client.clientID,
 			code,
 			redirectURI,
 			uuid: user.uuid,
@@ -222,10 +223,10 @@ server.grant(oauth2orize.grant.code(async (client, redirectURI, user: IUser, are
 	}
 }));
 
-server.exchange(oauth2orize.exchange.code(async (client, code, redirectURI, done) => {
+server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, redirectURI, done) => {
 	try {
 		let authCode = await AuthorizationCode.findOne({ code });
-		if (!authCode || client.id !== authCode.clientID || redirectURI !== authCode.redirectURI) {
+		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI) {
 			done(null, false);
 			return;
 		}
@@ -244,19 +245,13 @@ server.exchange(oauth2orize.exchange.code(async (client, code, redirectURI, done
 	}
 }));
 
-export function authenticateWithRedirect(request: express.Request, response: express.Response, next: express.NextFunction) {
-	response.setHeader("Cache-Control", "private");
-	if (!request.isAuthenticated() || !request.user || !request.user.verifiedEmail || !request.user.accountConfirmed) {
-		if (request.session) {
-			request.session.returnTo = request.originalUrl;
-		}
-		response.redirect("/login");
-	}
-	else {
-		next();
-	}
+interface IAuthorizationTemplate {
+	name: string;
+	email: string;
+	appName: string;
+	transactionID: string;
 }
-
+const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.html");
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
@@ -281,10 +276,29 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		done(err, false, null, null);
 	}
 }), (request, response) => {
-	let oauth2 = (request as any).oauth2;
-	response.json({ transactionId: oauth2.transactionID, user: request.user, client: oauth2.client })
+	let transactionID = (request as any).oauth2.transactionID as string;
+	let user = request.user as IUser;
+	let client = (request as any).oauth2.client as IOAuthClient;
+
+	response.send(AuthorizeTemplate.render({
+		name: user.name,
+		email: user.email,
+		appName: client.name,
+		transactionID,
+	}));
 });
 
 OAuthRouter.post("/authorize/decision", authenticateWithRedirect, server.decision());
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
+
+export let apiRoutes = express.Router();
+
+apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), async (request, response) => {
+	let user = request.user as IUser;
+	response.json({
+		"uuid": user.uuid,
+		"name": user.name,
+		"email": user.email,
+	});
+});

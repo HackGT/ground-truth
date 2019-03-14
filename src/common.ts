@@ -3,6 +3,7 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
+import express from "express";
 
 //
 // Config
@@ -192,6 +193,19 @@ import bodyParser from "body-parser";
 export const postParser = bodyParser.urlencoded({
 	extended: false
 });
+
+export function authenticateWithRedirect(request: express.Request, response: express.Response, next: express.NextFunction) {
+	response.setHeader("Cache-Control", "private");
+	if (!request.isAuthenticated() || !request.user || !request.user.verifiedEmail || !request.user.accountConfirmed) {
+		if (request.session) {
+			request.session.returnTo = request.originalUrl;
+		}
+		response.redirect("/login");
+	}
+	else {
+		next();
+	}
+}
 
 //
 // Email

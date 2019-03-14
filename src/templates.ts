@@ -3,8 +3,7 @@ import * as path from "path";
 import * as express from "express";
 import * as Handlebars from "handlebars";
 
-import { config } from "./common";
-import { authenticateWithRedirect } from "./auth/auth";
+import { config, authenticateWithRedirect } from "./common";
 import { User } from "./schema";
 
 // tslint:disable-next-line:no-any
@@ -22,7 +21,7 @@ Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], op
 	return options.inverse(this);
 });
 
-class Template<T> {
+export class Template<T> {
 	private template: Handlebars.TemplateDelegate<T> | null = null;
 
 	constructor(private file: string) {

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Authorize - HackGT</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<link rel="stylesheet" href="/css/wing.min.css" />
+		<link rel="stylesheet" href="/css/login.css" />
+	</head>
+	<body>
+		<div class="container">
+			<h1 class="center">HackGT</h1>
+
+			<div class="row">
+				<div class="col-12 text-center">
+					<h3>Hi, {{name}}</h3>
+					<br />
+					<p><strong>{{appName}}</strong> would like to use your HackGT account to authenticate you.</p>
+					<p>By allowing this, <strong>{{appName}}</strong> will receive your name and email address.</p>
+					<form action="/oauth/authorize/decision" method="POST">
+						<input type="hidden" name="transaction_id" value="{{transactionID}}" />
+						<input type="submit" value="Cancel" name="cancel" style="background-color: #FF4136" />
+						<input type="submit" value="Allow" style="background-color: #2ECC40" />
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
