@@ -74,7 +74,8 @@ uiRoutes.route("/login").get(async (request, response) => {
 		error: request.flash("error"),
 		success: request.flash("success"),
 		loginMethods: config.loginMethods,
-		localOnly: config.loginMethods && config.loginMethods.length === 1 && config.loginMethods[0] === "local"
+		localOnly: config.loginMethods && config.loginMethods.length === 1 && config.loginMethods[0] === "local",
+		email: request.session ? request.session.email : null,
 	};
 	response.send(LoginTemplate.render(templateData));
 });

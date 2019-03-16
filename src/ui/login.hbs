@@ -16,7 +16,11 @@
 				<div class="field">
 					<label class="label" for="email">Email</label>
 					<div class="control">
-						<input class="input" type="email" id="email" required />
+						{{#if email}}
+							<input class="input" type="email" id="email" value="{{email}}" required />
+						{{else}}
+							<input class="input" type="email" id="email" required />
+						{{/if}}
 					</div>
 				</div>
 				<br />
@@ -60,7 +64,7 @@
 		<section class="columns" id="step3">
 			<div class="column is-half is-offset-one-quarter">
 				<h3 class="title">Choose login method</h3>
-				<p class="subtitle">You can log in with an external service or just set password</p>
+				<p class="subtitle">You can log in with an external service or just set a password</p>
 
 				{{#if localOnly}}{{else}}
 					{{#*inline "loginMethod"}}

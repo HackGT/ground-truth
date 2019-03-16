@@ -65,6 +65,93 @@ export interface RegistrationStrategy {
 	readonly passportStrategy: Strategy;
 	use(authRoutes: Router, scope?: string[]): void;
 }
+
+async function ExternalServiceCallback(
+	request: Request,
+	serviceName: IConfig.OAuthServices | IConfig.CASServices,
+	id: string,
+	username: string | undefined,
+	serviceEmail: string | undefined,
+	done: PassportDone
+) {
+	let loggedInUser = request.user as Model<IUser> | undefined;
+	if (loggedInUser) {
+		request.logout();
+	}
+
+	if (!request.session || !request.session.email || !request.session.name) {
+		done(null, false, { message: "Missing email and/or name from session" });
+		return;
+	}
+
+	// If `user` exists, the user has already logged in with this service and is good-to-go
+	let user = await User.findOne({ [`services.${serviceName}.id`]: id });
+	let existingUser = await User.findOne({ email: request.session.email });
+
+	if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
+		user = existingUser;
+		// Add new service
+		if (!user.services) {
+			user.services = {};
+		}
+		if (!user.services[serviceName]) {
+			user.services[serviceName] = {
+				id,
+				email: serviceEmail,
+				username
+			};
+		}
+		try {
+			user.markModified("services");
+			await user.save();
+		}
+		catch (err) {
+			done(err);
+			return;
+		}
+	}
+	else if (!user && !existingUser) {
+		// Create an account
+		user = createNew<IUser>(User, {
+			...OAuthStrategy.defaultUserProperties,
+			email: request.session.email,
+			name: request.session.name,
+		});
+		user.services = {};
+		user.services[serviceName] = {
+			id,
+			email: serviceEmail,
+			username
+		};
+		try {
+			user.markModified("services");
+			await user.save();
+		}
+		catch (err) {
+			done(err);
+			return;
+		}
+	}
+	else if (!user) {
+		done(null, false, { "message": "Could not match login to existing account" });
+		return;
+	}
+
+	if (!user.verifiedEmail && !user.emailVerificationCode) {
+		await sendVerificationEmail(request, user);
+	}
+	if (!user.verifiedEmail) {
+		request.logout();
+		request.flash("success", "Account created successfully. Please verify your email before signing in.");
+		done(null, false);
+		return;
+	}
+
+	request.session.email = undefined;
+	request.session.name = undefined;
+	done(null, user);
+}
+
 abstract class OAuthStrategy implements RegistrationStrategy {
 	public readonly passportStrategy: Strategy;
 
@@ -72,7 +159,6 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 		return {
 			"uuid": uuid(),
 			"verifiedEmail": false,
-			"accountConfirmed": false,
 
 			"services": {},
 		};
@@ -94,95 +180,12 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 
 	protected async passportCallback(request: Request, accessToken: string, refreshToken: string, profile: Profile, done: PassportDone) {
 		let serviceName = this.name as IConfig.OAuthServices;
-
-		let email: string = "";
+		let serviceEmail: string | undefined = undefined;
 		if (profile.emails && profile.emails.length > 0) {
-			email = profile.emails[0].value.trim();
-		}
-		else if (!profile.emails || profile.emails.length === 0) {
-			done(null, false, { message: "Your GitHub profile does not have any public email addresses. Please make an email address public before logging in with GitHub." });
-			return;
+			serviceEmail = profile.emails[0].value.trim();
 		}
 
-		let user = await User.findOne({ [`services.${this.name}.id`]: profile.id });
-		if (!user) {
-			user = await User.findOne({ email });
-		}
-		let loggedInUser = request.user as Model<IUser> | undefined;
-		if (!user && !loggedInUser) {
-			user = createNew<IUser>(User, {
-				...OAuthStrategy.defaultUserProperties,
-				email,
-				name: profile.displayName ? profile.displayName.trim() : "",
-				verifiedEmail: true,
-			});
-			if (!user.services) {
-				user.services = {};
-			}
-			user.services[serviceName] = {
-				id: profile.id,
-				email,
-				username: profile.username,
-				profileUrl: profile.profileUrl
-			};
-			try {
-				user.markModified("services");
-				await user.save();
-			}
-			catch (err) {
-				done(err);
-				return;
-			}
-
-			done(null, user);
-		}
-		else {
-			if (user && loggedInUser && user.uuid !== loggedInUser.uuid) {
-				// Remove extra account represented by loggedInUser and merge into user
-				user.services = {
-					...loggedInUser.services,
-					// Don't overwrite any existing services
-					...user.services
-				};
-				if (loggedInUser.local && loggedInUser.local.hash && (!user.local || !user.local.hash)) {
-					user.local = {
-						...loggedInUser.local
-					};
-				}
-				await User.findOneAndRemove({ "uuid": loggedInUser.uuid });
-				// So that the user has an indication of the linking
-				user.accountConfirmed = false;
-			}
-			else if (!user && loggedInUser) {
-				// Attach service info to logged in user instead of non-existant user pulled via email address
-				user = loggedInUser;
-			}
-			if (!user) {
-				done(null, false, { "message": "Shouldn't happen: no user defined" });
-				return;
-			}
-
-			if (!user.services) {
-				user.services = {};
-			}
-			if (!user.services[serviceName]) {
-				user.services[serviceName] = {
-					id: profile.id,
-					email,
-					username: profile.username,
-					profileUrl: profile.profileUrl
-				};
-				// So that the user has an indication of the linking
-				user.accountConfirmed = false;
-			}
-			if (!user.verifiedEmail && user.email === email) {
-				// We trust our OAuth provider to have verified the user's email for us
-				user.verifiedEmail = true;
-			}
-			user.markModified("services");
-			await user.save();
-			done(null, user);
-		}
+		ExternalServiceCallback(request, serviceName, profile.id, profile.username, serviceEmail, done);
 	}
 
 	public use(authRoutes: Router, scope: string[]) {
@@ -253,80 +256,15 @@ abstract class CASStrategy implements RegistrationStrategy {
 	private async passportCallback(request: Request, username: string, profile: Profile, done: PassportDone) {
 		// GT login will pass long invalid usernames of different capitalizations
 		username = username.toLowerCase().trim();
-		let loggedInUser = request.user as Model<IUser> | undefined;
-		let user = await User.findOne({ [`services.${this.name}.id`]: username });
-		let email = `${username}@${this.emailDomain}`;
-
-		if (!user && !loggedInUser) {
-			user = createNew<IUser>(User, {
-				...OAuthStrategy.defaultUserProperties,
-				email,
-				name: "",
-				verifiedEmail: false,
-			});
-			if (!user.services) {
-				user.services = {};
-			}
-			user.services[this.name] = {
-				id: username,
-				email,
-				username
-			};
-			try {
-				user.markModified("services");
-				await user.save();
-			}
-			catch (err) {
-				done(err);
-				return;
-			}
-
-			done(null, user);
+		// Reject username@gatech.edu usernames because the CAS allows those for some reason
+		// Bonus fact: using a @gatech.edu username bypasses 2FA and the OIT team in charge refuses to fix this
+		if (username.indexOf("@")) {
+			done(null, false, { message: `Usernames of the format ${username} are insecure and therefore disallowed. Please log in with ${username.split("@")[0]}.` });
+			return;
 		}
-		else {
-			if (user && loggedInUser && user.uuid !== loggedInUser.uuid) {
-				// Remove extra account represented by loggedInUser and merge into user
-				user.services = {
-					...loggedInUser.services,
-					// Don't overwrite any existing services
-					...user.services
-				};
-				if (loggedInUser.local && loggedInUser.local.hash && (!user.local || !user.local.hash)) {
-					user.local = {
-						...loggedInUser.local
-					};
-				}
-				await User.findOneAndRemove({ "uuid": loggedInUser.uuid });
-				// So that the user has an indication of the linking
-				user.accountConfirmed = false;
-			}
-			else if (!user && loggedInUser) {
-				// Attach service info to logged in user instead of non-existant user pulled via email address
-				user = loggedInUser;
-			}
-			if (!user) {
-				done(null, false, { "message": "Shouldn't happen: no user defined" });
-				return;
-			}
+		let serviceEmail = `${username}@${this.emailDomain}`;
 
-			if (!user.services) {
-				user.services = {};
-			}
-			if (!user.services[this.name]) {
-				user.services[this.name] = {
-					id: username,
-					email,
-					username
-				};
-			}
-			user.markModified("services");
-			await user.save();
-			if (!user.verifiedEmail && user.accountConfirmed) {
-				done(null, false, { "message": "You must verify your email before you can sign in" });
-				return;
-			}
-			done(null, user);
-		}
+		ExternalServiceCallback(request, this.name, username, username, serviceEmail, done);
 	}
 
 	public use(authRoutes: Router) {

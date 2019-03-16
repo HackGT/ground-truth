@@ -62,7 +62,6 @@ export interface IUser extends RootDocument {
 	name: string;
 	verifiedEmail: boolean;
 	emailVerificationCode?: string;
-	accountConfirmed: boolean;
 
 	local?: {
 		hash: string;
@@ -75,9 +74,8 @@ export interface IUser extends RootDocument {
 		[Service in Exclude<IConfig.Services, "local">]?: {
 			id: string;
 			// OAuth account email can be different than registration account email
-			email: string;
+			email?: string;
 			username?: string;
-			profileUrl?: string;
 		};
 	};
 }

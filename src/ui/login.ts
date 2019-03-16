@@ -25,7 +25,7 @@ function setUpStep(step: number) {
 				if (step === 1) {
 					let emailRegex = /\S+@\S+\.\S+/;
 					if (!emailRegex.test(email.value)) {
-						errorBlock.textContent = "Please input valid a email";
+						errorBlock.textContent = "Please input a valid email";
 						return;
 					}
 					let { type } = await fetch(`/api/login-type?email=${encodeURIComponent(email.value.trim())}`).then(response => response.json());
@@ -36,12 +36,26 @@ function setUpStep(step: number) {
 					if (type === "local") {
 						return;
 					}
+					await fetch(`/api/signup-data`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+						},
+						body: `email=${encodeURIComponent(email.value.trim())}`
+					});
 				}
 				if (step === 2) {
 					if (!username.value.trim()) {
 						errorBlock.textContent = "Please enter your name. We use it to identify you online and at events!"
 						return;
 					}
+					await fetch(`/api/signup-data`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+						},
+						body: `name=${encodeURIComponent(username.value.trim())}`
+					});
 				}
 
 				if (step === 1 || step === 2) {

@@ -70,58 +70,6 @@ for (let methodName of config.loginMethods) {
 	method.use(authRouter);
 }
 
-authRouter.post("/confirm", validateAndCacheHostName, postParser, async (request, response) => {
-	let user = request.user as Model<IUser>;
-	let name = request.body.name as string;
-	if (!name || !name.trim()) {
-		request.flash("error", "Invalid name");
-		response.redirect("/login/confirm");
-		return;
-	}
-	if (!request.isAuthenticated() || !user) {
-		request.flash("error", "Must be logged in");
-		response.redirect("/login");
-		return;
-	}
-	user.name = name.trim();
-
-	let email = request.body.email as string | undefined;
-	if (email && email !== user.email) {
-		if (!email.trim()) {
-			request.flash("error", "Invalid email");
-			response.redirect("/login/confirm");
-			return;
-		}
-		if (await User.count({ email }) > 0) {
-			request.flash("error", "That email address is already in use. You may already have an account from another login service.");
-			response.redirect("/login/confirm");
-			return;
-		}
-		user.verifiedEmail = false;
-		user.email = email;
-	}
-	user.accountConfirmed = true;
-
-	try {
-		await user.save();
-		if (!user.verifiedEmail && !user.emailVerificationCode) {
-			await sendVerificationEmail(request, user);
-		}
-		if (!user.verifiedEmail) {
-			request.logout();
-			request.flash("success", "Account created successfully. Please verify your email before logging in.");
-			response.redirect("/login");
-			return;
-		}
-		response.redirect("/");
-	}
-	catch (err) {
-		console.error(err);
-		request.flash("error", "An error occurred while creating your account");
-		response.redirect("/login/confirm");
-	}
-});
-
 authRouter.get("/validatehost/:nonce", (request, response) => {
 	let nonce: string = request.params.nonce || "";
 	response.send(crypto.createHmac("sha256", config.secrets.session).update(nonce).digest().toString("hex"));
@@ -137,7 +85,7 @@ app.use(passport.session());
 
 // OAuth server stuff
 export let OAuthRouter = express.Router();
-OAuthRouter.use(bodyParser.urlencoded({ extended: true }));
+OAuthRouter.use(postParser);
 
 /**
  * BasicStrategy & ClientPasswordStrategy
@@ -332,4 +280,18 @@ apiRoutes.get("/login-type", async (request, response) => {
 		}
 	}
 	response.json({ type });
-})
+});
+
+apiRoutes.post("/signup-data", postParser, (request, response) => {
+	if (!request.session) return;
+
+	let email = request.body.email as string | undefined;
+	let name = request.body.name as string | undefined;
+	if (email) {
+		request.session.email = email;
+	}
+	if (name) {
+		request.session.name = name;
+	}
+	response.send();
+});
