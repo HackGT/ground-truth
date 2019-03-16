@@ -4,6 +4,7 @@ html, body {
 	background-color: #212121;
 	color: white;
 	height: 100%;
+	overflow-x: hidden;
 }
 .label, .title, strong {
 	color: white;
@@ -26,9 +27,6 @@ body > .container {
 	background: linear-gradient(to right, #4AC8EF, #8B54A2);
 }
 .footer {
-	position: fixed;
-    width: 100%;
-	bottom: 0;
 	background-color: #212121;
 	color: white;
 	padding-bottom: 3rem;
@@ -95,4 +93,11 @@ a.gatech:hover {
 }
 .carousel > .columns {
 	width: 100%;
+}
+
+@media screen and (max-width: 769px) {
+	.carousel > .columns {
+		margin-left: 5px;
+		margin-right: 5px;
+	}
 }
