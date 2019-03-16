@@ -17,16 +17,22 @@
 					<label class="label" for="email">Email</label>
 					<div class="control">
 						{{#if email}}
-							<input class="input" type="email" id="email" value="{{email}}" required />
+							<input class="input" tabindex="-1" type="email" id="email" value="{{email}}" required />
 						{{else}}
-							<input class="input" type="email" id="email" required />
+							<input class="input" tabindex="-1" type="email" id="email" required />
 						{{/if}}
+					</div>
+				</div>
+				<div id="hidden-password" class="field hidden">
+					<label class="label" for="password-login">Password</label>
+					<div class="control">
+						<input class="input" tabindex="-1" type="password" id="password-login" required />
 					</div>
 				</div>
 				<br />
 				<div class="field is-grouped is-grouped-centered">
 					<p class="control">
-						<button class="button is-medium next">
+						<button class="button is-medium next" tabindex="-1">
 							<span>Next</span>
 							<span class="icon"><i class="fas fa-arrow-right"></i></span>
 						</button>
@@ -41,19 +47,19 @@
 				<div class="field">
 					<label class="label" for="name">What's your name?</label>
 					<div class="control">
-						<input class="input" type="text" id="name" required />
+						<input class="input" tabindex="-1" type="text" id="name" required />
 					</div>
 				</div>
 				<br />
 				<div class="field is-grouped is-grouped-centered">
 					<p class="control">
-						<button class="button is-medium back">
+						<button class="button is-medium back" tabindex="-1">
 							<span class="icon"><i class="fas fa-arrow-left"></i></span>
 							<span>Back</span>
 						</button>
 					</p>
 					<p class="control">
-						<button class="button is-medium next">
+						<button class="button is-medium next" tabindex="-1">
 							<span>Next</span>
 							<span class="icon"><i class="fas fa-arrow-right"></i></span>
 						</button>
@@ -108,7 +114,7 @@
 					<div class="field">
 						<label class="label" for="password">Password</label>
 						<div class="control">
-							<input class="input" type="password" id="password" required />
+							<input class="input" tabindex="-1" type="password" id="password" required />
 						</div>
 					</div>
 				{{/ifIn}}
@@ -116,13 +122,13 @@
 				<br />
 				<div class="field is-grouped is-grouped-centered">
 					<p class="control">
-						<button class="button is-medium back">
+						<button class="button is-medium back" tabindex="-1">
 							<span class="icon"><i class="fas fa-arrow-left"></i></span>
 							<span>Back</span>
 						</button>
 					</p>
 					<p class="control">
-						<button class="button is-medium next">
+						<button class="button is-medium next" tabindex="-1">
 							<span>Sign up</span>
 							<span class="icon"><i class="fas fa-check-circle"></i></span>
 						</button>

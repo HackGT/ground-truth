@@ -271,17 +271,19 @@ export async function bestLoginMethod(email?: string): Promise<IConfig.Services 
 			if (user.local && user.local.hash) {
 				type = "local";
 			}
-			if (user.services.facebook) {
-				type = "facebook";
-			}
-			if (user.services.github) {
-				type = "github";
-			}
-			if (user.services.google) {
-				type = "google";
-			}
-			if (user.services.gatech) {
-				type = "gatech";
+			if (user.services) {
+				if (user.services.facebook) {
+					type = "facebook";
+				}
+				if (user.services.github) {
+					type = "github";
+				}
+				if (user.services.google) {
+					type = "google";
+				}
+				if (user.services.gatech) {
+					type = "gatech";
+				}
 			}
 		}
 	}

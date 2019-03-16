@@ -102,3 +102,15 @@ a.gatech:hover {
 		margin-right: 5px;
 	}
 }
+
+#hidden-password {
+	transition: 0.5s opacity;
+}
+.hidden {
+	opacity: 0;
+	display: none;
+}
+.shown {
+	opacity: 1;
+	display: block;
+}

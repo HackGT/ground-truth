@@ -308,9 +308,9 @@ export class Local implements RegistrationStrategy {
 		email = email.trim();
 		let user = await User.findOne({ email });
 		if (user && request.path.match(/\/signup$/i)) {
-			done(null, false, { "message": "That email address is already in use. You may already have an account from another login service." });
+			done(null, false, { "message": "That email address is already in use" });
 		}
-		else if (user && !user.local!.hash) {
+		else if (user && (!user.local || (user.local && !user.local.hash))) {
 			done(null, false, { "message": "Please log back in with an external provider" });
 		}
 		else if (!user || !user.local) {
@@ -346,6 +346,16 @@ export class Local implements RegistrationStrategy {
 				done(err);
 				return;
 			}
+
+			if (!user.verifiedEmail && !user.emailVerificationCode) {
+				await sendVerificationEmail(request, user);
+			}
+			if (!user.verifiedEmail) {
+				request.flash("success", "Account created successfully. Please verify your email before signing in.");
+				done(null, false);
+				return;
+			}
+
 			done(null, user);
 		}
 		else {
@@ -368,12 +378,16 @@ export class Local implements RegistrationStrategy {
 	public use(authRoutes: Router) {
 		passport.use(this.passportStrategy);
 
-		authRoutes.post("/signup", validateAndCacheHostName, postParser, passport.authenticate("local", { failureRedirect: "/login", failureFlash: true }), (request, response) => {
-			// User is logged in automatically by Passport but we want them to verify their email first
-			response.redirect("/login/confirm");
+		authRoutes.post("/signup", validateAndCacheHostName, postParser, passport.authenticate("local", { failureFlash: true }), async (request, response) => {
+			// This works because the client just reloads the page once the requests completes
+			// which displays the flash message (if error) or redirects to the next page (if success)
+			response.json({ success: true });
 		});
 
-		authRoutes.post("/login", postParser, passport.authenticate("local", { failureRedirect: "/login", failureFlash: true, successReturnToOrRedirect: "/" }));
+		authRoutes.post("/login", postParser, passport.authenticate("local", { failureFlash: true }), (request, response) => {
+			// Same as comment above
+			response.json({ success: true });
+		});
 
 		authRoutes.get("/verify/:code", async (request, response) => {
 			let user = await User.findOne({ "local.verificationCode": request.params.code });
