@@ -1,0 +1,130 @@
+{{#> main }}
+	<article class="message is-danger">
+		<div class="message-body">{{error}}</div>
+	</article>
+	<article class="message is-success">
+		<div class="message-body">{{success}}</div>
+	</article>
+
+	{{!-- <i class="fas fa-user-astronaut"></i> --}}
+	<main class="carousel step1">
+		<section class="columns" id="step1">
+			<div class="column is-half is-offset-one-quarter">
+				<h3 class="title">Sign into your HackGT account</h3>
+				<p class="subtitle">If you don't have an account yet, we'll set you up with one.</p>
+
+				<div class="field">
+					<label class="label" for="email">Email</label>
+					<div class="control">
+						<input class="input" type="email" id="email" required />
+					</div>
+				</div>
+				<br />
+				<div class="field is-grouped is-grouped-centered">
+					<p class="control">
+						<button class="button is-medium next">
+							<span>Next</span>
+							<span class="icon"><i class="fas fa-arrow-right"></i></span>
+						</button>
+					</p>
+				</div>
+			</div>
+		</section>
+		<section class="columns" id="step2">
+			<div class="column is-half is-offset-one-quarter">
+				<h3 class="title">Create a HackGT account</h3>
+
+				<div class="field">
+					<label class="label" for="name">What's your name?</label>
+					<div class="control">
+						<input class="input" type="text" id="name" required />
+					</div>
+				</div>
+				<br />
+				<div class="field is-grouped is-grouped-centered">
+					<p class="control">
+						<button class="button is-medium back">
+							<span class="icon"><i class="fas fa-arrow-left"></i></span>
+							<span>Back</span>
+						</button>
+					</p>
+					<p class="control">
+						<button class="button is-medium next">
+							<span>Next</span>
+							<span class="icon"><i class="fas fa-arrow-right"></i></span>
+						</button>
+					</p>
+				</div>
+			</div>
+		</section>
+		<section class="columns" id="step3">
+			<div class="column is-half is-offset-one-quarter">
+				<h3 class="title">Choose login method</h3>
+				<p class="subtitle">You can log in with an external service or just set password</p>
+
+				{{#if localOnly}}{{else}}
+					{{#*inline "loginMethod"}}
+						{{> @partial-block}}
+						<br />
+					{{/inline}}
+
+					{{#ifIn "gatech" loginMethods}}
+						{{#> loginMethod}}
+							<a class="gatech button" href="/auth/gatech">
+								Sign up with Georgia Tech
+							</a>
+						{{/loginMethod}}
+					{{/ifIn}}
+					{{#ifIn "github" loginMethods}}
+						{{#> loginMethod}}
+							<a class="github button" href="/auth/github">
+								<i class="fab fa-github" aria-hidden="true"></i>
+								Sign up with GitHub
+							</a>
+						{{/loginMethod}}
+					{{/ifIn}}
+					{{#ifIn "google" loginMethods}}
+						{{#> loginMethod}}
+							<a class="google button" href="/auth/google">
+								<i class="fab fa-google" aria-hidden="true"></i>
+								Sign up with Google
+							</a>
+						{{/loginMethod}}
+					{{/ifIn}}
+					{{#ifIn "facebook" loginMethods}}
+						{{#> loginMethod}}
+							<a class="facebook button" href="/auth/facebook">
+								<i class="fab fa-facebook-f" aria-hidden="true"></i>
+								Sign up with Facebook
+							</a>
+						{{/loginMethod}}
+					{{/ifIn}}
+				{{/if}}
+				{{#ifIn "local" loginMethods}}
+					<div class="field">
+						<label class="label" for="password">Password</label>
+						<div class="control">
+							<input class="input" type="password" id="password" required />
+						</div>
+					</div>
+				{{/ifIn}}
+
+				<br />
+				<div class="field is-grouped is-grouped-centered">
+					<p class="control">
+						<button class="button is-medium back">
+							<span class="icon"><i class="fas fa-arrow-left"></i></span>
+							<span>Back</span>
+						</button>
+					</p>
+					<p class="control">
+						<button class="button is-medium next">
+							<span>Sign up</span>
+							<span class="icon"><i class="fas fa-check-circle"></i></span>
+						</button>
+					</p>
+				</div>
+			</div>
+		</section>
+	</main>
+{{/main}}

@@ -1,10 +1,55 @@
-h1 {
-	margin-bottom: 64px;
-	text-align: center;
+html, body {
+	margin: 0;
+	font-family: "Barlow";
+	background-color: #212121;
+	color: white;
+	height: 100%;
+}
+.label, .title {
+	color: white;
+}
+.subtitle {
+	color: rgba(255, 255, 255, 0.5);
+}
+
+body > .container {
+	padding: 15px;
+}
+.hero-body {
+	background-color: #151515;
+}
+.hero::after {
+	display: block;
+	content: "";
+	width: 100vw;
+	height: 4px;
+	background: linear-gradient(to right, #4AC8EF, #8B54A2);
+}
+.footer {
+	position: fixed;
+    width: 100%;
+	bottom: 0;
+	background-color: #212121;
+	color: white;
+	padding-bottom: 3rem;
+}
+
+.is-danger > .message-body:empty, .is-success > .message-body:empty {
+	display: none;
+}
+
+a.button {
+	border: 1px solid #151515;
+	width: 100%;
+	display: block;
+	margin: 0 auto;
 }
 a > i {
 	margin-right: 10px;
-	transform: scale(1.5);
+	transform: scale(1.25);
+}
+a.button:hover {
+	color: white;
 }
 a.github {
 	color: white;
@@ -22,77 +67,26 @@ a.gatech {
 	color: black;
 	background-color: #eeb211;
 }
-#error, #success {
-	text-align: center;
-	margin-top: 1em;
-	font-size: 2rem;
-	margin-bottom: 1em;
-	color: white;
-	padding: 10px;
-	border-radius: 5px;
-}
-#error {
-	background-color: rgba(255, 65, 54, 0.85);
-}
-#success {
-	background-color: #3D9970;
-}
-#error:empty, #success:empty {
-	display: none;
+a.gatech:hover {
+	color: black;
 }
 
-main {
+.carousel {
 	display: flex;
-	flex-direction: column-reverse;
-	align-items: center;
+	flex-flow: row;
+	overflow: hidden;
+	width: 300%;
+	transition: transform 0.5s ease-in-out;
 }
-main > div {
-	box-sizing: border-box;
+.carousel.step1 {
+	transform: translateX(0);
+}
+.carousel.step2 {
+	transform: translateX(-33.333%);
+}
+.carousel.step3 {
+	transform: translateX(-66.666%);
+}
+.carousel > .columns {
 	width: 100%;
-	display: none;
-}
-main > .active {
-	display: block;
-}
-
-.simple-methods {
-	display: flex !important;
-	flex-direction: column;
-}
-
-.unit {
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-}
-.unit > *:first-child {
-	width: 125px;
-}
-#additional-logins {
-	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-	justify-content: center;
-	margin-bottom: 10px;
-	font-size: 85%;
-}
-
-/* Desktop styles */
-@media only screen and (min-width: 700px) {
-	main {
-		flex-direction: row;
-	}
-	main > * {
-		width: 50%;
-	}
-	main > .active.border {
-		border-right: 1px dashed #333030;
-		padding-right: 15px;
-	}
-	main > .active:last-of-type {
-		padding-left: 10px;
-	}
-	.unit, #additional-logins {
-		flex-direction: row;
-	}
 }

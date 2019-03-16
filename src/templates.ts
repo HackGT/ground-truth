@@ -4,7 +4,7 @@ import * as express from "express";
 import * as Handlebars from "handlebars";
 
 import { config, authenticateWithRedirect } from "./common";
-import { User } from "./schema";
+import { TemplateContent, User } from "./schema";
 
 // tslint:disable-next-line:no-any
 // tslint:disable:no-invalid-this
@@ -20,8 +20,11 @@ Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], op
 	}
 	return options.inverse(this);
 });
+if (config.server.isProduction) {
+	Handlebars.registerPartial("main", fs.readFileSync(path.resolve("src/ui", "partials", "main.hbs"), "utf8"));
+}
 
-export class Template<T> {
+export class Template<T extends TemplateContent> {
 	private template: Handlebars.TemplateDelegate<T> | null = null;
 
 	constructor(private file: string) {
@@ -35,15 +38,16 @@ export class Template<T> {
 
 	public render(input: T): string {
 		if (!config.server.isProduction) {
+			Handlebars.registerPartial("main", fs.readFileSync(path.resolve("src/ui", "partials", "main.hbs"), "utf8"));
 			this.loadTemplate();
 		}
 		return this.template!(input);
 	}
 }
 
-const LoginTemplate = new Template("login.html");
-const ForgotPasswordTemplate = new Template("forgotpassword.html");
-const ResetPasswordTemplate = new Template("resetpassword.html");
+const LoginTemplate = new Template("login.hbs");
+const ForgotPasswordTemplate = new Template("forgotpassword.hbs");
+const ResetPasswordTemplate = new Template("resetpassword.hbs");
 
 export let uiRoutes = express.Router();
 
@@ -63,6 +67,10 @@ uiRoutes.route("/").get(authenticateWithRedirect, (request, response) => {
 
 uiRoutes.route("/login").get(async (request, response) => {
 	let templateData = {
+		siteTitle: config.server.name,
+		title: "Log in",
+		includeJS: true,
+
 		error: request.flash("error"),
 		success: request.flash("success"),
 		loginMethods: config.loginMethods,
@@ -107,6 +115,10 @@ uiRoutes.route("/login").get(async (request, response) => {
 // });
 uiRoutes.route("/login/forgot").get((request, response) => {
 	let templateData = {
+		siteTitle: config.server.name,
+		title: "Forgot Password",
+		includeJS: false,
+
 		error: request.flash("error"),
 		success: request.flash("success")
 	};
@@ -129,6 +141,10 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 		return;
 	}
 	let templateData = {
+		siteTitle: config.server.name,
+		title: "Reset Password",
+		includeJS: false,
+
 		error: request.flash("error"),
 		success: request.flash("success"),
 		resetCode: user.local!.resetCode!

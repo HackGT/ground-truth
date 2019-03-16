@@ -173,3 +173,13 @@ export const AccessToken = mongoose.model<Model<IAccessToken>>("AccessToken", ne
 	clientID: String,
 	uuid: String,
 }));
+
+//
+// Template schema
+//
+
+export interface TemplateContent {
+	siteTitle: string;
+	title: string;
+	includeJS: boolean;
+}

@@ -44,6 +44,12 @@ class Config implements IConfig.Main {
 		name: "HackGT",
 	};
 	public loginMethods = ["local"] as IConfig.Services[];
+	protected addLoginMethod(method: IConfig.Services) {
+		if (this.loginMethods.indexOf(method) === -1) {
+			this.loginMethods.push(method);
+		}
+	}
+
 	public sessionSecretSet: boolean = false;
 
 	constructor(fileName: string = "config.json") {
@@ -82,6 +88,9 @@ class Config implements IConfig.Main {
 				this.server[key] = config.server[key];
 			}
 		}
+		if (config.loginMethods) {
+			this.loginMethods = config.loginMethods;
+		}
 	}
 	protected loadFromEnv(): void {
 		// Secrets
@@ -95,20 +104,26 @@ class Config implements IConfig.Main {
 			this.secrets.session = process.env.SESSION_SECRET;
 			this.sessionSecretSet = true;
 		}
+		if (process.env.GT_CAS) {
+			this.addLoginMethod("gatech");
+		}
 		if (process.env.GITHUB_CLIENT_ID) {
 			this.secrets.oauth.github.id = process.env.GITHUB_CLIENT_ID;
+			this.addLoginMethod("github");
 		}
 		if (process.env.GITHUB_CLIENT_SECRET) {
 			this.secrets.oauth.github.secret = process.env.GITHUB_CLIENT_SECRET;
 		}
 		if (process.env.GOOGLE_CLIENT_ID) {
 			this.secrets.oauth.google.id = process.env.GOOGLE_CLIENT_ID;
+			this.addLoginMethod("google");
 		}
 		if (process.env.GOOGLE_CLIENT_SECRET) {
 			this.secrets.oauth.google.secret = process.env.GOOGLE_CLIENT_SECRET;
 		}
 		if (process.env.FACEBOOK_CLIENT_ID) {
 			this.secrets.oauth.facebook.id = process.env.FACEBOOK_CLIENT_ID;
+			this.addLoginMethod("facebook");
 		}
 		if (process.env.FACEBOOK_CLIENT_SECRET) {
 			this.secrets.oauth.facebook.secret = process.env.FACEBOOK_CLIENT_SECRET;

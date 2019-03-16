@@ -18,7 +18,7 @@ import {
 	createNew, Model,
 	IUser, User,
 	IAuthorizationCode, AuthorizationCode,
-	IAccessToken, AccessToken, IOAuthClient, OAuthClient,
+	IAccessToken, AccessToken, IOAuthClient, OAuthClient, TemplateContent, IConfig,
 } from "../schema";
 import { Template } from "../templates";
 import {
@@ -245,13 +245,13 @@ server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, red
 	}
 }));
 
-interface IAuthorizationTemplate {
+interface IAuthorizationTemplate extends TemplateContent {
 	name: string;
 	email: string;
 	appName: string;
 	transactionID: string;
 }
-const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.html");
+const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
@@ -281,6 +281,10 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	let client = (request as any).oauth2.client as IOAuthClient;
 
 	response.send(AuthorizeTemplate.render({
+		siteTitle: config.server.name,
+		title: "Authorize",
+		includeJS: false,
+
 		name: user.name,
 		email: user.email,
 		appName: client.name,
@@ -302,3 +306,30 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 		"email": user.email,
 	});
 });
+
+apiRoutes.get("/login-type", async (request, response) => {
+	let email = request.query.email as string;
+	let type: IConfig.Services | "unknown" = "unknown";
+	if (email) {
+		let user = await User.findOne({ email });
+		if (user) {
+			// Least important first
+			if (user.local && user.local.hash) {
+				type = "local";
+			}
+			if (user.services.facebook) {
+				type = "facebook";
+			}
+			if (user.services.github) {
+				type = "github";
+			}
+			if (user.services.google) {
+				type = "google";
+			}
+			if (user.services.gatech) {
+				type = "gatech";
+			}
+		}
+	}
+	response.json({ type });
+})

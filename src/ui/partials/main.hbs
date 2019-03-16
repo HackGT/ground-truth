@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<title>{{title}} - {{siteTitle}}</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Barlow:400,700" />
+		<link rel="stylesheet" href="/css/login.css" />
+
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/solid.css" integrity="sha384-r/k8YTFqmlOaqRkZuSiE9trsrDXkh07mRaoGBMoDcmA58OHILZPsk29i2BsFng1B" crossorigin="anonymous" />
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/brands.css" integrity="sha384-BKw0P+CQz9xmby+uplDwp82Py8x1xtYPK3ORn/ZSoe6Dk3ETP59WCDnX+fI1XCKK" crossorigin="anonymous" />
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/fontawesome.css" integrity="sha384-4aon80D8rXCGx9ayDt85LbyUHeMWd3UiBaWliBlJ53yzm9hqN21A+o1pqoyK04h+" crossorigin="anonymous" />
+
+		{{#if includeJS}}
+		<script defer src="/js/login.js"></script>
+		{{/if}}
+	</head>
+
+	<body>
+		<header class="hero is-info">
+			<div class="hero-body">
+				<div class="container">
+					<h1 class="title">{{siteTitle}}</h1>
+					<h2 class="subtitle">Login system</h2>
+				</div>
+			</div>
+		</header>
+
+		<div class="container is-dark">
+			{{> @partial-block }}
+		</div>
+
+		<footer class="footer">
+			<div class="content has-text-centered">
+				<p>
+					<a href="https://github.com/HackGT/ground-truth"><strong>HackGT Ground Truth</strong></a> is HackGT's OAuth authorization service and an open source project released under the <a href="https://github.com/HackGT/ground-truth/blob/master/LICENSE">MIT license</a>.
+					<br />
+					Built with <span class="icon"><i class="fas fa-fighter-jet"></i></span> by HackGT.
+				</p>
+			</div>
+		</footer>
+	</body>
+</html>
