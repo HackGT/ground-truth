@@ -5,6 +5,7 @@ html, body {
 	color: white;
 	height: 100%;
 	overflow-x: hidden;
+	overflow-y: auto;
 }
 .label, .title, strong {
 	color: white;

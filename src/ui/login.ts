@@ -6,6 +6,18 @@ const email = document.getElementById("email") as HTMLInputElement;
 const username = document.getElementById("name") as HTMLInputElement;
 const password = document.getElementById("password") as HTMLInputElement;
 
+function setUpEnterHandler(input: HTMLInputElement, nextID: number) {
+	input.addEventListener("keydown", e => {
+		if (e.key === "Enter") {
+			let next = document.querySelector(`#step${nextID} .button.next`) as HTMLButtonElement;
+			next.click();
+		}
+	});
+}
+setUpEnterHandler(email, 1);
+setUpEnterHandler(username, 2);
+setUpEnterHandler(password, 3);
+
 function setUpStep(step: number) {
 	let back = document.querySelector(`#step${step} .button.back`) as HTMLButtonElement | null;
 	let next = document.querySelector(`#step${step} .button.next`) as HTMLButtonElement | null;
