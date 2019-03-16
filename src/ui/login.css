@@ -5,7 +5,7 @@ html, body {
 	color: white;
 	height: 100%;
 }
-.label, .title {
+.label, .title, strong {
 	color: white;
 }
 .subtitle {
@@ -48,20 +48,26 @@ a > i {
 	margin-right: 10px;
 	transform: scale(1.25);
 }
-a.button:hover {
-	color: white;
-}
 a.github {
 	color: white;
 	background-color: #444444;
+}
+a.github:hover {
+	color: white;
 }
 a.google {
 	color: white;
 	background-color: #4285F4;
 }
+a.google:hover {
+	color: white;
+}
 a.facebook {
 	color: white;
 	background-color: #3b5998;
+}
+a.facebook:hover {
+	color: white;
 }
 a.gatech {
 	color: black;

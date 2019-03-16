@@ -4,7 +4,8 @@ import * as express from "express";
 import * as Handlebars from "handlebars";
 
 import { config, authenticateWithRedirect } from "./common";
-import { TemplateContent, User } from "./schema";
+import { TemplateContent, User, IUser } from "./schema";
+import { bestLoginMethod } from "./auth/auth";
 
 // tslint:disable-next-line:no-any
 // tslint:disable:no-invalid-this
@@ -45,6 +46,7 @@ export class Template<T extends TemplateContent> {
 	}
 }
 
+const IndexTemplate = new Template("index.hbs");
 const LoginTemplate = new Template("login.hbs");
 const ForgotPasswordTemplate = new Template("forgotpassword.hbs");
 const ResetPasswordTemplate = new Template("resetpassword.hbs");
@@ -61,11 +63,23 @@ uiRoutes.route("/css/login.css").get((request, response) => {
 	fs.createReadStream(path.resolve("src/ui", "login.css")).pipe(response);
 });
 
-uiRoutes.route("/").get(authenticateWithRedirect, (request, response) => {
-	response.send("Hello, world");
+uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
+	let templateData = {
+		siteTitle: config.server.name,
+		title: "Home",
+		includeJS: false,
+
+		user: request.user,
+		loginMethod: await bestLoginMethod(request.user.email),
+	};
+	response.send(IndexTemplate.render(templateData));
 });
 
 uiRoutes.route("/login").get(async (request, response) => {
+	if (request.isAuthenticated() && request.user && (request.user as IUser).verifiedEmail) {
+		response.redirect("/");
+		return;
+	}
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Log in",
@@ -80,40 +94,6 @@ uiRoutes.route("/login").get(async (request, response) => {
 	response.send(LoginTemplate.render(templateData));
 });
 
-// uiRoutes.route("/login/confirm").get(async (request, response) => {
-// 	let user = request.user as IUser;
-// 	if (!user) {
-// 		response.redirect("/login");
-// 		return;
-// 	}
-// 	if (user.accountConfirmed) {
-// 		response.redirect("/");
-// 		return;
-// 	}
-
-// 	let usedLoginMethods: string[] = [];
-// 	if (user.local && user.local!.hash) {
-// 		usedLoginMethods.push("Local");
-// 	}
-// 	let services = Object.keys(user.services || {}) as (keyof typeof user.services)[];
-// 	for (let service of services) {
-// 		usedLoginMethods.push(prettyNames[service]);
-// 	}
-// 	let loginMethods = (await getSetting<IConfig.Services[]>("loginMethods")).filter(method => method !== "local" && !services.includes(method));
-
-// 	response.send(postLoginTemplate({
-// 		siteTitle: config.eventName,
-// 		error: request.flash("error"),
-// 		success: request.flash("success"),
-
-// 		name: user.name || "",
-// 		email: user.email || "",
-// 		verifiedEmail: user.verifiedEmail || false,
-// 		usedLoginMethods,
-// 		loginMethods,
-// 		canAddLogins: loginMethods.length !== 0
-// 	}));
-// });
 uiRoutes.route("/login/forgot").get((request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,

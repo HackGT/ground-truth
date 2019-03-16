@@ -100,7 +100,6 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 	},
 	verifiedEmail: Boolean,
 	emailVerificationCode: String,
-	accountConfirmed: Boolean,
 
 	local: {
 		hash: String,

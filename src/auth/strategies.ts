@@ -74,71 +74,64 @@ async function ExternalServiceCallback(
 	serviceEmail: string | undefined,
 	done: PassportDone
 ) {
-	let loggedInUser = request.user as Model<IUser> | undefined;
-	if (loggedInUser) {
-		if (loggedInUser.email === serviceEmail) {
-			done(null, loggedInUser);
-			return;
-		}
-		else {
-			request.logout();
-		}
-	}
-
-	if (!request.session || !request.session.email || !request.session.name) {
-		done(null, false, { message: "Missing email and/or name from session" });
-		return;
+	if (request.user) {
+		request.logout();
 	}
 
 	// If `user` exists, the user has already logged in with this service and is good-to-go
 	let user = await User.findOne({ [`services.${serviceName}.id`]: id });
-	let existingUser = await User.findOne({ email: request.session.email });
 
-	if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
-		user = existingUser;
-		// Add new service
-		if (!user.services) {
-			user.services = {};
+	if (request.session && request.session.email && request.session.name) {
+		// Only create / modify user account if email and name exist on the session (set by login page)
+		let existingUser = await User.findOne({ email: request.session.email });
+
+		if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
+			user = existingUser;
+			// Add new service
+			if (!user.services) {
+				user.services = {};
+			}
+			if (!user.services[serviceName]) {
+				user.services[serviceName] = {
+					id,
+					email: serviceEmail,
+					username
+				};
+			}
+			try {
+				user.markModified("services");
+				await user.save();
+			}
+			catch (err) {
+				done(err);
+				return;
+			}
 		}
-		if (!user.services[serviceName]) {
+		else if (!user && !existingUser) {
+			// Create an account
+			user = createNew<IUser>(User, {
+				...OAuthStrategy.defaultUserProperties,
+				email: request.session.email,
+				name: request.session.name,
+			});
+			user.services = {};
 			user.services[serviceName] = {
 				id,
 				email: serviceEmail,
 				username
 			};
-		}
-		try {
-			user.markModified("services");
-			await user.save();
-		}
-		catch (err) {
-			done(err);
-			return;
-		}
-	}
-	else if (!user && !existingUser) {
-		// Create an account
-		user = createNew<IUser>(User, {
-			...OAuthStrategy.defaultUserProperties,
-			email: request.session.email,
-			name: request.session.name,
-		});
-		user.services = {};
-		user.services[serviceName] = {
-			id,
-			email: serviceEmail,
-			username
-		};
-		try {
-			user.markModified("services");
-			await user.save();
-		}
-		catch (err) {
-			done(err);
-			return;
+			try {
+				user.markModified("services");
+				await user.save();
+			}
+			catch (err) {
+				done(err);
+				return;
+			}
 		}
 	}
-	else if (!user) {
+
+	if (!user) {
 		done(null, false, { "message": "Could not match login to existing account" });
 		return;
 	}
@@ -153,8 +146,10 @@ async function ExternalServiceCallback(
 		return;
 	}
 
-	request.session.email = undefined;
-	request.session.name = undefined;
+	if (request.session) {
+		request.session.email = undefined;
+		request.session.name = undefined;
+	}
 	done(null, user);
 }
 

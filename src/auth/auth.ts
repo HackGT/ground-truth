@@ -77,7 +77,14 @@ authRouter.get("/validatehost/:nonce", (request, response) => {
 
 app.all("/logout", (request, response) => {
 	request.logout();
-	response.redirect("/login");
+	if (request.session) {
+		request.session.destroy(() => {
+			response.redirect("/login");
+		});
+	}
+	else {
+		response.redirect("/login");
+	}
 });
 
 app.use(passport.initialize());
@@ -255,8 +262,7 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 	});
 });
 
-apiRoutes.get("/login-type", async (request, response) => {
-	let email = request.query.email as string;
+export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
 	let type: IConfig.Services | "unknown" = "unknown";
 	if (email) {
 		let user = await User.findOne({ email });
@@ -279,7 +285,12 @@ apiRoutes.get("/login-type", async (request, response) => {
 			}
 		}
 	}
-	response.json({ type });
+	return type;
+}
+
+apiRoutes.get("/login-type", async (request, response) => {
+	let email = request.query.email as string | undefined;
+	response.json({ type: await bestLoginMethod(email) });
 });
 
 apiRoutes.post("/signup-data", postParser, (request, response) => {
