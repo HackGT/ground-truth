@@ -76,7 +76,13 @@ async function ExternalServiceCallback(
 ) {
 	let loggedInUser = request.user as Model<IUser> | undefined;
 	if (loggedInUser) {
-		request.logout();
+		if (loggedInUser.email === serviceEmail) {
+			done(null, loggedInUser);
+			return;
+		}
+		else {
+			request.logout();
+		}
 	}
 
 	if (!request.session || !request.session.email || !request.session.name) {
