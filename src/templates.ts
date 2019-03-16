@@ -64,6 +64,14 @@ uiRoutes.route("/css/login.css").get((request, response) => {
 });
 
 uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
+	if (request.session) {
+		let url = request.session.returnTo;
+		if (url && url !== "/") {
+			request.session.returnTo = undefined;
+			response.redirect(url);
+			return;
+		}
+	}
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Home",

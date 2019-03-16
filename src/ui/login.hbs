@@ -6,7 +6,6 @@
 		<div class="message-body">{{success}}</div>
 	</article>
 
-	{{!-- <i class="fas fa-user-astronaut"></i> --}}
 	<main class="carousel step1">
 		<section class="columns" id="step1">
 			<div class="column is-half is-offset-one-quarter">
@@ -80,14 +79,14 @@
 
 					{{#ifIn "gatech" loginMethods}}
 						{{#> loginMethod}}
-							<a class="gatech button" href="/auth/gatech">
+							<a tabindex="-1" class="gatech button" href="/auth/gatech">
 								Sign up with Georgia Tech
 							</a>
 						{{/loginMethod}}
 					{{/ifIn}}
 					{{#ifIn "github" loginMethods}}
 						{{#> loginMethod}}
-							<a class="github button" href="/auth/github">
+							<a tabindex="-1" class="github button" href="/auth/github">
 								<i class="fab fa-github" aria-hidden="true"></i>
 								Sign up with GitHub
 							</a>
@@ -95,7 +94,7 @@
 					{{/ifIn}}
 					{{#ifIn "google" loginMethods}}
 						{{#> loginMethod}}
-							<a class="google button" href="/auth/google">
+							<a tabindex="-1" class="google button" href="/auth/google">
 								<i class="fab fa-google" aria-hidden="true"></i>
 								Sign up with Google
 							</a>
@@ -103,7 +102,7 @@
 					{{/ifIn}}
 					{{#ifIn "facebook" loginMethods}}
 						{{#> loginMethod}}
-							<a class="facebook button" href="/auth/facebook">
+							<a tabindex="-1" class="facebook button" href="/auth/facebook">
 								<i class="fab fa-facebook-f" aria-hidden="true"></i>
 								Sign up with Facebook
 							</a>

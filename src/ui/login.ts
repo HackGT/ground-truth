@@ -64,6 +64,7 @@ function setUpStep(step: number) {
 						}
 						await fetch(`/api/signup-data`, {
 							method: "POST",
+							credentials: "include",
 							headers: {
 								"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
 							},
@@ -73,6 +74,7 @@ function setUpStep(step: number) {
 					else {
 						await fetch(`/auth/login`, {
 							method: "POST",
+							credentials: "include",
 							headers: {
 								"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
 							},
@@ -92,6 +94,7 @@ function setUpStep(step: number) {
 					}
 					await fetch(`/api/signup-data`, {
 						method: "POST",
+						credentials: "include",
 						headers: {
 							"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
 						},
@@ -106,6 +109,7 @@ function setUpStep(step: number) {
 					}
 					await fetch(`/auth/signup`, {
 						method: "POST",
+						credentials: "include",
 						headers: {
 							"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
 						},
