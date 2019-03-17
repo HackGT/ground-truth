@@ -114,3 +114,11 @@ a.gatech:hover {
 	opacity: 1;
 	display: block;
 }
+
+#authorize {
+	text-align: center;
+    margin-top: 25px;
+}
+#authorize > span.icon {
+	margin-bottom: 1.5rem;
+}
