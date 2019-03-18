@@ -42,6 +42,8 @@ class Config implements IConfig.Main {
 		passwordResetExpiration: 1000 * 60 * 60, // 1 hour
 		defaultTimezone: "America/New_York",
 		name: "HackGT",
+		adminDomains: ["hack.gt"],
+		admins: [],
 	};
 	public loginMethods = ["local"] as IConfig.Services[];
 	protected addLoginMethod(method: IConfig.Services) {
@@ -177,6 +179,12 @@ class Config implements IConfig.Main {
 			if (!isNaN(expirationTime) && expirationTime > 0) {
 				this.server.passwordResetExpiration = expirationTime;
 			}
+		}
+		if (process.env.ADMIN_DOMAINS) {
+			this.server.adminDomains = process.env.ADMIN_DOMAINS.split(",");
+		}
+		if (process.env.ADMINS) {
+			this.server.admins = process.env.ADMINS.split(",");
 		}
 	}
 }

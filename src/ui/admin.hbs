@@ -1,0 +1,119 @@
+{{#> main }}
+	<h1 class="title">Authorized applications</h1>
+	<h2 class="subtitle">These apps can authenticate users via OAuth 2 with user permission</h2>
+	<section class="columns is-multiline">
+		{{#each apps}}
+			<div class="column is-one-third">
+				<h1 class="title">{{this.name}}</h1>
+				<p class="content">
+					<ul>
+						<li>UUID: <strong>{{this.uuid}}</strong></li>
+						<li>Client ID: <strong>{{this.clientID}}</strong></li>
+						<li>Client Secret: <strong>{{this.clientSecret}}</strong></li>
+						<li>
+							Allowed redirect URIs:
+							<ul>
+								{{#each this.redirectURIs}}
+									<li>
+										<span class="icon"><i class="fas fa-link"></i></span>
+										{{this}}
+									</li>
+								{{/each}}
+							</ul>
+						</li>
+					</ul>
+				</p>
+				<br />
+				<div class="field is-grouped is-grouped-centered">
+					<p class="control">
+						<button class="button is-primary is-outlined rename" data-uuid="{{this.uuid}}">Rename</button>
+					</p>
+					<p class="control">
+						<button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}">Edit redirect URIs</button>
+					</p>
+					<p class="control">
+						<button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
+					</p>
+				</div>
+			</div>
+		{{else}}
+			<div class="column is-half is-offset-one-quarter">
+				<p>No apps</p>
+			</div>
+		{{/each}}
+	</section>
+
+	<hr />
+
+	<h1 class="title">Add an application</h1>
+	<h2 class="subtitle">This allows an application to authenticate users via OAuth 2</h2>
+	<section class="columns">
+		<div class="column is-half is-offset-one-quarter">
+			<div class="field">
+				<label class="label" for="name">App name</label>
+				<div class="control">
+					<input class="input" type="text" id="name" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="redirect-uris">Redirect URIs (comma separated</label>
+				<div class="control">
+					<input class="input" type="url" id="redirect-uris" />
+				</div>
+			</div>
+			<br />
+			<div class="field is-grouped is-grouped-centered">
+				<p class="control">
+					<button class="button is-info is-outlined">Add application</button>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<hr />
+
+	<h1 class="title">Admins</h1>
+	<h2 class="subtitle">The people who can access this page</h2>
+	<section class="columns">
+		<div class="column">
+			<h1 class="title">Preconfigured</h1>
+			<h2 class="subtitle">You can only change these in config.json or server environment variables</h2>
+			<p>Email domains:</p>
+			<ul>
+				{{#each adminDomains}}
+				<li>
+					<span class="icon"><i class="fas fa-at"></i></span>
+					<strong>{{this}}</strong>
+				</li>
+				{{else}}
+				<li><em>None</em></li>
+				{{/each}}
+			</ul>
+			<p>Specific emails:</p>
+			<ul>
+				{{#each admins}}
+				<li>
+					<span class="icon"><i class="fas fa-envelope"></i></span>
+					<strong>{{this}}</strong>
+				</li>
+				{{else}}
+				<li><em>None</em></li>
+				{{/each}}
+			</ul>
+		</div>
+		<div class="column">
+			<h1 class="title">Current</h1>
+			<h2 class="subtitle">Active users with admin privileges</h2>
+			<ul>
+				{{#each currentAdmins}}
+				<li class="single-line-button">
+					<span class="icon"><i class="fas fa-user-cog"></i></span>
+					<strong>{{this.name}}</strong> ({{this.email}})
+					<button class="button is-danger is-outlined delete-admin" data-uuid="{{this.uuid}}">Demote</button>
+				</li>
+				{{/each}}
+			</ul>
+		</div>
+	</section>
+
+{{/main}}

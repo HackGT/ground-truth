@@ -1,5 +1,5 @@
 {{#> main }}
-	<section class="columns" id="step1">
+	<section class="columns">
 		<div class="column is-half is-offset-one-quarter">
 			<h1 class="title">Hello, {{user.name}}!</h1>
 			<p>You're logged in! Get the full details below:</p>
@@ -14,6 +14,11 @@
 
 			<br />
 			<div class="field is-grouped is-grouped-centered">
+				{{#if user.admin}}
+					<p class="control">
+						<a class="button is-medium" href="/admin">Admin Settings</a>
+					</p>
+				{{/if}}
 				<p class="control">
 					<a class="button is-medium" href="/logout">Log out</a>
 				</p>

@@ -4,7 +4,7 @@ import * as express from "express";
 import * as Handlebars from "handlebars";
 
 import { config, authenticateWithRedirect } from "./common";
-import { TemplateContent, User, IUser } from "./schema";
+import { TemplateContent, User, IUser, OAuthClient } from "./schema";
 import { bestLoginMethod } from "./auth/auth";
 
 // tslint:disable-next-line:no-any
@@ -50,6 +50,7 @@ const IndexTemplate = new Template("index.hbs");
 const LoginTemplate = new Template("login.hbs");
 const ForgotPasswordTemplate = new Template("forgotpassword.hbs");
 const ResetPasswordTemplate = new Template("resetpassword.hbs");
+const AdminTemplate = new Template("admin.hbs");
 
 export let uiRoutes = express.Router();
 
@@ -139,4 +140,23 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 		resetCode: user.local!.resetCode!
 	};
 	response.send(ResetPasswordTemplate.render(templateData));
+});
+
+uiRoutes.route("/admin").get(authenticateWithRedirect, async (request, response) => {
+	if (!request.user.admin) {
+		response.redirect("/");
+		return;
+	}
+
+	let templateData = {
+		siteTitle: config.server.name,
+		title: "Admin",
+		includeJS: false,
+
+		apps: await OAuthClient.find(),
+		adminDomains: config.server.adminDomains,
+		admins: config.server.admins,
+		currentAdmins: await User.find({ admin: true })
+	};
+	response.send(AdminTemplate.render(templateData));
 });

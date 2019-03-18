@@ -66,6 +66,18 @@ export interface RegistrationStrategy {
 	use(authRoutes: Router, scope?: string[]): void;
 }
 
+async function checkAndSetAdmin(user: Model<IUser>) {
+	if (!user.verifiedEmail) return;
+
+	let domain = user.email.split("@").pop();
+	if (!domain) return;
+
+	if (config.server.adminDomains.includes(domain) || config.server.admins.includes(user.email)) {
+		user.admin = true;
+		await user.save();
+	}
+}
+
 async function ExternalServiceCallback(
 	request: Request,
 	serviceName: IConfig.OAuthServices | IConfig.CASServices,
@@ -146,6 +158,8 @@ async function ExternalServiceCallback(
 		return;
 	}
 
+	await checkAndSetAdmin(user);
+
 	if (request.session) {
 		request.session.email = undefined;
 		request.session.name = undefined;
@@ -160,6 +174,7 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 		return {
 			"uuid": uuid(),
 			"verifiedEmail": false,
+			"admin": false,
 
 			"services": {},
 		};
@@ -355,6 +370,7 @@ export class Local implements RegistrationStrategy {
 				done(null, false);
 				return;
 			}
+			await checkAndSetAdmin(user);
 
 			done(null, user);
 		}
@@ -363,6 +379,7 @@ export class Local implements RegistrationStrategy {
 			let hash = await pbkdf2Async(password, Buffer.from(user.local.salt || "", "hex"), PBKDF2_ROUNDS);
 			if (hash.toString("hex") === user.local.hash) {
 				if (user.verifiedEmail) {
+					await checkAndSetAdmin(user);
 					done(null, user);
 				}
 				else {

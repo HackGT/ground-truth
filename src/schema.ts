@@ -32,6 +32,8 @@ export namespace IConfig {
 		passwordResetExpiration: number;
 		defaultTimezone: string;
 		name: string;
+		adminDomains: string[];
+		admins: string[];
 	}
 
 	export interface Main {
@@ -62,6 +64,7 @@ export interface IUser extends RootDocument {
 	name: string;
 	verifiedEmail: boolean;
 	emailVerificationCode?: string;
+	admin: boolean;
 
 	local?: {
 		hash: string;
@@ -100,6 +103,7 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 	},
 	verifiedEmail: Boolean,
 	emailVerificationCode: String,
+	admin: Boolean,
 
 	local: {
 		hash: String,

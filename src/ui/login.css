@@ -122,3 +122,10 @@ a.gatech:hover {
 #authorize > span.icon {
 	margin-bottom: 1.5rem;
 }
+
+.single-line-button {
+	line-height: 2.25em; /* Same height as button */
+}
+.single-line-button > button {
+	margin-left: 15px;
+}
