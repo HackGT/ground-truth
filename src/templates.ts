@@ -4,7 +4,7 @@ import * as express from "express";
 import * as Handlebars from "handlebars";
 
 import { config, authenticateWithRedirect } from "./common";
-import { TemplateContent, User, IUser, OAuthClient } from "./schema";
+import { TemplateContent, User, IUser, OAuthClient, AccessToken } from "./schema";
 import { bestLoginMethod } from "./auth/auth";
 
 // tslint:disable-next-line:no-any
@@ -153,7 +153,12 @@ uiRoutes.route("/admin").get(authenticateWithRedirect, async (request, response)
 		title: "Admin",
 		includeJS: false,
 
-		apps: await OAuthClient.find(),
+		apps: await Promise.all((await OAuthClient.find()).map(async client => {
+			let tokens = await AccessToken.count({ clientID: client.clientID });
+			(client as any).tokens = tokens;
+			return client;
+		})),
+
 		adminDomains: config.server.adminDomains,
 		admins: config.server.admins,
 		currentAdmins: await User.find({ admin: true })
