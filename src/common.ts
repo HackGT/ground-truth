@@ -230,6 +230,20 @@ export function authenticateWithRedirect(request: express.Request, response: exp
 	}
 }
 
+export function isAdmin(request: express.Request, response: express.Response, next: express.NextFunction) {
+	authenticateWithRedirect(request, response, (err?: any) => {
+		if (err) {
+			next(err);
+			return;
+		}
+		if (!request.user.admin) {
+			response.redirect("/");
+			return;
+		}
+		next();
+	});
+}
+
 //
 // Email
 //

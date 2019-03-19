@@ -2,7 +2,6 @@ import * as crypto from "crypto";
 import * as express from "express";
 import { URL } from "url";
 import session from "express-session";
-import bodyParser from "body-parser";
 import connectMongo from "connect-mongo";
 const MongoStore = connectMongo(session);
 import passport from "passport";
@@ -239,7 +238,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
 		title: "Authorize",
-		includeJS: false,
+		includeJS: null,
 
 		name: user.name,
 		email: user.email,
@@ -252,61 +251,3 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 OAuthRouter.post("/authorize/decision", authenticateWithRedirect, server.decision());
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
-
-export let apiRoutes = express.Router();
-
-apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), async (request, response) => {
-	let user = request.user as IUser;
-	response.json({
-		"uuid": user.uuid,
-		"name": user.name,
-		"email": user.email,
-	});
-});
-
-export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
-	let type: IConfig.Services | "unknown" = "unknown";
-	if (email) {
-		let user = await User.findOne({ email });
-		if (user) {
-			// Least important first
-			if (user.local && user.local.hash) {
-				type = "local";
-			}
-			if (user.services) {
-				if (user.services.facebook) {
-					type = "facebook";
-				}
-				if (user.services.github) {
-					type = "github";
-				}
-				if (user.services.google) {
-					type = "google";
-				}
-				if (user.services.gatech) {
-					type = "gatech";
-				}
-			}
-		}
-	}
-	return type;
-}
-
-apiRoutes.get("/login-type", async (request, response) => {
-	let email = request.query.email as string | undefined;
-	response.json({ type: await bestLoginMethod(email) });
-});
-
-apiRoutes.post("/signup-data", postParser, (request, response) => {
-	if (!request.session) return;
-
-	let email = request.body.email as string | undefined;
-	let name = request.body.name as string | undefined;
-	if (email) {
-		request.session.email = email;
-	}
-	if (name) {
-		request.session.name = name;
-	}
-	response.send();
-});

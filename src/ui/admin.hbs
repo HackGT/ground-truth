@@ -25,15 +25,18 @@
 					</ul>
 				</p>
 				<br />
-				<div class="field is-grouped is-grouped-centered">
+				<div class="field is-grouped is-grouped-centered is-multiline">
 					<p class="control">
-						<button class="button is-primary is-outlined rename" data-uuid="{{this.uuid}}">Rename</button>
+						<button class="button is-primary is-outlined rename" data-uuid="{{this.uuid}}" data-name="{{this.name}}">Rename</button>
 					</p>
 					<p class="control">
-						<button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}">Edit redirect URIs</button>
+						<button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}" data-uris="{{join this.redirectURIs}}">Edit redirect URIs</button>
 					</p>
 					<p class="control">
 						<button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
+					</p>
+					<p class="control">
+						<button class="button is-danger is-outlined remove" data-uuid="{{this.uuid}}">Delete</button>
 					</p>
 				</div>
 			</div>

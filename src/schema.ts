@@ -182,5 +182,5 @@ export const AccessToken = mongoose.model<Model<IAccessToken>>("AccessToken", ne
 export interface TemplateContent {
 	siteTitle: string;
 	title: string;
-	includeJS: boolean;
+	includeJS: string | null;
 }

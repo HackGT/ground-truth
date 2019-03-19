@@ -3,9 +3,9 @@ import * as path from "path";
 import * as express from "express";
 import * as Handlebars from "handlebars";
 
-import { config, authenticateWithRedirect } from "./common";
+import { config, authenticateWithRedirect, isAdmin } from "./common";
 import { TemplateContent, User, IUser, OAuthClient, AccessToken } from "./schema";
-import { bestLoginMethod } from "./auth/auth";
+import { bestLoginMethod } from "./api";
 
 // tslint:disable-next-line:no-any
 // tslint:disable:no-invalid-this
@@ -20,6 +20,9 @@ Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], op
 		return options.fn(this);
 	}
 	return options.inverse(this);
+});
+Handlebars.registerHelper("join", <T>(arr: T[]): string => {
+	return arr.join(", ");
 });
 if (config.server.isProduction) {
 	Handlebars.registerPartial("main", fs.readFileSync(path.resolve("src/ui", "partials", "main.hbs"), "utf8"));
@@ -57,8 +60,8 @@ export let uiRoutes = express.Router();
 uiRoutes.route("/js/login.js").get((request, response) => {
 	fs.createReadStream(path.resolve("src/ui", "login.js")).pipe(response);
 });
-uiRoutes.route("/css/wing.min.css").get((request, response) => {
-	fs.createReadStream(path.resolve("src/ui", "wing-0.1.9.min.css")).pipe(response);
+uiRoutes.route("/js/admin.js").get((request, response) => {
+	fs.createReadStream(path.resolve("src/ui", "admin.js")).pipe(response);
 });
 uiRoutes.route("/css/login.css").get((request, response) => {
 	fs.createReadStream(path.resolve("src/ui", "login.css")).pipe(response);
@@ -76,7 +79,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Home",
-		includeJS: false,
+		includeJS: null,
 
 		user: request.user,
 		loginMethod: await bestLoginMethod(request.user.email),
@@ -92,7 +95,7 @@ uiRoutes.route("/login").get(async (request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Log in",
-		includeJS: true,
+		includeJS: "login",
 
 		error: request.flash("error"),
 		success: request.flash("success"),
@@ -107,7 +110,7 @@ uiRoutes.route("/login/forgot").get((request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Forgot Password",
-		includeJS: false,
+		includeJS: null,
 
 		error: request.flash("error"),
 		success: request.flash("success")
@@ -133,7 +136,7 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Reset Password",
-		includeJS: false,
+		includeJS: null,
 
 		error: request.flash("error"),
 		success: request.flash("success"),
@@ -142,16 +145,11 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 	response.send(ResetPasswordTemplate.render(templateData));
 });
 
-uiRoutes.route("/admin").get(authenticateWithRedirect, async (request, response) => {
-	if (!request.user.admin) {
-		response.redirect("/");
-		return;
-	}
-
+uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Admin",
-		includeJS: false,
+		includeJS: "admin",
 
 		apps: await Promise.all((await OAuthClient.find()).map(async client => {
 			let tokens = await AccessToken.count({ clientID: client.clientID });

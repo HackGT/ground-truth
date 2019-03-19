@@ -6,5 +6,5 @@
 			"dom"
 		]
 	},
-	"include": [ "login.ts" ]
+	"include": [ "login.ts", "admin.ts" ]
 }

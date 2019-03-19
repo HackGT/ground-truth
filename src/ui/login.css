@@ -37,6 +37,10 @@ body > .container {
 	display: none;
 }
 
+li {
+	overflow-wrap: break-word;
+}
+
 a.button {
 	border: 1px solid #151515;
 	width: 100%;
@@ -128,4 +132,12 @@ a.gatech:hover {
 }
 .single-line-button > button {
 	margin-left: 15px;
+}
+
+.is-grouped.is-multiline {
+	flex-wrap: wrap;
+	margin-top: -12px;
+}
+.is-grouped.is-multiline > * {
+	margin-top: 12px;
 }

@@ -71,9 +71,11 @@ process.on("unhandledRejection", err => {
 });
 
 // Auth needs to be the first route configured or else requests handled before it will always be unauthenticated
-import { authRouter, OAuthRouter, apiRoutes } from "./auth/auth";
+import { authRouter, OAuthRouter } from "./auth/auth";
 app.use("/auth", authRouter);
 app.use("/oauth", OAuthRouter);
+
+import { apiRoutes } from "./api";
 app.use("/api", apiRoutes);
 
 import { uiRoutes } from "./templates";
