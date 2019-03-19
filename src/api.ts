@@ -203,3 +203,30 @@ adminRoutes.post("/app/:id/delete", async (request, response) => {
 		});
 	}
 });
+
+async function changeAdminStatus(isAdmin: boolean, request: express.Request, response: express.Response) {
+	let user = await User.findOne({ email: request.body.email });
+	if (!user) {
+		response.status(400).json({
+			"error": "No existing user found with that email"
+		});
+		return;
+	}
+
+	try {
+		user.admin = isAdmin;
+		await user.save();
+		response.json({
+			"success": true
+		});
+	}
+	catch (err) {
+		console.error(err);
+		response.status(500).json({
+			"error": "An error occurred while setting admin status"
+		});
+	}
+}
+
+adminRoutes.post("/add", changeAdminStatus.bind(null, true));
+adminRoutes.post("/remove", changeAdminStatus.bind(null, false));

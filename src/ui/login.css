@@ -129,6 +129,7 @@ a.gatech:hover {
 
 .single-line-button {
 	line-height: 2.25em; /* Same height as button */
+	margin: 10px 0;
 }
 .single-line-button > button {
 	margin-left: 15px;

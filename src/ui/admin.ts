@@ -26,104 +26,94 @@ interface APIResponse {
 	error?: string;
 }
 
-setUpHandlers("rename", async (uuid, button) => {
-	let name = prompt("New name:", button.dataset.name);
-	if (!name) return;
-
-	let response: APIResponse = await fetch(`/api/admin/app/${uuid}/rename`, {
+async function sendRequest(url: string, data?: object) {
+	let options: RequestInit = {
 		method: "POST",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-		},
-		body: serializeQueryString({ name: name.trim() })
-	}).then(response => response.json());
+		credentials: "include"
+	};
+	if (data) {
+		options = {
+			...options,
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+			},
+			body: serializeQueryString(data)
+		};
+	}
 
+	let response: APIResponse = await fetch(url, options).then(response => response.json());
 	if (!response.success) {
 		alert(response.error);
 	}
 	else {
 		window.location.reload();
 	}
+}
+
+setUpHandlers("rename", async (uuid, button) => {
+	let name = prompt("New name:", button.dataset.name);
+	if (!name) return;
+
+	await sendRequest(`/api/admin/app/${uuid}/rename`, { name: name.trim() });
 });
 setUpHandlers("edit-redirects", async (uuid, button) => {
 	let uris = prompt("Redirect URIs (comma separated):", button.dataset.uris);
 	if (!uris) return;
 
-	let response: APIResponse = await fetch(`/api/admin/app/${uuid}/redirects`, {
-		method: "POST",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-		},
-		body: serializeQueryString({ redirectURIs: uris.trim() })
-	}).then(response => response.json());
-
-	if (!response.success) {
-		alert(response.error);
-	}
-	else {
-		window.location.reload();
-	}
+	await sendRequest(`/api/admin/app/${uuid}/redirects`, { redirectURIs: uris.trim() });
 });
 setUpHandlers("regenerate-secret", async (uuid, button) => {
-	let response: APIResponse = await fetch(`/api/admin/app/${uuid}/regenerate`, {
-		method: "POST",
-		credentials: "include"
-	}).then(response => response.json());
-
-	if (!response.success) {
-		alert(response.error);
-	}
-	else {
-		window.location.reload();
-	}
+	await sendRequest(`/api/admin/app/${uuid}/regenerate`);
 });
 setUpHandlers("remove", async (uuid, button) => {
 	if (!confirm("Are you sure you want to delete this app?")) return;
 
-	let response: APIResponse = await fetch(`/api/admin/app/${uuid}/delete`, {
-		method: "POST",
-		credentials: "include"
-	}).then(response => response.json());
-
-	if (!response.success) {
-		alert(response.error);
-	}
-	else {
-		window.location.reload();
-	}
+	await sendRequest(`/api/admin/app/${uuid}/delete`);
 });
 
 let addApplicationButton = document.getElementById("add-application") as HTMLButtonElement;
 addApplicationButton.addEventListener("click", async () => {
-	let nameField = document.getElementById("name") as HTMLInputElement;
-	let redirectURIsField = document.getElementById("redirect-uris") as HTMLInputElement;
+	try {
+		addApplicationButton.disabled = true;
+		let nameField = document.getElementById("name") as HTMLInputElement;
+		let redirectURIsField = document.getElementById("redirect-uris") as HTMLInputElement;
 
-	let name = nameField.value.trim();
-	let redirectURIs = redirectURIsField.value.trim();
-	if (!name) {
-		alert("Application name cannot be blank");
-		return;
-	}
-	if (!redirectURIs) {
-		alert("Application must have at least one redirect URI");
-		return;
-	}
+		let name = nameField.value.trim();
+		let redirectURIs = redirectURIsField.value.trim();
+		if (!name) {
+			alert("Application name cannot be blank");
+			return;
+		}
+		if (!redirectURIs) {
+			alert("Application must have at least one redirect URI");
+			return;
+		}
 
-	let response: APIResponse = await fetch(`/api/admin/app`, {
-		method: "POST",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-		},
-		body: serializeQueryString({ name, redirectURIs })
-	}).then(response => response.json());
+		await sendRequest("/api/admin/app", { name, redirectURIs });
+	}
+	finally {
+		addApplicationButton.disabled = false;
+	}
+});
 
-	if (!response.success) {
-		alert(response.error);
+let addAdminButton = document.getElementById("admin-promote") as HTMLButtonElement;
+addAdminButton.addEventListener("click", async () => {
+	let emailField = document.getElementById("admin-email") as HTMLInputElement;
+	try {
+		addAdminButton.disabled = true;
+		let email = emailField.value.trim();
+		if (!email) return;
+
+		await sendRequest("/api/admin/add", { email });
 	}
-	else {
-		window.location.reload();
+	finally {
+		emailField.value = "";
+		addAdminButton.disabled = false;
 	}
+});
+
+setUpHandlers("delete-admin", async (uuid, button) => {
+	if (!confirm("Are you sure you want to revoke admin privileges from this user?")) return;
+
+	await sendRequest("/api/admin/remove", { email: button.dataset.email });
 });

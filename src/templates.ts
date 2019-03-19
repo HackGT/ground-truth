@@ -151,6 +151,8 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 		title: "Admin",
 		includeJS: "admin",
 
+		uuid: request.user.uuid,
+
 		apps: await Promise.all((await OAuthClient.find()).map(async client => {
 			let tokens = await AccessToken.count({ clientID: client.clientID });
 			(client as any).tokens = tokens;
@@ -159,7 +161,7 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 
 		adminDomains: config.server.adminDomains,
 		admins: config.server.admins,
-		currentAdmins: await User.find({ admin: true })
+		currentAdmins: await User.find({ admin: true }).sort("name")
 	};
 	response.send(AdminTemplate.render(templateData));
 });
