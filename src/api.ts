@@ -1,8 +1,13 @@
 import crypto from "crypto";
 import express from "express";
 import passport from "passport";
+import uuid from "uuid";
 
-import { IConfig, IUser, User, OAuthClient } from "./schema";
+import {
+	createNew, IConfig,
+	IUser, User,
+	IOAuthClient, OAuthClient
+} from "./schema";
 import { postParser, isAdmin } from "./common";
 
 export let apiRoutes = express.Router();
@@ -65,6 +70,37 @@ apiRoutes.post("/signup-data", postParser, (request, response) => {
 
 let adminRoutes = express.Router();
 apiRoutes.use("/admin", isAdmin, postParser, adminRoutes);
+
+adminRoutes.post("/app", async (request, response) => {
+	let name: string = (request.body.name || "").trim();
+	let rawRedirectURIs: string = (request.body.redirectURIs || "").trim();
+	let redirectURIs: string[] = rawRedirectURIs.split(/, ?/);
+	if (!name || !rawRedirectURIs) {
+		response.status(400).json({
+			"error": "Missing name or redirect URI(s)"
+		});
+		return;
+	}
+
+	try {
+		await createNew<IOAuthClient>(OAuthClient, {
+			uuid: uuid.v4(),
+			clientID: crypto.randomBytes(32).toString("hex"),
+			clientSecret: crypto.randomBytes(64).toString("hex"),
+			name,
+			redirectURIs
+		}).save();
+		response.json({
+			"success": true
+		});
+	}
+	catch (err) {
+		console.error(err);
+		response.status(500).json({
+			"error": "An error occurred while creating app"
+		});
+	}
+});
 
 adminRoutes.post("/app/:id/rename", async (request, response) => {
 	let app = await OAuthClient.findOne({ uuid: request.params.id });

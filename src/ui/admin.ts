@@ -94,3 +94,36 @@ setUpHandlers("remove", async (uuid, button) => {
 		window.location.reload();
 	}
 });
+
+let addApplicationButton = document.getElementById("add-application") as HTMLButtonElement;
+addApplicationButton.addEventListener("click", async () => {
+	let nameField = document.getElementById("name") as HTMLInputElement;
+	let redirectURIsField = document.getElementById("redirect-uris") as HTMLInputElement;
+
+	let name = nameField.value.trim();
+	let redirectURIs = redirectURIsField.value.trim();
+	if (!name) {
+		alert("Application name cannot be blank");
+		return;
+	}
+	if (!redirectURIs) {
+		alert("Application must have at least one redirect URI");
+		return;
+	}
+
+	let response: APIResponse = await fetch(`/api/admin/app`, {
+		method: "POST",
+		credentials: "include",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+		},
+		body: serializeQueryString({ name, redirectURIs })
+	}).then(response => response.json());
+
+	if (!response.success) {
+		alert(response.error);
+	}
+	else {
+		window.location.reload();
+	}
+});
