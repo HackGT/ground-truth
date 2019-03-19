@@ -6,7 +6,7 @@ import uuid from "uuid";
 import {
 	createNew, IConfig,
 	IUser, User,
-	IOAuthClient, OAuthClient
+	IOAuthClient, OAuthClient, AccessToken
 } from "./schema";
 import { postParser, isAdmin } from "./common";
 
@@ -191,6 +191,7 @@ adminRoutes.post("/app/:id/delete", async (request, response) => {
 		return;
 	}
 	try {
+		await AccessToken.deleteMany({ clientID: app.clientID });
 		await app.remove();
 		response.json({
 			"success": true

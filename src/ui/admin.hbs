@@ -41,8 +41,8 @@
 				</div>
 			</div>
 		{{else}}
-			<div class="column is-half is-offset-one-quarter">
-				<p>No apps</p>
+			<div class="column is-half is-offset-one-quarter has-text-centered">
+				<p><em>No apps</em></p>
 			</div>
 		{{/each}}
 	</section>
@@ -114,7 +114,7 @@
 					<span class="icon"><i class="fas fa-user-cog"></i></span>
 					<strong>{{this.name}}</strong> ({{this.email}})
 					{{#ifCond this.uuid ../uuid}}{{else}}
-					<button class="button is-danger is-outlined delete-admin" data-email="{{this.email}}">Demote</button>
+						<button class="button is-danger is-outlined delete-admin" data-email="{{this.email}}">Demote</button>
 					{{/ifCond}}
 				</li>
 				{{/each}}
