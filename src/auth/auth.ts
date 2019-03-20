@@ -230,7 +230,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	catch (err) {
 		done(err, false, null, null);
 	}
-}), authenticateWithRedirect, (request, response) => {
+}), (request, response) => {
 	let transactionID = request.oauth2.transactionID as string;
 	let user = request.user as IUser;
 	let client = request.oauth2.client as IOAuthClient;

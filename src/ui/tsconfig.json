@@ -1,10 +1,11 @@
 {
 	"compilerOptions": {
+		"module": "none",
 		"composite": true,
 		"target": "es5",
 		"lib": [
 			"dom"
 		]
 	},
-	"include": [ "login.ts", "admin.ts" ]
+	"files": [ "login.ts", "admin.ts" ]
 }
