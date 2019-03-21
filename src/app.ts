@@ -26,10 +26,10 @@ let cookieParserInstance = cookieParser(undefined, COOKIE_OPTIONS as cookieParse
 app.use(cookieParserInstance);
 morgan.token("sessionid", (request, response) => {
 	const FAILURE_MESSAGE = "Unknown session";
-	if (!request.cookies["connect.sid"]) {
+	if (!request.cookies["groundtruthid"]) {
 		return FAILURE_MESSAGE;
 	}
-	let rawID: string = request.cookies["connect.sid"].slice(2);
+	let rawID: string = request.cookies["groundtruthid"].slice(2);
 	let id = cookieSignature.unsign(rawID, config.secrets.session);
 	if (typeof id === "string") {
 		return id;

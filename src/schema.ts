@@ -66,6 +66,8 @@ export interface IUser extends RootDocument {
 	emailVerificationCode?: string;
 	admin: boolean;
 
+	forceLogOut: boolean;
+
 	local?: {
 		hash: string;
 		salt: string;
@@ -104,6 +106,8 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 	verifiedEmail: Boolean,
 	emailVerificationCode: String,
 	admin: Boolean,
+
+	forceLogOut: Boolean,
 
 	local: {
 		hash: String,

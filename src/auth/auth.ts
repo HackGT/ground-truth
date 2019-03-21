@@ -11,8 +11,9 @@ import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
 
 import {
-	config, mongoose, COOKIE_OPTIONS, postParser, authenticateWithRedirect
+	config, mongoose, COOKIE_OPTIONS
 } from "../common";
+import { postParser, authenticateWithRedirect } from "../middleware";
 import {
 	createNew, Model,
 	IUser, User,
@@ -37,6 +38,7 @@ if (!config.sessionSecretSet) {
 	console.warn("No session secret set; sessions won't carry over server restarts");
 }
 app.use(session({
+	name: "groundtruthid",
 	secret: config.secrets.session,
 	cookie: COOKIE_OPTIONS,
 	resave: false,

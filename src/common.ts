@@ -3,7 +3,6 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
-import express from "express";
 
 //
 // Config
@@ -211,38 +210,6 @@ mongoose.connect(config.server.mongoURL, { useNewUrlParser: true }).catch(err =>
 	throw err;
 });
 export { mongoose };
-
-import bodyParser from "body-parser";
-export const postParser = bodyParser.urlencoded({
-	extended: false
-});
-
-export function authenticateWithRedirect(request: express.Request, response: express.Response, next: express.NextFunction) {
-	response.setHeader("Cache-Control", "private");
-	if (!request.isAuthenticated() || !request.user || !(request.user as IUser).verifiedEmail) {
-		if (request.session) {
-			request.session.returnTo = request.originalUrl;
-		}
-		response.redirect("/login");
-	}
-	else {
-		next();
-	}
-}
-
-export function isAdmin(request: express.Request, response: express.Response, next: express.NextFunction) {
-	authenticateWithRedirect(request, response, (err?: any) => {
-		if (err) {
-			next(err);
-			return;
-		}
-		if (!request.user.admin) {
-			response.redirect("/");
-			return;
-		}
-		next();
-	});
-}
 
 //
 // Email

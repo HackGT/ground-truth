@@ -8,7 +8,7 @@ import {
 	IUser, User,
 	IOAuthClient, OAuthClient, AccessToken
 } from "./schema";
-import { postParser, isAdmin } from "./common";
+import { postParser, isAdmin } from "./middleware";
 
 export let apiRoutes = express.Router();
 
@@ -19,6 +19,21 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 		"name": user.name,
 		"email": user.email,
 	});
+});
+
+apiRoutes.post("/user/logout", passport.authenticate("bearer", { session: false }), postParser, async (request, response) => {
+	let rawToken = (request.headers.authorization as string).split(" ")[1];
+	let token = await AccessToken.findOne({ token: rawToken });
+	if (token) {
+		let user = await User.findOne({ uuid: token.uuid });
+		if (user) {
+			user.forceLogOut = true;
+			await user.save();
+		}
+		await token.remove();
+	}
+
+	response.json({ "success": true });
 });
 
 export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {

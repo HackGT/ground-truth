@@ -7,7 +7,8 @@ import passport from "passport";
 import moment from "moment-timezone";
 import uuid from "uuid/v4";
 
-import { config, renderEmailHTML, renderEmailText, sendMailAsync, postParser } from "../common";
+import { config, renderEmailHTML, renderEmailText, sendMailAsync } from "../common";
+import { postParser } from "../middleware";
 import { createNew, IConfig, Model, IUser, User } from "../schema";
 import { Request, Response, NextFunction, Router } from "express";
 
@@ -175,6 +176,7 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 			"uuid": uuid(),
 			"verifiedEmail": false,
 			"admin": false,
+			"forceLogOut": false,
 
 			"services": {},
 		};

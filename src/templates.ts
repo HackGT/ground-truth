@@ -3,7 +3,8 @@ import * as path from "path";
 import * as express from "express";
 import * as Handlebars from "handlebars";
 
-import { config, authenticateWithRedirect, isAdmin } from "./common";
+import { config } from "./common";
+import { authenticateWithRedirect, isAdmin } from "./middleware";
 import { TemplateContent, User, IUser, OAuthClient, AccessToken } from "./schema";
 import { bestLoginMethod } from "./api";
 
@@ -154,7 +155,7 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 		uuid: request.user.uuid,
 
 		apps: await Promise.all((await OAuthClient.find()).map(async client => {
-			let tokens = await AccessToken.count({ clientID: client.clientID });
+			let tokens = await AccessToken.countDocuments({ clientID: client.clientID });
 			(client as any).tokens = tokens;
 			return client;
 		})),
