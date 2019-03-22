@@ -276,7 +276,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 		username = username.toLowerCase().trim();
 		// Reject username@gatech.edu usernames because the CAS allows those for some reason
 		// Bonus fact: using a @gatech.edu username bypasses 2FA and the OIT team in charge refuses to fix this
-		if (username.indexOf("@")) {
+		if (username.indexOf("@") !== -1) {
 			done(null, false, { message: `Usernames of the format ${username} are insecure and therefore disallowed. Please log in with ${username.split("@")[0]}.` });
 			return;
 		}
