@@ -409,7 +409,7 @@ export class Local implements RegistrationStrategy {
 		});
 
 		authRoutes.get("/verify/:code", async (request, response) => {
-			let user = await User.findOne({ "local.verificationCode": request.params.code });
+			let user = await User.findOne({ emailVerificationCode: request.params.code });
 			if (!user) {
 				request.flash("error", "Invalid email verification code");
 			}
