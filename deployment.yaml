@@ -1,0 +1,19 @@
+git:
+  branch: master
+wants:
+  mongo: true
+env: 
+  GT_CAS: true
+  EMAIL_FROM: "HackGT Team <hello@hackgt.com>"
+  SESSION_SECRET: hack.gt
+  PRODUCTION: true
+secrets:
+  - ADMIN_KEY_SECRET
+  - SESSION_SECRET
+  - EMAIL_KEY
+  - GOOGLE_CLIENT_ID
+  - GOOGLE_CLIENT_SECRET
+  - GITHUB_CLIENT_ID
+  - GITHUB_CLIENT_SECRET
+  - FACEBOOK_CLIENT_ID
+  - FACEBOOK_CLIENT_SECRET

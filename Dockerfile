@@ -7,7 +7,7 @@ RUN apk add git
 
 # Bundle app source
 WORKDIR /usr/src/groundtruth
-COPY ./src /usr/src/groundtruth
+COPY . /usr/src/groundtruth
 RUN npm install
 RUN npm run build
 
