@@ -5,7 +5,8 @@
 		"target": "es5",
 		"lib": [
 			"dom"
-		]
+		],
+		"moduleResolution": "node",
 	},
 	"files": [ "login.ts", "admin.ts" ]
 }

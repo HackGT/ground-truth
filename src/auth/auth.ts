@@ -233,9 +233,10 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		done(err, false, null, null);
 	}
 }), (request, response) => {
-	let transactionID = request.oauth2.transactionID as string;
+	let oauth2 = (request as any).oauth2;
+	let transactionID = oauth2.transactionID as string;
 	let user = request.user as IUser;
-	let client = request.oauth2.client as IOAuthClient;
+	let client = oauth2.client as IOAuthClient;
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
@@ -244,7 +245,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
 		name: user.name,
 		email: user.email,
-		redirect: new URL(request.oauth2.redirectURI).origin,
+		redirect: new URL(oauth2.redirectURI).origin,
 		appName: client.name,
 		transactionID,
 	}));
