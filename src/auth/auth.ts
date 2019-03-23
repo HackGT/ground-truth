@@ -215,7 +215,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		// Redirect URIs are allowed on a same-origin basis
 		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
 		let redirectOrigin = new URL(redirectURI).origin;
-		if (!client || !client.redirectURIs.includes(redirectOrigin)) {
+		if (!client || (!client.redirectURIs.includes(redirectOrigin) && !client.redirectURIs.includes(redirectURI))) {
 			done(null, false);
 			return;
 		}
