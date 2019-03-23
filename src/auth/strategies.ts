@@ -348,8 +348,7 @@ export class Local implements RegistrationStrategy {
 			user = createNew<IUser>(User, {
 				...OAuthStrategy.defaultUserProperties,
 				email,
-				name: request.body.name,
-				verifiedEmail: false,
+				name,
 				local: {
 					"hash": hash.toString("hex"),
 					"salt": salt.toString("hex"),
