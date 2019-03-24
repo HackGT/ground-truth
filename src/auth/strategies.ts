@@ -508,12 +508,12 @@ The ${config.server.name} Team.`;
 			let password2: string | undefined = request.body.password2;
 			if (!password1 || !password2) {
 				request.flash("error", "Missing new password or confirm password");
-				response.redirect(path.join("/auth", request.url));
+				response.redirect(`/login/forgot/${request.params.code}`);
 				return;
 			}
 			if (password1 !== password2) {
 				request.flash("error", "Passwords must match");
-				response.redirect(path.join("/auth", request.url));
+				response.redirect(`/login/forgot/${request.params.code}`);
 				return;
 			}
 
