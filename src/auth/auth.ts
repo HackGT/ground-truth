@@ -18,7 +18,7 @@ import {
 	createNew, Model,
 	IUser, User,
 	IAuthorizationCode, AuthorizationCode,
-	IAccessToken, AccessToken, IOAuthClient, OAuthClient, TemplateContent, IConfig,
+	IAccessToken, AccessToken, IOAuthClient, OAuthClient, TemplateContent, IConfig, IScope, Scope,
 } from "../schema";
 import { Template } from "../templates";
 import {
@@ -171,6 +171,7 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 			code,
 			redirectURI,
 			uuid: user.uuid,
+			scopes: ares.scopes || [],
 		}).save();
 		done(null, code);
 	}
@@ -191,6 +192,7 @@ server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, red
 			token,
 			clientID: authCode.clientID,
 			uuid: authCode.uuid,
+			scopes: authCode.scopes,
 		}).save();
 		await authCode.remove();
 		const params = {};
@@ -207,6 +209,8 @@ interface IAuthorizationTemplate extends TemplateContent {
 	appName: string;
 	redirect: string;
 	transactionID: string;
+	scopes: IScope[];
+	scopeNames: string[];
 }
 const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
@@ -227,16 +231,31 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 }, async (client, user, scope, type, areq, done) => {
 	try {
 		let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
-		done(null, !!token, null, null);
+		done(null, !!token, { scope }, null);
 	}
 	catch (err) {
-		done(err, false, null, null);
+		done(err, false, { scope }, null);
 	}
-}), (request, response) => {
+}), async (request, response, next) => {
+	if (!request.session) {
+		response.status(500).send("Session not enabled but is required");
+		return;
+	}
+
 	let oauth2 = (request as any).oauth2;
 	let transactionID = oauth2.transactionID as string;
 	let user = request.user as IUser;
 	let client = oauth2.client as IOAuthClient;
+
+	let scopes: IScope[] = [];
+	for (let scopeName of (oauth2.info.scope as string[])) {
+		let scope = await Scope.findOne({ name: scopeName });
+		if (scope) {
+			scopes.push(scope);
+		}
+	}
+	let scopeNames = scopes.map(scope => scope.name);
+	request.session.scopes = scopeNames;
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
@@ -248,9 +267,15 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		redirect: new URL(oauth2.redirectURI).origin,
 		appName: client.name,
 		transactionID,
+		scopes,
+		scopeNames,
 	}));
 });
 
-OAuthRouter.post("/authorize/decision", authenticateWithRedirect, server.decision());
+OAuthRouter.post("/authorize/decision", authenticateWithRedirect, server.decision((request, done) => {
+	let session = (request as express.Request).session;
+	let scopes: string[] = session ? session.scopes || [] : [];
+	done(null, { scopes });
+}));
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());

@@ -75,7 +75,7 @@ export interface IUser extends RootDocument {
 		resetCode?: string;
 		resetRequestedTime?: Date;
 	};
-	services: {
+	services?: {
 		[Service in Exclude<IConfig.Services, "local">]?: {
 			id: string;
 			// OAuth account email can be different than registration account email
@@ -147,6 +147,7 @@ export interface IAuthorizationCode extends RootDocument {
 	code: string;
 	clientID: string;
 	redirectURI: string;
+	scopes: string[];
 	uuid: string;
 }
 
@@ -159,12 +160,14 @@ export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("Auth
 	},
 	clientID: String,
 	redirectURI: String,
+	scopes: [String],
 	uuid: String,
 }));
 
 export interface IAccessToken extends RootDocument {
 	token: string;
 	clientID: string;
+	scopes: string[];
 	uuid: string;
 }
 
@@ -176,7 +179,24 @@ export const AccessToken = mongoose.model<Model<IAccessToken>>("AccessToken", ne
 		unique: true
 	},
 	clientID: String,
+	scopes: [String],
 	uuid: String,
+}));
+
+export interface IScope extends RootDocument {
+	name: string;
+	question: string;
+	type: string;
+	validator: string | null;
+	icon: string | null;
+}
+
+export const Scope = mongoose.model<Model<IScope>>("Scope", new mongoose.Schema({
+	name: String,
+	question: String,
+	type: String,
+	validator: String,
+	icon: String,
 }));
 
 //
