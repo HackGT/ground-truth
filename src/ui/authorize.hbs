@@ -19,17 +19,43 @@
 
 			<p>The app <strong>{{appName}}</strong> would like to use your {{siteTitle}} account to authenticate you.</p>
 			<p>If you allow this, <strong>{{appName}}</strong> will receive your name and email address.</p>
-			<p>{{join scopeNames}}</p>
 			<br />
 
-			<form class="field is-grouped is-grouped-centered" action="/oauth/authorize/decision" method="POST">
-				<input type="hidden" name="transaction_id" value="{{transactionID}}" />
-				<p class="control">
-					<input type="submit" class="button is-danger is-outlined" value="Cancel" name="cancel" />
-				</p>
-				<p class="control">
-					<input type="submit" class="button is-success is-outlined" value="Allow" />
-				</p>
+			<form action="/oauth/authorize/decision" method="POST">
+				{{#if scopeNames.length}}
+					<h3 class="title"><small>Additional data requested:</small></h3>
+					<article class="message is-danger">
+						<div class="message-body">{{error}}</div>
+					</article>
+					{{#each scopes}}
+						<div class="field" style="text-align: left">
+							<label class="label" for="scope-{{this.name}}">{{this.question}}</label>
+							{{#if this.icon}}
+								<div class="control has-icons-left">
+									<input class="input" type="{{this.type}}" id="scope-{{this.name}}" name="scope-{{this.name}}" {{{attr "value" this.value}}} required />
+									<span class="icon is-small is-left">
+										<i class="fas fa-{{this.icon}}"></i>
+									</span>
+								</div>
+							{{else}}
+								<div class="control">
+									<input class="input" type="{{this.type}}" id="scope-{{this.name}}" name="scope-{{this.name}}" {{{attr "value" this.value}}} required />
+								</div>
+							{{/if}}
+						</div>
+					{{/each}}
+					<br />
+				{{/if}}
+
+				<div class="field is-grouped is-grouped-centered">
+					<input type="hidden" name="transaction_id" value="{{transactionID}}" />
+					<p class="control">
+						<input type="submit" class="button is-danger is-outlined" value="Cancel" name="cancel" />
+					</p>
+					<p class="control">
+						<input type="submit" class="button is-success is-outlined" value="Allow" />
+					</p>
+				</div>
 			</form>
 		</div>
 	</section>

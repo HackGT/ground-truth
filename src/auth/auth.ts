@@ -141,8 +141,7 @@ passport.use(new BearerStrategy(async (rawToken, done) => {
 			done(null, false);
 			return;
 		}
-		// TODO: implement scopes
-		done(null, user, { scope: "*", message: "" });
+		done(null, user, { scope: token.scopes, message: "" });
 	}
 	catch (err) {
 		done(err);
@@ -203,16 +202,57 @@ server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, red
 	}
 }));
 
+type IScopeWithValue = IScope & { value?: string };
 interface IAuthorizationTemplate extends TemplateContent {
 	name: string;
 	email: string;
 	appName: string;
 	redirect: string;
 	transactionID: string;
-	scopes: IScope[];
+	scopes: IScopeWithValue[];
 	scopeNames: string[];
 }
 const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
+async function decisionRenderer (request: express.Request, response: express.Response) {
+	if (!request.session) {
+		response.status(500).send("Session not enabled but is required");
+		return;
+	}
+
+	let oauth2 = (request as any).oauth2;
+	let transactionID = oauth2.transactionID as string;
+	let user = request.user as IUser;
+	let client = oauth2.client as IOAuthClient;
+
+	let scopes: IScopeWithValue[] = [];
+	for (let scopeName of (oauth2.info.scope as string[])) {
+		let scope = await Scope.findOne({ name: scopeName });
+		if (scope) {
+			let userScope: string | undefined = (user.scopes || {})[scopeName];
+			scopes.push({
+				...scope.toObject(),
+				value: userScope
+			});
+		}
+	}
+	let scopeNames = scopes.map(scope => scope.name);
+	request.session.scopes = scopeNames;
+
+	response.send(AuthorizeTemplate.render({
+		siteTitle: config.server.name,
+		title: "Authorize",
+		includeJS: null,
+
+		name: user.name,
+		email: user.email,
+		redirect: new URL(oauth2.redirectURI).origin,
+		appName: client.name,
+		transactionID,
+		scopes,
+		scopeNames,
+	}));
+}
+
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
@@ -236,43 +276,30 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	catch (err) {
 		done(err, false, { scope }, null);
 	}
-}), async (request, response, next) => {
-	if (!request.session) {
-		response.status(500).send("Session not enabled but is required");
-		return;
-	}
+}), decisionRenderer);
 
-	let oauth2 = (request as any).oauth2;
-	let transactionID = oauth2.transactionID as string;
-	let user = request.user as IUser;
-	let client = oauth2.client as IOAuthClient;
-
-	let scopes: IScope[] = [];
-	for (let scopeName of (oauth2.info.scope as string[])) {
-		let scope = await Scope.findOne({ name: scopeName });
-		if (scope) {
-			scopes.push(scope);
+OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request, response, next) => {
+	let user = request.user as Model<IUser>;
+	let scopes: string[] = request.session ? request.session.scopes || [] : [];
+	for (let scope of scopes) {
+		let scopeValue = request.body[`scope-${scope}`];
+		if (scopeValue) {
+			// TODO: run validator
+			if (!user.scopes) {
+				user.scopes = {};
+			}
+			user.scopes[scope] = scopeValue;
+		}
+		else {
+			request.flash("error", "All data fields must be filled out");
+			decisionRenderer(request, response);
+			return;
 		}
 	}
-	let scopeNames = scopes.map(scope => scope.name);
-	request.session.scopes = scopeNames;
-
-	response.send(AuthorizeTemplate.render({
-		siteTitle: config.server.name,
-		title: "Authorize",
-		includeJS: null,
-
-		name: user.name,
-		email: user.email,
-		redirect: new URL(oauth2.redirectURI).origin,
-		appName: client.name,
-		transactionID,
-		scopes,
-		scopeNames,
-	}));
-});
-
-OAuthRouter.post("/authorize/decision", authenticateWithRedirect, server.decision((request, done) => {
+	user.markModified("scopes");
+	await user.save();
+	next();
+}, server.decision((request, done) => {
 	let session = (request as express.Request).session;
 	let scopes: string[] = session ? session.scopes || [] : [];
 	done(null, { scopes });

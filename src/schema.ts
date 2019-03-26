@@ -62,6 +62,10 @@ export interface IUser extends RootDocument {
 	uuid: string;
 	email: string;
 	name: string;
+	scopes?: {
+		[name: string]: string;
+	};
+
 	verifiedEmail: boolean;
 	emailVerificationCode?: string;
 	admin: boolean;
@@ -103,6 +107,8 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 		type: String,
 		index: true
 	},
+	scopes: mongoose.Schema.Types.Mixed,
+
 	verifiedEmail: Boolean,
 	emailVerificationCode: String,
 	admin: Boolean,

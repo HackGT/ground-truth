@@ -179,6 +179,7 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 			"forceLogOut": false,
 
 			"services": {},
+			"scopes": {},
 		};
 	}
 

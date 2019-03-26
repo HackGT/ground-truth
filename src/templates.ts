@@ -22,6 +22,15 @@ Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], op
 	}
 	return options.inverse(this);
 });
+Handlebars.registerHelper("attr", (name: string, value: string): string => {
+	if (value) {
+		value = value.replace(/"/g, "&quot;");
+		return `${name}="${value}"`;
+	}
+	else {
+		return "";
+	}
+});
 Handlebars.registerHelper("join", <T>(arr: T[]): string => {
 	return arr.join(", ");
 });
