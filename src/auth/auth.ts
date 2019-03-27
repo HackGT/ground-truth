@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import * as vm from "vm";
 import * as express from "express";
 import { URL } from "url";
 import session from "express-session";
@@ -211,13 +212,40 @@ interface IAuthorizationTemplate extends TemplateContent {
 	transactionID: string;
 	scopes: IScopeWithValue[];
 	scopeNames: string[];
+	error?: string;
 }
 const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
-async function decisionRenderer (request: express.Request, response: express.Response) {
+
+OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
+	try {
+		let client = await OAuthClient.findOne({ clientID });
+		// Redirect URIs are allowed on a same-origin basis
+		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
+		let redirectOrigin = new URL(redirectURI).origin;
+		if (!client || (!client.redirectURIs.includes(redirectOrigin) && !client.redirectURIs.includes(redirectURI))) {
+			done(null, false);
+			return;
+		}
+		done(null, client, redirectURI);
+	}
+	catch (err) {
+		done(err);
+	}
+}, async (client, user, scope, type, areq, done) => {
+	try {
+		let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
+		done(null, !!token, { scope }, null);
+	}
+	catch (err) {
+		done(err, false, { scope }, null);
+	}
+}), async (request, response) => {
 	if (!request.session) {
 		response.status(500).send("Session not enabled but is required");
 		return;
 	}
+	// Save request url in session so that we can go back to it in /authorize/decision if there was a validation error
+	request.session.authorizeURL = request.originalUrl;
 
 	let oauth2 = (request as any).oauth2;
 	let transactionID = oauth2.transactionID as string;
@@ -243,6 +271,8 @@ async function decisionRenderer (request: express.Request, response: express.Res
 		title: "Authorize",
 		includeJS: null,
 
+		error: request.flash("error"),
+
 		name: user.name,
 		email: user.email,
 		redirect: new URL(oauth2.redirectURI).origin,
@@ -251,40 +281,53 @@ async function decisionRenderer (request: express.Request, response: express.Res
 		scopes,
 		scopeNames,
 	}));
+});
+
+interface IScopeValidatorContext {
+	name: string;
+	email: string;
+	scope: string;
+	type: string;
+	value: string;
 }
-
-OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
-	try {
-		let client = await OAuthClient.findOne({ clientID });
-		// Redirect URIs are allowed on a same-origin basis
-		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
-		let redirectOrigin = new URL(redirectURI).origin;
-		if (!client || (!client.redirectURIs.includes(redirectOrigin) && !client.redirectURIs.includes(redirectURI))) {
-			done(null, false);
-			return;
-		}
-		done(null, client, redirectURI);
-	}
-	catch (err) {
-		done(err);
-	}
-}, async (client, user, scope, type, areq, done) => {
-	try {
-		let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
-		done(null, !!token, { scope }, null);
-	}
-	catch (err) {
-		done(err, false, { scope }, null);
-	}
-}), decisionRenderer);
-
 OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request, response, next) => {
+	if (!request.session) {
+		response.status(500).send("Session not enabled but is required");
+		return;
+	}
 	let user = request.user as Model<IUser>;
 	let scopes: string[] = request.session ? request.session.scopes || [] : [];
 	for (let scope of scopes) {
 		let scopeValue = request.body[`scope-${scope}`];
 		if (scopeValue) {
-			// TODO: run validator
+			let scopeDetails = await Scope.findOne({ name: scope });
+			if (!scopeDetails) {
+				request.flash("error", `Scope "${scope}" is not specified in DB`);
+				response.redirect(request.session.authorizeURL);
+				return;
+			}
+			if (scopeDetails.validator && scopeDetails.validator.code) {
+				let context: IScopeValidatorContext = {
+					name: user.name,
+					email: user.email,
+					scope,
+					type: scopeDetails.type,
+					value: scopeValue
+				};
+				try {
+					let success = vm.runInNewContext(scopeDetails.validator.code, context, { timeout: 500 });
+					if (!success) {
+						request.flash("error", `Error validating "${scope}": ${scopeDetails.validator.errorMessage}`);
+						response.redirect(request.session.authorizeURL);
+						return;
+					}
+				}
+				catch {
+					request.flash("error", `An error occurred while validating scope "${scope}"`);
+					response.redirect(request.session.authorizeURL);
+					return;
+				}
+			}
 			if (!user.scopes) {
 				user.scopes = {};
 			}
@@ -292,12 +335,13 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 		}
 		else {
 			request.flash("error", "All data fields must be filled out");
-			decisionRenderer(request, response);
+			response.redirect(request.session.authorizeURL);
 			return;
 		}
 	}
 	user.markModified("scopes");
 	await user.save();
+	request.session.authorizeURL = undefined;
 	next();
 }, server.decision((request, done) => {
 	let session = (request as express.Request).session;

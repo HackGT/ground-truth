@@ -193,15 +193,21 @@ export interface IScope extends RootDocument {
 	name: string;
 	question: string;
 	type: string;
-	validator: string | null;
-	icon: string | null;
+	validator?: {
+		code: string;
+		errorMessage: string;
+	};
+	icon?: string;
 }
 
 export const Scope = mongoose.model<Model<IScope>>("Scope", new mongoose.Schema({
 	name: String,
 	question: String,
 	type: String,
-	validator: String,
+	validator: {
+		code: String,
+		errorMessage: String,
+	},
 	icon: String,
 }));
 
