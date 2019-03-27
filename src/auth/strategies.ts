@@ -328,7 +328,7 @@ export class Local implements RegistrationStrategy {
 		if (user && request.path.match(/\/signup$/i)) {
 			done(null, false, { "message": "That email address is already in use" });
 		}
-		else if (user && (!user.local || (user.local && !user.local.hash))) {
+		else if (user && (!user.local || !user.local.hash)) {
 			done(null, false, { "message": "Please log back in with an external provider" });
 		}
 		else if (!user || !user.local) {
@@ -495,11 +495,9 @@ The ${config.server.name} Team.`;
 			}
 
 			let expirationDuration = moment.duration(config.server.passwordResetExpiration, "milliseconds");
-			if (!user.local || !user.local.resetCode || moment().isAfter(moment(user.local.resetRequestedTime).add(expirationDuration))) {
+			if (!user.local!.resetCode || moment().isAfter(moment(user.local!.resetRequestedTime).add(expirationDuration))) {
 				request.flash("error", "Your password reset link has expired. Please request a new one.");
-				if (user.local) {
-					user.local.resetCode = undefined;
-				}
+				user.local!.resetCode = undefined;
 				await user.save();
 				response.redirect("/login");
 				return;
@@ -522,9 +520,9 @@ The ${config.server.name} Team.`;
 			let hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
 
 			try {
-				user.local.salt = salt.toString("hex");
-				user.local.hash = hash.toString("hex");
-				user.local.resetCode = undefined;
+				user.local!.salt = salt.toString("hex");
+				user.local!.hash = hash.toString("hex");
+				user.local!.resetCode = undefined;
 				await user.save();
 
 				request.flash("success", "Password reset successfully. You can now log in.");
