@@ -63,6 +63,8 @@ namespace Admin {
 		await sendRequest(`/api/admin/app/${uuid}/redirects`, { redirectURIs: uris.trim() });
 	});
 	setUpHandlers("regenerate-secret", async (uuid, button) => {
+		if (!confirm("Are you sure you want to regenerate this app's client secret? This will require reconfiguring this application with the newly generated secret.")) return;
+
 		await sendRequest(`/api/admin/app/${uuid}/regenerate`);
 	});
 	setUpHandlers("remove", async (uuid, button) => {
