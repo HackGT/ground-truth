@@ -41,6 +41,11 @@ li {
 	overflow-wrap: break-word;
 }
 
+code {
+	border-radius: 3px;
+	padding: 0.15em 0.35em 0.15em
+}
+
 a.button {
 	border: 1px solid #151515;
 	width: 100%;

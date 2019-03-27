@@ -5,7 +5,7 @@ import * as Handlebars from "handlebars";
 
 import { config } from "./common";
 import { authenticateWithRedirect, isAdmin } from "./middleware";
-import { TemplateContent, User, IUser, OAuthClient, AccessToken } from "./schema";
+import { TemplateContent, User, IUser, OAuthClient, AccessToken, Scope } from "./schema";
 import { bestLoginMethod } from "./api";
 
 // tslint:disable-next-line:no-any
@@ -168,6 +168,8 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 			(client as any).tokens = tokens;
 			return client;
 		})),
+
+		scopes: await Scope.find(),
 
 		adminDomains: config.server.adminDomains,
 		admins: config.server.admins,

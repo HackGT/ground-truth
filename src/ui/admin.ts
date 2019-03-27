@@ -67,11 +67,16 @@ namespace Admin {
 
 		await sendRequest(`/api/admin/app/${uuid}/regenerate`);
 	});
-	setUpHandlers("remove", async (uuid, button) => {
+	setUpHandlers("delete-app", async (uuid, button) => {
 		if (!confirm("Are you sure you want to delete this app?")) return;
 
 		await sendRequest(`/api/admin/app/${uuid}/delete`);
 	});
+	setUpHandlers("delete-scope", async (name, button) => {
+		if (!confirm("Are you sure you want to delete this scope?")) return;
+
+		await sendRequest(`/api/admin/scope/delete`, { name });
+	})
 
 	let addApplicationButton = document.getElementById("add-application") as HTMLButtonElement;
 	addApplicationButton.addEventListener("click", async () => {
@@ -95,6 +100,32 @@ namespace Admin {
 		}
 		finally {
 			addApplicationButton.disabled = false;
+		}
+	});
+
+	let addScopeButton = document.getElementById("add-scope") as HTMLButtonElement;
+	addScopeButton.addEventListener("click", async () => {
+		try {
+			addScopeButton.disabled = true;
+
+			let name = document.getElementById("scope-name") as HTMLInputElement;
+			let question = document.getElementById("scope-question") as HTMLInputElement;
+			let type = document.getElementById("scope-type") as HTMLInputElement;
+			let icon = document.getElementById("scope-icon") as HTMLInputElement;
+			let validatorCode = document.getElementById("scope-validator") as HTMLTextAreaElement;
+			let errorMessage = document.getElementById("scope-error-message") as HTMLInputElement;
+
+			await sendRequest("/api/admin/scope", {
+				name: name.value,
+				question: question.value,
+				type: type.value,
+				icon: icon.value,
+				validatorCode: validatorCode.value,
+				errorMessage: errorMessage.value,
+			});
+		}
+		finally {
+			addScopeButton.disabled = false;
 		}
 	});
 

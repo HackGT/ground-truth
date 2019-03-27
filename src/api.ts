@@ -6,7 +6,7 @@ import uuid from "uuid";
 import {
 	createNew, IConfig,
 	IUser, User,
-	IOAuthClient, OAuthClient, AccessToken
+	IOAuthClient, OAuthClient, AccessToken, Scope, IScope
 } from "./schema";
 import { postParser, isAdmin } from "./middleware";
 
@@ -216,6 +216,75 @@ adminRoutes.post("/app/:id/delete", async (request, response) => {
 		console.error(err);
 		response.status(500).json({
 			"error": "An error occurred while deleting this app"
+		});
+	}
+});
+
+adminRoutes.post("/scope", async (request, response) => {
+	function getParam(name: string): string {
+		return (request.body[name] || "").trim();
+	}
+	let name = getParam("name").toLowerCase().replace(/ /g, "-").replace(/,/, "");
+	let question = getParam("question");
+	let type = getParam("type");
+	let validatorCode: string | undefined = request.body.validatorCode;
+	let errorMessage: string | undefined = request.body.errorMessage;
+	let icon: string | undefined = getParam("icon") || undefined;
+
+	if (!name || !question || !type) {
+		response.status(400).json({
+			"error": "Missing name, question, or type"
+		});
+		return;
+	}
+	if ((validatorCode && !errorMessage) || (!validatorCode && errorMessage)) {
+		response.status(400).json({
+			"error": "Validator code and corresponding error message cannot appear individually"
+		});
+		return;
+	}
+
+	try {
+		await createNew<IScope>(Scope, {
+			name,
+			question,
+			type,
+			validator: validatorCode ? {
+				code: validatorCode,
+				errorMessage: errorMessage!
+			} : undefined,
+			icon
+		}).save();
+		response.json({
+			"success": true
+		});
+	}
+	catch (err) {
+		console.error(err);
+		response.status(500).json({
+			"error": "An error occurred while creating scope"
+		});
+	}
+});
+
+adminRoutes.post("/scope/delete", async (request, response) => {
+	let scope = await Scope.findOne({ name: request.body.name });
+	if (!scope) {
+		response.status(400).json({
+			"error": "Invalid scope name"
+		});
+		return;
+	}
+	try {
+		await scope.remove();
+		response.json({
+			"success": true
+		});
+	}
+	catch (err) {
+		console.error(err);
+		response.status(500).json({
+			"error": "An error occurred while deleting this scope"
 		});
 	}
 });

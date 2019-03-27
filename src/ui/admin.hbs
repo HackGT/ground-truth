@@ -36,7 +36,7 @@
 						<button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
 					</p>
 					<p class="control">
-						<button class="button is-danger is-outlined remove" data-uuid="{{this.uuid}}">Delete</button>
+						<button class="button is-danger is-outlined delete-app" data-uuid="{{this.uuid}}">Delete</button>
 					</p>
 				</div>
 			</div>
@@ -69,6 +69,100 @@
 			<div class="field is-grouped is-grouped-centered">
 				<p class="control">
 					<button class="button is-info is-outlined" id="add-application">Add application</button>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<hr />
+
+	<h1 class="title">OAuth Scopes</h1>
+	<h2 class="subtitle">Additional information users must enter before they can authorize an app</h2>
+	<section class="columns is-multiline">
+		{{#each scopes}}
+			<div class="column is-one-third">
+				<h1 class="title"><code>{{this.name}}</code></h1>
+				<p class="content">
+					<ul>
+						<li>Question: <strong>{{this.question}}</strong></li>
+						<li>Type: <code>{{this.type}}</code></li>
+						{{#if this.icon}}
+							<li>
+								Icon:
+								<span class="icon"><i class="fas fa-{{this.icon}}"></i></span>
+							(<code>{{this.icon}}</code>)
+							</li>
+						{{else}}
+							<li><em>No icon set</em></li>
+						{{/if}}
+						{{#if this.validator.code}}
+							<li>Validator: <code>{{this.validator.code}}</code></li>
+							<li>Error message: <strong>{{this.validator.errorMessage}}</strong></li>
+						{{else}}
+							<li><em>No validator configured</em></li>
+						{{/if}}
+					</ul>
+				</p>
+				<br />
+				<div class="field is-grouped is-grouped-centered is-multiline">
+					<p class="control">
+						<button class="button is-danger is-outlined delete-scope" data-uuid="{{this.name}}">Delete</button>
+					</p>
+				</div>
+			</div>
+		{{else}}
+			<div class="column is-half is-offset-one-quarter has-text-centered">
+				<p><em>No scopes</em></p>
+			</div>
+		{{/each}}
+	</section>
+
+	<hr />
+
+	<h1 class="title">Add a scope</h1>
+	<h2 class="subtitle">This allows an application to collect additional information from its users</h2>
+	<section class="columns">
+		<div class="column is-half is-offset-one-quarter">
+			<div class="field">
+				<label class="label" for="scope-name">Scope name (should be lowercase and cannot contain spaces or commas)</label>
+				<div class="control">
+					<input class="input" type="text" id="scope-name" placeholder="e.g. phone" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="scope-question">Scope question</label>
+				<div class="control">
+					<input class="input" type="text" id="scope-question" placeholder="e.g. What's your phone number?" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="scope-type">Input type (<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Form_<input>_types" target="_blank">see complete list</a>)</label>
+				<div class="control">
+					<input class="input" type="text" id="scope-type" value="text" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="scope-icon">Icon (optional; <a href="https://fontawesome.com/icons?d=gallery&s=solid" target="_blank">see complete list</a>)</label>
+				<div class="control">
+					<input class="input" type="text" id="scope-icon" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="scope-validator">Validation code (optional)</label>
+				<div class="control">
+					<textarea class="textarea" id="scope-validator" placeholder="e.g. value === &quot;correct answer&quot;"></textarea>
+				</div>
+			</div>
+			<div class="field">
+				<label class="label" for="scope-error-message">Validation error message (optional)</label>
+				<div class="control">
+					<input class="input" type="text" id="scope-error-message" />
+				</div>
+			</div>
+			<br />
+			<div class="field is-grouped is-grouped-centered">
+				<p class="control">
+					<button class="button is-info is-outlined" id="add-scope">Add scope</button>
 				</p>
 			</div>
 		</div>
