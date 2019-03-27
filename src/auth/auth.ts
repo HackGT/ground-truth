@@ -295,6 +295,10 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 		response.status(500).send("Session not enabled but is required");
 		return;
 	}
+	if (request.body.cancel) {
+		next();
+		return;
+	}
 	let user = request.user as Model<IUser>;
 	let scopes: string[] = request.session ? request.session.scopes || [] : [];
 	for (let scope of scopes) {
