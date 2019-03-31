@@ -18,6 +18,7 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 		"uuid": user.uuid,
 		"name": user.name,
 		"email": user.email,
+		"scopes": (user.scopes && Object.keys(user.scopes).length > 0) ? user.scopes : null
 	});
 });
 
