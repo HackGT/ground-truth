@@ -22,7 +22,7 @@
 			<br />
 
 			<form action="/oauth/authorize/decision" method="POST">
-				{{#if scopeNames.length}}
+				{{#if scopes.length}}
 					<h3 class="title"><small>Additional data requested:</small></h3>
 					<article class="message is-danger">
 						<div class="message-body">{{error}}</div>

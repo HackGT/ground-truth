@@ -211,7 +211,6 @@ interface IAuthorizationTemplate extends TemplateContent {
 	redirect: string;
 	transactionID: string;
 	scopes: IScopeWithValue[];
-	scopeNames: string[];
 	error?: string;
 }
 const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
@@ -251,9 +250,10 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	let transactionID = oauth2.transactionID as string;
 	let user = request.user as IUser;
 	let client = oauth2.client as IOAuthClient;
+	let requestScopes: string[] = oauth2.info.scope || [];
 
 	let scopes: IScopeWithValue[] = [];
-	for (let scopeName of (oauth2.info.scope as string[])) {
+	for (let scopeName of requestScopes) {
 		let scope = await Scope.findOne({ name: scopeName });
 		if (scope) {
 			let userScope: string | undefined = (user.scopes || {})[scopeName];
@@ -279,7 +279,6 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		appName: client.name,
 		transactionID,
 		scopes,
-		scopeNames,
 	}));
 });
 
