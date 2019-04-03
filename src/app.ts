@@ -1,5 +1,3 @@
-import * as path from "path";
-
 import express from "express";
 import compression from "compression";
 import cookieParser from "cookie-parser";
@@ -14,12 +12,23 @@ import {
 	// Configuration
 	config
 } from "./common";
-import {
-	User
-} from "./schema";
 
 // Set up Express and its middleware
 export let app = express();
+
+import bugsnag from "@bugsnag/js";
+import bugsnagExpress from "@bugsnag/plugin-express";
+let bugsnagMiddleware: any | null = null;
+if (config.server.isProduction) {
+	const bugsnagClient = bugsnag("1e8a0d99fa5d5e8d9dbc4351857c6c67");
+	bugsnagClient.use(bugsnagExpress);
+	bugsnagMiddleware = bugsnagClient.getPlugin("express");
+	// Must come first to capture errors downstream
+	app.use(bugsnagMiddleware.requestHandler);
+}
+else {
+	console.info("Not setting up Bugsnag because this isn't production");
+}
 
 app.use(compression());
 let cookieParserInstance = cookieParser(undefined, COOKIE_OPTIONS as cookieParser.CookieParseOptions);
@@ -88,6 +97,10 @@ app.route("/version").get((request, response) => {
 		"node": process.version
 	});
 });
+
+if (bugsnagMiddleware) {
+	app.use(bugsnagMiddleware.errorHandler);
+}
 
 app.listen(PORT, () => {
 	console.log(`Ground Truth system v${VERSION_NUMBER} @ ${VERSION_HASH} started on port ${PORT}`);

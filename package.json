@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/HackGT/ground-truth#readme",
   "dependencies": {
+    "@bugsnag/js": "^6.0.0",
+    "@bugsnag/plugin-express": "^6.0.0",
     "@sendgrid/mail": "^6.3.1",
     "@types/cheerio": "^0.22.11",
     "@types/compression": "0.0.36",
@@ -69,7 +71,7 @@
     "passport-local": "^1.0.0",
     "passport-oauth2-client-password": "^0.1.2",
     "striptags": "^3.1.1",
-    "uuid": "^3.3.2",
-    "typescript": "^3.3.0"
+    "typescript": "^3.3.0",
+    "uuid": "^3.3.2"
   }
 }
