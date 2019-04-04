@@ -2,11 +2,12 @@ git:
   branch: master
 wants:
   mongo: true
-env: 
+env:
   GT_CAS: true
   EMAIL_FROM: "HackGT Team <hello@hackgt.com>"
   SESSION_SECRET: hack.gt
   PRODUCTION: true
+  BUGSNAG: 1e8a0d99fa5d5e8d9dbc4351857c6c67
 secrets:
   - ADMIN_KEY_SECRET
   - SESSION_SECRET

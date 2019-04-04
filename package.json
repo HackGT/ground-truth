@@ -6,11 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "report-build": "node bugsnag.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HackGT/ground-truth.git"
+    "url": "https://github.com/HackGT/ground-truth.git"
   },
   "author": "Ryan Petschek",
   "license": "MIT",
@@ -73,5 +74,8 @@
     "striptags": "^3.1.1",
     "typescript": "^3.3.0",
     "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "bugsnag-build-reporter": "^1.0.1"
   }
 }

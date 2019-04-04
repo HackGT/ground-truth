@@ -17,6 +17,7 @@ export namespace IConfig {
 				secret: string;
 			}
 		};
+		bugsnag: string | null;
 	}
 	export interface Email {
 		from: string;

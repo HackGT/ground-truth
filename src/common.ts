@@ -25,7 +25,8 @@ class Config implements IConfig.Main {
 				id: "",
 				secret: ""
 			}
-		}
+		},
+		bugsnag: null
 	};
 	public email: IConfig.Email = {
 		from: "HackGT Team <hello@hackgt.com>",
@@ -128,6 +129,9 @@ class Config implements IConfig.Main {
 		}
 		if (process.env.FACEBOOK_CLIENT_SECRET) {
 			this.secrets.oauth.facebook.secret = process.env.FACEBOOK_CLIENT_SECRET;
+		}
+		if (process.env.BUGSNAG) {
+			this.secrets.bugsnag = process.env.BUGSNAG;
 		}
 		// Email
 		if (process.env.EMAIL_FROM) {

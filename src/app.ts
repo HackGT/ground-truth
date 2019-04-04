@@ -19,15 +19,18 @@ export let app = express();
 import bugsnag from "@bugsnag/js";
 import bugsnagExpress from "@bugsnag/plugin-express";
 let bugsnagMiddleware: any | null = null;
-if (config.server.isProduction) {
-	const bugsnagClient = bugsnag("1e8a0d99fa5d5e8d9dbc4351857c6c67");
+if (config.secrets.bugsnag) {
+	const bugsnagClient = bugsnag({
+		apiKey: config.secrets.bugsnag,
+		appVersion: VERSION_NUMBER
+	});
 	bugsnagClient.use(bugsnagExpress);
 	bugsnagMiddleware = bugsnagClient.getPlugin("express");
 	// Must come first to capture errors downstream
 	app.use(bugsnagMiddleware.requestHandler);
 }
 else {
-	console.info("Not setting up Bugsnag because this isn't production");
+	console.info("Bugsnag API key not set");
 }
 
 app.use(compression());
