@@ -9,6 +9,7 @@ import {
 	IOAuthClient, OAuthClient, AccessToken, Scope, IScope
 } from "./schema";
 import { postParser, isAdmin } from "./middleware";
+import { UserSessionData } from "./auth/strategies";
 
 export let apiRoutes = express.Router();
 
@@ -71,16 +72,20 @@ apiRoutes.get("/login-type", async (request, response) => {
 });
 
 apiRoutes.post("/signup-data", postParser, (request, response) => {
-	if (!request.session) return;
+	function attachToSession(bodyProperty: keyof UserSessionData) {
+		if (!request.session) return;
 
-	let email = request.body.email as string | undefined;
-	let name = request.body.name as string | undefined;
-	if (email) {
-		request.session.email = email;
+		let value = request.body[bodyProperty] as string | undefined;
+		if (value) {
+			request.session[bodyProperty] = value;
+		}
 	}
-	if (name) {
-		request.session.name = name;
-	}
+
+	attachToSession("email");
+	attachToSession("firstName");
+	attachToSession("preferredName");
+	attachToSession("lastName");
+
 	response.send();
 });
 

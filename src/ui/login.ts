@@ -3,10 +3,15 @@ namespace Login {
 	const carousel = document.querySelector(".carousel") as HTMLMainElement;
 	const errorBlock = document.querySelector(".is-danger > .message-body") as HTMLDivElement;
 
-	const email = document.getElementById("email") as HTMLInputElement;
-	const username = document.getElementById("name") as HTMLInputElement;
-	const password = document.getElementById("password") as HTMLInputElement;
-	const passwordLogin = document.getElementById("password-login") as HTMLInputElement;
+	function getInput(id: string): HTMLInputElement {
+		return document.getElementById(id) as HTMLInputElement;
+	}
+	const email = getInput("email");
+	const firstName = getInput("first-name");
+	const preferredName = getInput("preferred-name");
+	const lastName = getInput("last-name");
+	const password = getInput("password");
+	const passwordLogin = getInput("password-login");
 
 	function setUpEnterHandler(input: HTMLInputElement, nextID: number) {
 		input.addEventListener("keydown", e => {
@@ -18,8 +23,16 @@ namespace Login {
 	}
 	setUpEnterHandler(email, 1);
 	setUpEnterHandler(passwordLogin, 1);
-	setUpEnterHandler(username, 2);
+	setUpEnterHandler(lastName, 2);
 	setUpEnterHandler(password, 3);
+
+	const commonFetchSettings: Partial<RequestInit> = {
+		method: "POST",
+		credentials: "include",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+		},
+	};
 
 	function serializeQueryString(data: object): string {
 		return Object.keys(data).map(key => {
@@ -64,21 +77,13 @@ namespace Login {
 								return;
 							}
 							await fetch(`/api/signup-data`, {
-								method: "POST",
-								credentials: "include",
-								headers: {
-									"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-								},
+								...commonFetchSettings,
 								body: serializeQueryString({ email: email.value.trim() })
 							});
 						}
 						else {
 							await fetch(`/auth/login`, {
-								method: "POST",
-								credentials: "include",
-								headers: {
-									"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-								},
+								...commonFetchSettings,
 								body: serializeQueryString({
 									email: email.value.trim(),
 									password: passwordLogin.value
@@ -89,17 +94,20 @@ namespace Login {
 						}
 					}
 					if (step === 2) {
-						if (!username.value.trim()) {
-							errorBlock.textContent = "Please enter your name. We use it to identify you online and at events!"
+						let firstNameValue = firstName.value.trim();
+						let preferredNameValue = preferredName.value.trim();
+						let lastNameValue = lastName.value.trim();
+						if (!firstNameValue || !lastNameValue) {
+							errorBlock.textContent = "Please enter your first and last name. We use it to identify you online and at events!"
 							return;
 						}
 						await fetch(`/api/signup-data`, {
-							method: "POST",
-							credentials: "include",
-							headers: {
-								"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-							},
-							body: serializeQueryString({ name: username.value.trim() })
+							...commonFetchSettings,
+							body: serializeQueryString({
+								firstName: firstNameValue,
+								preferredName: preferredNameValue,
+								lastName: lastNameValue
+							})
 						});
 					}
 					if (step === 3) {
@@ -108,15 +116,16 @@ namespace Login {
 							errorBlock.textContent = "Please enter a password or sign up using an external service";
 							return;
 						}
+						let firstNameValue = firstName.value.trim();
+						let preferredNameValue = preferredName.value.trim();
+						let lastNameValue = lastName.value.trim();
 						await fetch(`/auth/signup`, {
-							method: "POST",
-							credentials: "include",
-							headers: {
-								"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-							},
+							...commonFetchSettings,
 							body: serializeQueryString({
 								email: email.value.trim(),
-								name: username.value.trim(),
+								firstName: firstNameValue,
+								preferredName: preferredNameValue,
+								lastName: lastNameValue,
 								password: password.value
 							})
 						});

@@ -66,7 +66,11 @@ export type Model<T extends RootDocument> = T & mongoose.Document;
 export interface IUser extends RootDocument {
 	uuid: string;
 	email: string;
-	name: string;
+	name: {
+		first: string;
+		preferred?: string;
+		last: string;
+	};
 	scopes?: {
 		[name: string]: string;
 	};
@@ -109,8 +113,9 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 		unique: true
 	},
 	name: {
-		type: String,
-		index: true
+		first: String,
+		preferred: String,
+		last: String,
 	},
 	scopes: mongoose.Schema.Types.Mixed,
 
