@@ -22,6 +22,10 @@ export namespace IConfig {
 	export interface Email {
 		from: string;
 		key: string;
+		headerImage: string;
+		twitterHandle: string;
+		facebookHandle: string;
+		contactAddress: string;
 	}
 	export interface Server {
 		isProduction: boolean;

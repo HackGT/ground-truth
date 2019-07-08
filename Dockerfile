@@ -12,6 +12,7 @@ COPY . /usr/src/groundtruth
 # Set Timezone to EST
 RUN apk add tzdata
 ENV TZ="/usr/share/zoneinfo/America/New_York"
+ENV NODE_ENV="production"
 
 RUN npm install
 RUN npm run build
