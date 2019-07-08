@@ -233,7 +233,7 @@ import * as htmlToText from "html-to-text";
 const Email = require('email-templates');
 const email = new Email({
 	views: {
-		root: path.resolve('server/emails/')
+		root: path.resolve('src/emails/')
 	},
 	juice: true,
 	juiceResources: {
