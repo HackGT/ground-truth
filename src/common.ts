@@ -242,16 +242,16 @@ const striptags = require("striptags");
 import { IUser } from "./schema";
 import * as htmlToText from "html-to-text";
 // tslint:disable-next-line:no-var-requires
-const Email = require('email-templates');
+const Email = require("email-templates");
 const email = new Email({
 	views: {
-		root: path.resolve('src/emails/')
+		root: path.resolve("src/emails/")
 	},
 	juice: true,
 	juiceResources: {
 		preserveImportant: true,
 		webResources: {
-			relativeTo: path.join(__dirname, 'emails', 'email-template')
+			relativeTo: path.join(__dirname, "emails", "email-template")
 		}
 	}
 });
@@ -299,7 +299,7 @@ export async function renderEmailHTML(markdown: string, user: IUser): Promise<st
 	markdown = await templateMarkdown(markdown, user);
 
 	let renderedMarkdown = await renderMarkdown(markdown);
-	return email.render('email-template/html', {
+	return email.render("email-template/html", {
 		emailHeaderImage: config.email.headerImage,
 		twitterHandle: config.email.twitterHandle,
 		facebookHandle: config.email.facebookHandle,
