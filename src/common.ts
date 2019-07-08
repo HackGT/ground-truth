@@ -144,6 +144,18 @@ class Config implements IConfig.Main {
 		if (process.env.EMAIL_KEY) {
 			this.email.key = process.env.EMAIL_KEY;
 		}
+		if (process.env.EMAIL_HEADER_IMAGE) {
+			this.email.headerImage = process.env.EMAIL_HEADER_IMAGE;
+		}
+		if (process.env.EMAIL_TWITTER_HANDLE) {
+			this.email.twitterHandle = process.env.EMAIL_TWITTER_HANDLE;
+		}
+		if (process.env.EMAIL_FACEBOOK_HANDLE) {
+			this.email.facebookHandle = process.env.EMAIL_FACEBOOK_HANDLE;
+		}
+		if (process.env.EMAIL_CONTACT_ADDRESS) {
+			this.email.contactAddress = process.env.EMAIL_CONTACT_ADDRESS;
+		}
 		// Server
 		if (process.env.PRODUCTION && process.env.PRODUCTION.toLowerCase() === "true") {
 			this.server.isProduction = true;
