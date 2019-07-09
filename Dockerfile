@@ -24,6 +24,6 @@ RUN npm run report-build
 
 FROM node:11-alpine
 WORKDIR /usr/src/groundtruth
-COPY --from=0 . .
+COPY --from=0 /usr/src/groundtruth .
 EXPOSE 3000
 CMD ["npm", "start"]
