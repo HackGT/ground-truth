@@ -78,7 +78,7 @@ class Config implements IConfig.Main {
 		}
 		if (config.secrets) {
 			for (let key of Object.keys(config.secrets) as (keyof IConfig.Secrets)[]) {
-				this.secrets[key] = config.secrets[key];
+				(this.secrets as any)[key] = config.secrets[key];
 			}
 		}
 		if (config.secrets && config.secrets.session) {
@@ -91,7 +91,7 @@ class Config implements IConfig.Main {
 		}
 		if (config.server) {
 			for (let key of Object.keys(config.server) as (keyof IConfig.Server)[]) {
-				this.server[key] = config.server[key];
+				(this.server as any)[key] = config.server[key];
 			}
 		}
 		if (config.loginMethods) {

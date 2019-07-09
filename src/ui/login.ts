@@ -1,6 +1,6 @@
 namespace Login {
 
-	const carousel = document.querySelector(".carousel") as HTMLMainElement;
+	const carousel = document.querySelector(".carousel") as HTMLDivElement;
 	const errorBlock = document.querySelector(".is-danger > .message-body") as HTMLDivElement;
 
 	function getInput(id: string): HTMLInputElement {
