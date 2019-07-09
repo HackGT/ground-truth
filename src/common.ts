@@ -78,7 +78,7 @@ class Config implements IConfig.Main {
 		}
 		if (config.secrets) {
 			for (let key of Object.keys(config.secrets) as (keyof IConfig.Secrets)[]) {
-				this.secrets[key] = config.secrets[key];
+				(this.secrets as any)[key] = config.secrets[key];
 			}
 		}
 		if (config.secrets && config.secrets.session) {
@@ -91,7 +91,7 @@ class Config implements IConfig.Main {
 		}
 		if (config.server) {
 			for (let key of Object.keys(config.server) as (keyof IConfig.Server)[]) {
-				this.server[key] = config.server[key];
+				(this.server as any)[key] = config.server[key];
 			}
 		}
 		if (config.loginMethods) {
@@ -274,6 +274,10 @@ export function sanitize(input?: string): string {
 	return input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+export function formatName(user: IUser): string {
+	return `${user.name.preferred || user.name.first} ${user.name.last}`;
+}
+
 let renderer = new marked.Renderer();
 let singleLineRenderer = new marked.Renderer();
 singleLineRenderer.link = (href, title, text) => `<a target=\"_blank\" href=\"${href}\" title=\"${title || ''}\">${text}</a>`;
@@ -292,7 +296,10 @@ export async function renderMarkdown(markdown: string, options?: marked.MarkedOp
 }
 async function templateMarkdown(markdown: string, user: IUser): Promise<string> {
 	markdown = markdown.replace(/{{email}}/g, sanitize(user.email));
-	markdown = markdown.replace(/{{name}}/g, sanitize(user.name));
+	markdown = markdown.replace(/{{name}}/g, sanitize(formatName(user)));
+	markdown = markdown.replace(/{{firstName}}/g, sanitize(user.name.first));
+	markdown = markdown.replace(/{{preferredName}}/g, sanitize(user.name.preferred));
+	markdown = markdown.replace(/{{lastName}}/g, sanitize(user.name.last));
 	return markdown;
 }
 export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as express from "express";
 import * as Handlebars from "handlebars";
 
-import { config } from "./common";
+import { config, formatName } from "./common";
 import { authenticateWithRedirect, isAdmin } from "./middleware";
 import { TemplateContent, User, IUser, OAuthClient, AccessToken, Scope } from "./schema";
 import { bestLoginMethod } from "./api";
@@ -34,6 +34,9 @@ Handlebars.registerHelper("attr", (name: string, value: string): string => {
 Handlebars.registerHelper("join", <T>(arr: T[]): string => {
 	return arr.join(", ");
 });
+Handlebars.registerHelper("formatName", (name: { first: string; preferred: string; last: string; }): string => {
+	return formatName({ name } as IUser);
+})
 if (config.server.isProduction) {
 	Handlebars.registerPartial("main", fs.readFileSync(path.resolve("src/ui", "partials", "main.hbs"), "utf8"));
 }
@@ -173,7 +176,7 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 
 		adminDomains: config.server.adminDomains,
 		admins: config.server.admins,
-		currentAdmins: await User.find({ admin: true }).sort("name")
+		currentAdmins: await User.find({ admin: true }).sort("name.last")
 	};
 	response.send(AdminTemplate.render(templateData));
 });

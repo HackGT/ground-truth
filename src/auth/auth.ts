@@ -12,7 +12,7 @@ import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
 
 import {
-	config, mongoose, COOKIE_OPTIONS
+	config, mongoose, COOKIE_OPTIONS, formatName
 } from "../common";
 import { postParser, authenticateWithRedirect } from "../middleware";
 import {
@@ -273,7 +273,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
 		error: request.flash("error"),
 
-		name: user.name,
+		name: formatName(user),
 		email: user.email,
 		redirect: new URL(oauth2.redirectURI).origin,
 		appName: client.name,
@@ -283,7 +283,11 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 });
 
 interface IScopeValidatorContext {
-	name: string;
+	name: {
+		first: string;
+		preferred?: string;
+		last: string;
+	};
 	email: string;
 	scope: string;
 	type: string;

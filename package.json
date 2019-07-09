@@ -1,6 +1,6 @@
 {
   "name": "ground-truth",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Single sign on for HackGT apps",
   "main": "app.js",
   "scripts": {
@@ -58,9 +58,9 @@
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "git-rev-sync": "^1.12.0",
-    "handlebars": "^4.1.0",
+    "handlebars": "^4.1.2",
     "html-to-text": "^5.1.1",
-    "marked": "^0.6.1",
+    "marked": "^0.6.2",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.23",
     "mongoose": "^5.4.18",

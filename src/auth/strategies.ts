@@ -79,6 +79,13 @@ async function checkAndSetAdmin(user: Model<IUser>) {
 	}
 }
 
+export interface UserSessionData {
+	email: string;
+	firstName: string;
+	preferredName: string;
+	lastName: string;
+}
+
 async function ExternalServiceCallback(
 	request: Request,
 	serviceName: IConfig.OAuthServices | IConfig.CASServices,
@@ -90,13 +97,14 @@ async function ExternalServiceCallback(
 	if (request.user) {
 		request.logout();
 	}
+	let session = request.session as Partial<UserSessionData>;
 
 	// If `user` exists, the user has already logged in with this service and is good-to-go
 	let user = await User.findOne({ [`services.${serviceName}.id`]: id });
 
-	if (request.session && request.session.email && request.session.name) {
+	if (session && session.email && session.firstName && session.lastName) {
 		// Only create / modify user account if email and name exist on the session (set by login page)
-		let existingUser = await User.findOne({ email: request.session.email });
+		let existingUser = await User.findOne({ email: session.email });
 
 		if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
 			user = existingUser;
@@ -124,8 +132,12 @@ async function ExternalServiceCallback(
 			// Create an account
 			user = createNew<IUser>(User, {
 				...OAuthStrategy.defaultUserProperties,
-				email: request.session.email,
-				name: request.session.name,
+				email: session.email,
+				name: {
+					first: session.firstName,
+					preferred: session.preferredName,
+					last: session.lastName,
+				},
 			});
 			user.services = {};
 			user.services[serviceName] = {
@@ -161,9 +173,11 @@ async function ExternalServiceCallback(
 
 	await checkAndSetAdmin(user);
 
-	if (request.session) {
-		request.session.email = undefined;
-		request.session.name = undefined;
+	if (session) {
+		session.email = undefined;
+		session.firstName = undefined;
+		session.preferredName = undefined;
+		session.lastName = undefined;
 	}
 	done(null, user);
 }
@@ -338,10 +352,19 @@ export class Local implements RegistrationStrategy {
 				done(null, false, { "message": "Incorrect email or password" });
 				return;
 			}
-			let name: string = request.body.name || "";
-			name = name.trim();
-			if (!name || !email || !password) {
-				done(null, false, { "message": "Missing email, name, or password" });
+			let firstName: string = request.body.firstName || "";
+			let preferredName: string = request.body.preferredName || "";
+			let lastName: string = request.body.lastName || "";
+			if (!email) {
+				done(null, false, { "message": "Missing email" });
+				return;
+			}
+			else if (!password) {
+				done(null, false, { "message": "Missing password" });
+				return;
+			}
+			else if (!firstName || !lastName) {
+				done(null, false, { "message": "Missing first or last name" });
 				return;
 			}
 			let salt = crypto.randomBytes(32);
@@ -349,7 +372,11 @@ export class Local implements RegistrationStrategy {
 			user = createNew<IUser>(User, {
 				...OAuthStrategy.defaultUserProperties,
 				email,
-				name,
+				name: {
+					first: firstName,
+					preferred: preferredName,
+					last: lastName,
+				},
 				local: {
 					"hash": hash.toString("hex"),
 					"salt": salt.toString("hex"),
