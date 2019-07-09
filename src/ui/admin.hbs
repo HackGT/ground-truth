@@ -206,7 +206,7 @@
 				{{#each currentAdmins}}
 				<li class="single-line-button">
 					<span class="icon"><i class="fas fa-user-cog"></i></span>
-					<strong>{{this.name}}</strong> ({{this.email}})
+					<strong>{{formatName this.name}}</strong> ({{this.email}})
 					{{#ifCond this.uuid ../uuid}}{{else}}
 						<button class="button is-danger is-outlined delete-admin" data-email="{{this.email}}">Demote</button>
 					{{/ifCond}}

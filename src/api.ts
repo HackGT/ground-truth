@@ -8,6 +8,7 @@ import {
 	IUser, User,
 	IOAuthClient, OAuthClient, AccessToken, Scope, IScope
 } from "./schema";
+import { formatName } from "./common";
 import { postParser, isAdmin } from "./middleware";
 import { UserSessionData } from "./auth/strategies";
 
@@ -17,7 +18,8 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 	let user = request.user as IUser;
 	response.json({
 		"uuid": user.uuid,
-		"name": user.name,
+		"name": formatName(user),
+		"nameParts": user.name,
 		"email": user.email,
 		"scopes": (user.scopes && Object.keys(user.scopes).length > 0) ? user.scopes : null
 	});
