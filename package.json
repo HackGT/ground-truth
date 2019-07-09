@@ -46,6 +46,7 @@
     "@types/passport-local": "^1.0.33",
     "@types/passport-oauth2-client-password": "^0.1.2",
     "@types/uuid": "^3.4.4",
+    "bugsnag-build-reporter": "^1.0.2",
     "chalk": "^2.4.2",
     "cheerio": "^1.0.0-rc.2",
     "compression": "^1.7.3",
@@ -79,6 +80,5 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "bugsnag-build-reporter": "^1.0.1"
   }
 }
