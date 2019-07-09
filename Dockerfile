@@ -1,6 +1,8 @@
 FROM node:11-alpine
 MAINTAINER Ryan Petschek <petschekr@gmail.com>
 
+ARG BUGSNAG
+
 # Deis wants bash
 RUN apk update && apk add bash
 RUN apk add git
@@ -20,5 +22,8 @@ RUN npm run build
 # Report a release to Bugsnag
 RUN npm run report-build
 
+FROM node:11-alpine
+WORKDIR /usr/src/groundtruth
+COPY --from=0 . .
 EXPOSE 3000
 CMD ["npm", "start"]

@@ -61,6 +61,7 @@ typings/
 .next
 
 *.js
+!bugsnag.js
 *.d.ts
 
 src/config/config\.json
