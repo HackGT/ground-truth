@@ -30,7 +30,11 @@ class Config implements IConfig.Main {
 	};
 	public email: IConfig.Email = {
 		from: "HackGT Team <hello@hackgt.com>",
-		key: ""
+		key: "",
+		headerImage: "",
+		twitterHandle: "TheHackGT",
+		facebookHandle: "thehackgt",
+		contactAddress: "hello@hack.gt"
 	};
 	public server: IConfig.Server = {
 		isProduction: false,
@@ -140,6 +144,18 @@ class Config implements IConfig.Main {
 		if (process.env.EMAIL_KEY) {
 			this.email.key = process.env.EMAIL_KEY;
 		}
+		if (process.env.EMAIL_HEADER_IMAGE) {
+			this.email.headerImage = process.env.EMAIL_HEADER_IMAGE;
+		}
+		if (process.env.EMAIL_TWITTER_HANDLE) {
+			this.email.twitterHandle = process.env.EMAIL_TWITTER_HANDLE;
+		}
+		if (process.env.EMAIL_FACEBOOK_HANDLE) {
+			this.email.facebookHandle = process.env.EMAIL_FACEBOOK_HANDLE;
+		}
+		if (process.env.EMAIL_CONTACT_ADDRESS) {
+			this.email.contactAddress = process.env.EMAIL_CONTACT_ADDRESS;
+		}
 		// Server
 		if (process.env.PRODUCTION && process.env.PRODUCTION.toLowerCase() === "true") {
 			this.server.isProduction = true;
@@ -224,6 +240,21 @@ import marked from "marked";
 // tslint:disable-next-line:no-var-requires
 const striptags = require("striptags");
 import { IUser } from "./schema";
+import * as htmlToText from "html-to-text";
+// tslint:disable-next-line:no-var-requires
+const Email = require("email-templates");
+const email = new Email({
+	views: {
+		root: path.resolve("src/emails/")
+	},
+	juice: true,
+	juiceResources: {
+		preserveImportant: true,
+		webResources: {
+			relativeTo: path.join(__dirname, "emails", "email-template")
+		}
+	}
+});
 
 export interface IMailObject {
 	to: string;
@@ -259,32 +290,26 @@ export async function renderMarkdown(markdown: string, options?: marked.MarkedOp
 		});
 	});
 }
-export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
+async function templateMarkdown(markdown: string, user: IUser): Promise<string> {
 	markdown = markdown.replace(/{{email}}/g, sanitize(user.email));
 	markdown = markdown.replace(/{{name}}/g, sanitize(user.name));
-	return renderMarkdown(markdown);
+	return markdown;
 }
-export async function renderEmailText(markdown: string, user: IUser, markdownRendered: boolean = false): Promise<string> {
-	let html: string;
-	if (!markdownRendered) {
-		html = await renderEmailHTML(markdown, user);
-	}
-	else {
-		html = markdown;
-	}
-	// Remove <style> and <script> block's content
-	html = html.replace(/<style>[\s\S]*?<\/style>/gi, "<style></style>").replace(/<script>[\s\S]*?<\/script>/gi, "<script></script>");
+export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
+	markdown = await templateMarkdown(markdown, user);
 
-	// Append href of links to their text
-	const cheerio = await import("cheerio");
-	let $ = cheerio.load(html, { decodeEntities: false });
-	$("a").each((i, el) => {
-		let element = $(el);
-		element.text(`${element.text()} (${element.attr("href")})`);
+	let renderedMarkdown = await renderMarkdown(markdown);
+	return email.render("email-template/html", {
+		emailHeaderImage: config.email.headerImage,
+		twitterHandle: config.email.twitterHandle,
+		facebookHandle: config.email.facebookHandle,
+		emailAddress: config.email.contactAddress,
+		hackathonName: config.server.name,
+		body: renderedMarkdown
 	});
-	html = $.html();
-
-	let text: string = striptags(html);
-	// Reverse sanitization
-	return text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+}
+export async function renderEmailText(markdown: string, user: IUser): Promise<string> {
+	let templatedMarkdown = await templateMarkdown(markdown, user);
+	let renderedHtml = await renderMarkdown(templatedMarkdown);
+	return htmlToText.fromString(renderedHtml);
 }

@@ -1,7 +1,8 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'hackgt/$REPO_NAME:$COMMIT_SHA', '-t', 'hackgt/$REPO_NAME:latest', '.']
+  args: ['build', '-t', 'hackgt/$REPO_NAME:$COMMIT_SHA', '-t', 'hackgt/$REPO_NAME:latest', '--build-arg', 'BUGSNAG', '.']
   timeout: 120s
+  secretEnv: ['BUGSNAG']
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args: ['-c', 'docker login --username=hackgt --password=$$DOCKER_PASSWORD']
@@ -26,3 +27,4 @@ secrets:
     DOCKER_PASSWORD: CiQATk4Dt7S6ki9JbJvw22WkKHsdyQhEOflZeK/1IJz/rJ18LmASNQD6KHO+IyjkNS/GHaDxJuLmbFXCr1kU5xzVVHaePe1CZeI1P1J/vyO3y1lXvSJpyID0hoXm
     TRAVIS_TOKEN: CiQATk4Dt3x0+R2zKUvt090ul3dDhcZUnYsGoQfOzSjKquHVwiUSPwD6KHO+mVuFK9L8KYnFzg20D24Ih3FPujmuEiNPugBU0qTlTSQFcEMQrv93l8sLPlW8E8k0cg3v0mZqI721Rg==
     GH_TOKEN: CiQATk4Dt+aCWrSvmOjyeFMx1cE6IdyMcp/9QICxGVymKcwNRnUSUQD6KHO+AF+uv67L1thZYzN4WY9U/UYDy69RR8KUEKNwfiUW2vxtvLOjMawfj4NHEnIthVC6Z9aWqb3In6l+/+mcKh5ZgVFKrWY8Whh+LEZGGA==
+    BUGSNAG: CiQATk4Dt8xzStNV4WE0wCBnfQIo8bhJ5fzvT/SG/4x8EEQ7wgYSSQD6KHO+BYGP1AjzIztHYtIw9x1GKA+aVquncYB98qZDHxHiV6/iacYfu4zlN7grLr+EPeXAvqeAPCIkF/K34MVfkA/wL/0oyZM=
