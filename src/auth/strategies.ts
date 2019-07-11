@@ -103,8 +103,9 @@ async function ExternalServiceCallback(
 	let user = await User.findOne({ [`services.${serviceName}.id`]: id });
 
 	if (session && session.email && session.firstName && session.lastName) {
+		let signupEmail = session.email.trim().toLowerCase();
 		// Only create / modify user account if email and name exist on the session (set by login page)
-		let existingUser = await User.findOne({ email: session.email });
+		let existingUser = await User.findOne({ email: signupEmail });
 
 		if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
 			user = existingUser;
@@ -132,7 +133,7 @@ async function ExternalServiceCallback(
 			// Create an account
 			user = createNew<IUser>(User, {
 				...OAuthStrategy.defaultUserProperties,
-				email: session.email,
+				email: signupEmail,
 				name: {
 					first: session.firstName,
 					preferred: session.preferredName,
@@ -337,7 +338,7 @@ export class Local implements RegistrationStrategy {
 	}
 
 	protected async passportCallback(request: Request, email: string, password: string, done: PassportDone) {
-		email = email.trim();
+		email = email.trim().toLowerCase();
 		let user = await User.findOne({ email });
 		if (user && request.path.match(/\/signup$/i)) {
 			done(null, false, { "message": "That email address is already in use" });
@@ -353,7 +354,7 @@ export class Local implements RegistrationStrategy {
 				return;
 			}
 			let firstName: string = request.body.firstName || "";
-			let preferredName: string = request.body.preferredName || "";
+			let preferredName: string | undefined = request.body.preferredName;
 			let lastName: string = request.body.lastName || "";
 			if (!email) {
 				done(null, false, { "message": "Missing email" });
@@ -456,7 +457,7 @@ export class Local implements RegistrationStrategy {
 				response.redirect("/login/forgot");
 				return;
 			}
-			email = email.toString().trim();
+			email = email.toString().trim().toLowerCase();
 
 			let user = await User.findOne({ email });
 			if (!user) {
@@ -666,7 +667,7 @@ export async function sendVerificationEmail(request: Request, user: Model<IUser>
 Thanks for creating an account with ${config.server.name}! To verify your email, please [click here](${link}).
 
 If you are registering for a ${config.server.name} event, please note that this does **not** complete your registration. After verifying your email, you will be directed to the event registration portal to submit an application.
- 
+
 Sincerely,
 
 The ${config.server.name} Team.`;

@@ -1,6 +1,6 @@
 {
   "name": "ground-truth",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Single sign on for HackGT apps",
   "main": "app.js",
   "scripts": {
@@ -79,6 +79,5 @@
     "typescript": "^3.3.0",
     "uuid": "^3.3.2"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
