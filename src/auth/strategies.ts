@@ -354,7 +354,7 @@ export class Local implements RegistrationStrategy {
 				return;
 			}
 			let firstName: string = request.body.firstName || "";
-			let preferredName: string = request.body.preferredName || "";
+			let preferredName: string | undefined = request.body.preferredName;
 			let lastName: string = request.body.lastName || "";
 			if (!email) {
 				done(null, false, { "message": "Missing email" });
