@@ -43,7 +43,7 @@ apiRoutes.post("/user/logout", passport.authenticate("bearer", { session: false 
 export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
 	let type: IConfig.Services | "unknown" = "unknown";
 	if (email) {
-		let user = await User.findOne({ email });
+		let user = await User.findOne({ email: email.trim().toLowerCase() });
 		if (user) {
 			// Least important first
 			if (user.local && user.local.hash) {
@@ -298,7 +298,7 @@ adminRoutes.post("/scope/delete", async (request, response) => {
 });
 
 async function changeAdminStatus(isAdmin: boolean, request: express.Request, response: express.Response) {
-	let user = await User.findOne({ email: request.body.email });
+	let user = await User.findOne({ email: (request.body.email || "").trim().toLowerCase() });
 	if (!user) {
 		response.status(400).json({
 			"error": "No existing user found with that email"
