@@ -480,7 +480,7 @@ export class Local implements RegistrationStrategy {
 			user.local.resetCode = crypto.randomBytes(32).toString("hex");
 
 			// Send reset email (hostname validated by previous middleware)
-			let link = createLink(request, `/auth/forgot/${user.local.resetCode}`);
+			let link = createLink(request, `/login/forgot/${user.local.resetCode}`);
 			let markdown =
 				`Hi {{name}},
 
