@@ -104,6 +104,10 @@ adminRoutes.post("/app", async (request, response) => {
 		});
 		return;
 	}
+	let clientType: "private" | "public" = request.body.clientType;
+	if (clientType !== "private" && clientType !== "public") {
+		clientType = "private";
+	}
 
 	try {
 		await createNew<IOAuthClient>(OAuthClient, {
@@ -111,7 +115,8 @@ adminRoutes.post("/app", async (request, response) => {
 			clientID: crypto.randomBytes(32).toString("hex"),
 			clientSecret: crypto.randomBytes(64).toString("hex"),
 			name,
-			redirectURIs
+			redirectURIs,
+			public: clientType === "public"
 		}).save();
 		response.json({
 			"success": true

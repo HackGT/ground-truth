@@ -84,6 +84,7 @@ namespace Admin {
 			addApplicationButton.disabled = true;
 			let nameField = document.getElementById("name") as HTMLInputElement;
 			let redirectURIsField = document.getElementById("redirect-uris") as HTMLInputElement;
+			let clientType = (document.querySelector(`input[name="client-type"]:checked`) as HTMLInputElement).value;
 
 			let name = nameField.value.trim();
 			let redirectURIs = redirectURIsField.value.trim();
@@ -96,7 +97,7 @@ namespace Admin {
 				return;
 			}
 
-			await sendRequest("/api/admin/app", { name, redirectURIs });
+			await sendRequest("/api/admin/app", { name, redirectURIs, clientType });
 		}
 		finally {
 			addApplicationButton.disabled = false;

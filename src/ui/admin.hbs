@@ -9,7 +9,12 @@
 					<ul>
 						<li>UUID: <strong>{{this.uuid}}</strong></li>
 						<li>Client ID: <strong>{{this.clientID}}</strong></li>
-						<li>Client Secret: <strong>{{this.clientSecret}}</strong></li>
+						{{#if this.public}}
+							<li>Client Secret: <strong>N/A</strong></li>
+						{{else}}
+							<li>Client Secret: <strong>{{this.clientSecret}}</strong></li>
+						{{/if}}
+						<li>Client Type: <strong>{{#if this.public}}Public (e.g. native app){{else}}Private (e.g. server-based){{/if}}</strong></li>
 						<li>
 							Allowed redirect URIs:
 							<ul>
@@ -32,9 +37,11 @@
 					<p class="control">
 						<button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}" data-uris="{{join this.redirectURIs}}">Edit redirect URIs</button>
 					</p>
-					<p class="control">
-						<button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
-					</p>
+					{{#if this.public}}{{else}}
+						<p class="control">
+							<button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
+						</p>
+					{{/if}}
 					<p class="control">
 						<button class="button is-danger is-outlined delete-app" data-uuid="{{this.uuid}}">Delete</button>
 					</p>
@@ -63,6 +70,22 @@
 				<label class="label" for="redirect-uris">Redirect URIs (comma separated)</label>
 				<div class="control">
 					<input class="input" type="url" id="redirect-uris" placeholder="e.g. https://localhost:3000" />
+				</div>
+			</div>
+			<div class="field">
+				<label class="label">Client type</label>
+				<p>Private applications must pass along a <code>client_secret</code> parameter when exchanging an authorization code for a long-term access token. This can only work for mediums like server-based apps where the client secret cannot be leaked. Native apps cannot guarantee the security of their secret and so should use <a href="https://www.oauth.com/oauth2-servers/pkce" target="_blank">PKCE</a> to generate and use a per-request secret instead. Public applications <em>should not</em> store or pass along a client secret.</p>
+				<br />
+				<div class="control ">
+					<label class="radio">
+						<input type="radio" name="client-type" value="private" checked />
+						Private (e.g. server-based)
+					</label>
+					<br />
+					<label class="radio">
+						<input type="radio" name="client-type" value="public" />
+						Public (e.g. native app)
+					</label>
 				</div>
 			</div>
 			<br />

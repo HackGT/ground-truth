@@ -144,6 +144,7 @@ export interface IOAuthClient extends RootDocument {
 	clientID: string;
 	clientSecret: string;
 	redirectURIs: string[];
+	public?: boolean;
 }
 
 export const OAuthClient = mongoose.model<Model<IOAuthClient>>("OAuthClient", new mongoose.Schema({
@@ -157,6 +158,7 @@ export const OAuthClient = mongoose.model<Model<IOAuthClient>>("OAuthClient", ne
 	clientID: String,
 	clientSecret: String,
 	redirectURIs: [String],
+	public: Boolean,
 }));
 
 export interface IAuthorizationCode extends RootDocument {

@@ -147,3 +147,7 @@ a.gatech:hover {
 .is-grouped.is-multiline > * {
 	margin-top: 12px;
 }
+
+.checkbox:hover, .radio:hover {
+	color: #aaa;
+}
