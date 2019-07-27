@@ -11,6 +11,7 @@ import * as oauth2orize from "oauth2orize";
 import { BasicStrategy } from "passport-http";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
+import moment = require("moment");
 
 import {
 	config, mongoose, COOKIE_OPTIONS, formatName
@@ -29,7 +30,6 @@ import {
 
 // Passport authentication
 import { app } from "../app";
-import moment = require("moment");
 
 if (!config.server.isProduction) {
 	console.warn("OAuth callback(s) running in development mode");
