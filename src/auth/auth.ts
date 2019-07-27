@@ -23,7 +23,7 @@ import {
 } from "../schema";
 import { Template } from "../templates";
 import {
-	RegistrationStrategy, strategies, validateAndCacheHostName, sendVerificationEmail
+	RegistrationStrategy, strategies
 } from "./strategies";
 
 // Passport authentication
