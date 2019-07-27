@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
     "start": "node src/app.js",
-    "report-build": "node bugsnag.js"
+    "report-build": "node bugsnag.js",
+    "debug": "node --nolazy --inspect-brk=9229 src/app.js"
   },
   "repository": {
     "type": "git",
