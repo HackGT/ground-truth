@@ -410,6 +410,12 @@ export class Local implements RegistrationStrategy {
 			if (hash.toString("hex") === user.local.hash) {
 				if (user.verifiedEmail) {
 					await checkAndSetAdmin(user);
+					if (request.session) {
+						request.session.email = undefined;
+						request.session.firstName = undefined;
+						request.session.preferredName = undefined;
+						request.session.lastName = undefined;
+					}
 					done(null, user);
 				}
 				else {
