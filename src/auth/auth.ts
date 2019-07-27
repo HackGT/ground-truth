@@ -1,7 +1,8 @@
 import * as crypto from "crypto";
 import * as vm from "vm";
-import * as express from "express";
+import * as qs from "querystring";
 import { URL } from "url";
+import * as express from "express";
 import session from "express-session";
 import connectMongo from "connect-mongo";
 const MongoStore = connectMongo(session);
@@ -111,7 +112,9 @@ OAuthRouter.use(postParser);
 async function verifyClient(clientID: string, clientSecret: string, done: (err: Error | null, client?: IOAuthClient | false) => void) {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
-		if (!client || client.clientSecret !== clientSecret) {
+		// Private apps must have a matching client secret
+		// Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
+		if (!client || (!client.public && client.clientSecret !== clientSecret)) {
 			done(null, false);
 			return;
 		}
@@ -174,6 +177,8 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 			uuid: user.uuid,
 			scopes: ares.scopes || [],
 			expiresAt: moment().add(60, "seconds").toDate(),
+			codeChallenge: ares.codeChallenge || undefined,
+			codeChallengeMethod: ares.codeChallengeMethod || undefined,
 		}).save();
 		done(null, code);
 	}
@@ -182,13 +187,41 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 	}
 }));
 
-server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, redirectURI, done) => {
+// As defined in types for oauth2orize
+// The IssueExchangeCodeFunction is missing an undocumented optional extra parameter that allows access to the request body
+type ExchangeDoneFunction = (err: Error | null, accessToken?: string | boolean, refreshToken?: string, params?: any) => void;
+type IssueExchangeCodeFunction = (client: any, code: string, redirectURI: string, issued: ExchangeDoneFunction) => void;
+
+server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: string, redirectURI: string, body: any, done: ExchangeDoneFunction) => {
 	try {
 		let authCode = await AuthorizationCode.findOne({ code });
 		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI || moment().isAfter(moment(authCode.expiresAt)) ) {
 			done(null, false);
 			return;
 		}
+		if (client.public) {
+			// Verify PKCE code challenge
+			// Private apps have already verified their client secret in verifyClient()
+			let codeVerifier: string = body.code_verifier || "";
+			if (!authCode.codeChallenge || !authCode.codeChallengeMethod || !codeVerifier) {
+				done(null, false);
+				return;
+			}
+			if (authCode.codeChallengeMethod === "S256") {
+				codeVerifier = crypto.createHash("sha256")
+					.update(codeVerifier)
+					.digest()
+					.toString("base64")
+					.replace(/\=/g, "")
+					.replace(/\+/g, "-")
+					.replace(/\//g, "_");
+			}
+			if (codeVerifier !== authCode.codeChallenge) {
+				done(null, false);
+				return;
+			}
+		}
+		await authCode.remove();
 		const token = crypto.randomBytes(128).toString("hex");
 		await createNew<IAccessToken>(AccessToken, {
 			token,
@@ -196,14 +229,13 @@ server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, red
 			uuid: authCode.uuid,
 			scopes: authCode.scopes,
 		}).save();
-		await authCode.remove();
 		const params = {};
 		done(null, token, undefined, params);
 	}
 	catch (err) {
 		done(err);
 	}
-}));
+}) as unknown as IssueExchangeCodeFunction));
 
 type IScopeWithValue = IScope & { value?: string };
 interface IAuthorizationTemplate extends TemplateContent {
@@ -247,6 +279,11 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	}
 	// Save request url in session so that we can go back to it in /authorize/decision if there was a validation error
 	request.session.authorizeURL = request.originalUrl;
+	const urlParams = qs.parse(request.originalUrl.split("?")[1]);
+	const codeChallenge: string | undefined = Array.isArray(urlParams.code_challenge) ? urlParams.code_challenge[0] : urlParams.code_challenge;
+	const codeChallengeMethod: string | undefined = Array.isArray(urlParams.code_challenge_method) ? urlParams.code_challenge_method[0] : urlParams.code_challenge_method;
+	request.session.codeChallenge = codeChallenge;
+	request.session.codeChallengeMethod = codeChallengeMethod;
 
 	let oauth2 = (request as any).oauth2;
 	let transactionID = oauth2.transactionID as string;
@@ -355,7 +392,9 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 }, server.decision((request, done) => {
 	let session = (request as express.Request).session;
 	let scopes: string[] = session ? session.scopes || [] : [];
-	done(null, { scopes });
+	let codeChallenge: string | undefined = session ? session.codeChallenge : undefined;
+	let codeChallengeMethod: string | undefined = session ? session.codeChallengeMethod : undefined;
+	done(null, { scopes, codeChallenge, codeChallengeMethod });
 }));
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());

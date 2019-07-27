@@ -168,6 +168,8 @@ export interface IAuthorizationCode extends RootDocument {
 	scopes: string[];
 	uuid: string;
 	expiresAt: Date;
+	codeChallenge?: string;
+	codeChallengeMethod?: "plain" | "S256";
 }
 
 export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("AuthorizationCode", new mongoose.Schema({
@@ -182,6 +184,8 @@ export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("Auth
 	scopes: [String],
 	uuid: String,
 	expiresAt: Date,
+	codeChallenge: String,
+	codeChallengeMethod: String,
 }));
 
 export interface IAccessToken extends RootDocument {
