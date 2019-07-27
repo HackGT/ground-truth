@@ -28,6 +28,7 @@ import {
 
 // Passport authentication
 import { app } from "../app";
+import moment = require("moment");
 
 if (!config.server.isProduction) {
 	console.warn("OAuth callback(s) running in development mode");
@@ -172,6 +173,7 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 			redirectURI,
 			uuid: user.uuid,
 			scopes: ares.scopes || [],
+			expiresAt: moment().add(60, "seconds").toDate(),
 		}).save();
 		done(null, code);
 	}
@@ -183,7 +185,7 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, redirectURI, done) => {
 	try {
 		let authCode = await AuthorizationCode.findOne({ code });
-		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI) {
+		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI || moment().isAfter(moment(authCode.expiresAt)) ) {
 			done(null, false);
 			return;
 		}

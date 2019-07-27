@@ -165,6 +165,7 @@ export interface IAuthorizationCode extends RootDocument {
 	redirectURI: string;
 	scopes: string[];
 	uuid: string;
+	expiresAt: Date;
 }
 
 export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("AuthorizationCode", new mongoose.Schema({
@@ -178,6 +179,7 @@ export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("Auth
 	redirectURI: String,
 	scopes: [String],
 	uuid: String,
+	expiresAt: Date,
 }));
 
 export interface IAccessToken extends RootDocument {
