@@ -115,6 +115,7 @@ async function verifyClient(clientID: string, clientSecret: string, done: (err: 
 		// Private apps must have a matching client secret
 		// Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
 		if (!client || (!client.public && client.clientSecret !== clientSecret)) {
+			console.warn(`Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"}`);
 			done(null, false);
 			return;
 		}
@@ -138,11 +139,13 @@ passport.use(new BearerStrategy(async (rawToken, done) => {
 	try {
 		let token = await AccessToken.findOne({ token: rawToken });
 		if (!token) {
+			console.warn(`Invalid token: ${rawToken}`);
 			done(null, false);
 			return;
 		}
 		let user = await User.findOne({ uuid: token.uuid });
 		if (!user) {
+			console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
 			done(null, false);
 			return;
 		}
@@ -195,7 +198,23 @@ type IssueExchangeCodeFunction = (client: any, code: string, redirectURI: string
 server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: string, redirectURI: string, body: any, done: ExchangeDoneFunction) => {
 	try {
 		let authCode = await AuthorizationCode.findOne({ code });
-		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI || moment().isAfter(moment(authCode.expiresAt)) ) {
+		if (!authCode) {
+			console.warn(`Could not find auth code to exchange for token: ${code}`);
+			done(null, false);
+			return;
+		}
+		if (client.clientID !== authCode.clientID) {
+			console.warn(`Client ID mismatch when exchanging for token: via request: ${client.clientID}, on auth code: ${authCode.clientID}`);
+			done(null, false);
+			return;
+		}
+		if (redirectURI !== authCode.redirectURI) {
+			console.warn(`Redirect URI mismatch when exchanging for token: via request: ${redirectURI}, on auth code: ${authCode.redirectURI}`);
+			done(null, false);
+			return;
+		}
+		if (moment().isAfter(moment(authCode.expiresAt))) {
+			console.warn(`Auth code is expired when exchanging for token: expired at ${authCode.expiresAt.toISOString()} (now: ${new Date().toISOString()})`);
 			done(null, false);
 			return;
 		}
@@ -204,6 +223,7 @@ server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: st
 			// Private apps have already verified their client secret in verifyClient()
 			let codeVerifier: string = body.code_verifier || "";
 			if (!authCode.codeChallenge || !authCode.codeChallengeMethod || !codeVerifier) {
+				console.warn(`Missing code challenge, challenge method, or code verifier in exchange for token: ${code}`);
 				done(null, false);
 				return;
 			}
@@ -217,6 +237,7 @@ server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: st
 					.replace(/\//g, "_");
 			}
 			if (codeVerifier !== authCode.codeChallenge) {
+				console.warn(`Code challenge mismatch: computed: ${codeVerifier}, expected: ${authCode.codeChallenge}`);
 				done(null, false);
 				return;
 			}
@@ -256,6 +277,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
 		let redirectOrigin = new URL(redirectURI).origin;
 		if (!client || (!client.redirectURIs.includes(redirectOrigin) && !client.redirectURIs.includes(redirectURI))) {
+			console.warn(`Client doesn't exist or redirect URI is not allowed: ${clientID} (${client ? client.name : "Not found"}), ${redirectURI}`);
 			done(null, false);
 			return;
 		}
