@@ -183,7 +183,7 @@ server.grant(oauth2orize.grant.code((async (client: IOAuthClient, redirectURI: s
 			code,
 			redirectURI,
 			uuid: user.uuid,
-			scopes: ares.scopes || [],
+			scopes: ares.scope || [],
 			expiresAt: moment().add(60, "seconds").toDate(),
 			codeChallenge: areq.codeChallenge || undefined,
 			codeChallengeMethod: areq.codeChallengeMethod || undefined,
@@ -325,7 +325,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		}
 	}
 	let scopeNames = scopes.map(scope => scope.name);
-	request.session.scopes = scopeNames;
+	request.session.scope = scopeNames;
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
@@ -364,7 +364,7 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 		return;
 	}
 	let user = request.user as Model<IUser>;
-	let scopes: string[] = request.session ? request.session.scopes || [] : [];
+	let scopes: string[] = request.session ? request.session.scope || [] : [];
 	for (let scope of scopes) {
 		let scopeValue = request.body[`scope-${scope}`];
 		if (scopeValue) {
@@ -413,10 +413,8 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 	next();
 }, server.decision((request, done) => {
 	let session = (request as express.Request).session;
-	let scopes: string[] = session ? session.scopes || [] : [];
-	let codeChallenge: string | undefined = session ? session.codeChallenge : undefined;
-	let codeChallengeMethod: string | undefined = session ? session.codeChallengeMethod : undefined;
-	done(null, { scopes, codeChallenge, codeChallengeMethod });
+	let scope: string[] = session ? session.scope || [] : [];
+	done(null, { scope });
 }));
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
