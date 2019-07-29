@@ -223,7 +223,7 @@ server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: st
 			// Private apps have already verified their client secret in verifyClient()
 			let codeVerifier: string = body.code_verifier || "";
 			if (!authCode.codeChallenge || !authCode.codeChallengeMethod || !codeVerifier) {
-				console.warn(`Missing code challenge, challenge method, or code verifier in exchange for token: ${code}`);
+				console.warn(`Missing code challenge, challenge method, or code verifier in exchange for token: ${code} (challenge: ${authCode.codeChallenge}, method: ${authCode.codeChallengeMethod}, verifier: ${codeVerifier})`);
 				done(null, false);
 				return;
 			}
