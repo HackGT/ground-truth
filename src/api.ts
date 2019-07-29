@@ -26,15 +26,15 @@ apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), asyn
 });
 
 apiRoutes.post("/user/logout", passport.authenticate("bearer", { session: false }), postParser, async (request, response) => {
-	let rawToken = (request.headers.authorization as string).split(" ")[1];
-	let token = await AccessToken.findOne({ token: rawToken });
-	if (token) {
-		let user = await User.findOne({ uuid: token.uuid });
-		if (user) {
-			user.forceLogOut = true;
-			await user.save();
-		}
+	let user = request.user as IUser;
+	let existingTokens = await AccessToken.find({ "uuid": user.uuid });
+	for (let token of existingTokens) {
 		await token.remove();
+	}
+	let userDB = await User.findOne({ uuid: user.uuid });
+	if (userDB) {
+		userDB.forceLogOut = true;
+		await userDB.save();
 	}
 
 	response.json({ "success": true });
@@ -104,6 +104,10 @@ adminRoutes.post("/app", async (request, response) => {
 		});
 		return;
 	}
+	let clientType: "private" | "public" = request.body.clientType;
+	if (clientType !== "private" && clientType !== "public") {
+		clientType = "private";
+	}
 
 	try {
 		await createNew<IOAuthClient>(OAuthClient, {
@@ -111,7 +115,8 @@ adminRoutes.post("/app", async (request, response) => {
 			clientID: crypto.randomBytes(32).toString("hex"),
 			clientSecret: crypto.randomBytes(64).toString("hex"),
 			name,
-			redirectURIs
+			redirectURIs,
+			public: clientType === "public"
 		}).save();
 		response.json({
 			"success": true

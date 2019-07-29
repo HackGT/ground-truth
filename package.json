@@ -1,13 +1,14 @@
 {
   "name": "ground-truth",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Single sign on for HackGT apps",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
     "start": "node src/app.js",
-    "report-build": "node bugsnag.js"
+    "report-build": "node bugsnag.js",
+    "debug": "node --nolazy --inspect-brk=9229 src/app.js"
   },
   "repository": {
     "type": "git",
@@ -66,6 +67,7 @@
     "mongoose": "^5.4.18",
     "morgan": "^1.9.1",
     "oauth2orize": "^1.11.0",
+    "oauth2orize-pkce": "^0.1.2",
     "passport": "^0.4.0",
     "passport-cas2": "petschekr/passport-cas",
     "passport-facebook": "^3.0.0",

@@ -63,5 +63,7 @@ typings/
 *.js
 !bugsnag.js
 *.d.ts
+*.map
+*.tsbuildinfo
 
 src/config/config\.json

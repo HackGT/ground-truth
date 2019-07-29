@@ -144,6 +144,7 @@ export interface IOAuthClient extends RootDocument {
 	clientID: string;
 	clientSecret: string;
 	redirectURIs: string[];
+	public?: boolean;
 }
 
 export const OAuthClient = mongoose.model<Model<IOAuthClient>>("OAuthClient", new mongoose.Schema({
@@ -157,6 +158,7 @@ export const OAuthClient = mongoose.model<Model<IOAuthClient>>("OAuthClient", ne
 	clientID: String,
 	clientSecret: String,
 	redirectURIs: [String],
+	public: Boolean,
 }));
 
 export interface IAuthorizationCode extends RootDocument {
@@ -165,6 +167,9 @@ export interface IAuthorizationCode extends RootDocument {
 	redirectURI: string;
 	scopes: string[];
 	uuid: string;
+	expiresAt: Date;
+	codeChallenge?: string;
+	codeChallengeMethod?: "plain" | "S256";
 }
 
 export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("AuthorizationCode", new mongoose.Schema({
@@ -178,6 +183,9 @@ export const AuthorizationCode = mongoose.model<Model<IAuthorizationCode>>("Auth
 	redirectURI: String,
 	scopes: [String],
 	uuid: String,
+	expiresAt: Date,
+	codeChallenge: String,
+	codeChallengeMethod: String,
 }));
 
 export interface IAccessToken extends RootDocument {

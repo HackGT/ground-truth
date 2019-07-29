@@ -1,15 +1,17 @@
 import * as crypto from "crypto";
 import * as vm from "vm";
-import * as express from "express";
 import { URL } from "url";
+import * as express from "express";
 import session from "express-session";
 import connectMongo from "connect-mongo";
 const MongoStore = connectMongo(session);
 import passport from "passport";
 import * as oauth2orize from "oauth2orize";
+const oauth2orize_pkce = require("oauth2orize-pkce");
 import { BasicStrategy } from "passport-http";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
+import moment = require("moment");
 
 import {
 	config, mongoose, COOKIE_OPTIONS, formatName
@@ -23,7 +25,7 @@ import {
 } from "../schema";
 import { Template } from "../templates";
 import {
-	RegistrationStrategy, strategies, validateAndCacheHostName, sendVerificationEmail
+	RegistrationStrategy, strategies
 } from "./strategies";
 
 // Passport authentication
@@ -110,7 +112,10 @@ OAuthRouter.use(postParser);
 async function verifyClient(clientID: string, clientSecret: string, done: (err: Error | null, client?: IOAuthClient | false) => void) {
 	try {
 		let client = await OAuthClient.findOne({ clientID });
-		if (!client || client.clientSecret !== clientSecret) {
+		// Private apps must have a matching client secret
+		// Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
+		if (!client || (!client.public && client.clientSecret !== clientSecret)) {
+			console.warn(`Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"})`);
 			done(null, false);
 			return;
 		}
@@ -134,11 +139,13 @@ passport.use(new BearerStrategy(async (rawToken, done) => {
 	try {
 		let token = await AccessToken.findOne({ token: rawToken });
 		if (!token) {
+			console.warn(`Invalid token: ${rawToken}`);
 			done(null, false);
 			return;
 		}
 		let user = await User.findOne({ uuid: token.uuid });
 		if (!user) {
+			console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
 			done(null, false);
 			return;
 		}
@@ -163,7 +170,12 @@ server.deserializeClient(async (uuid, done) => {
 	}
 });
 
-server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, user: IUser, ares, done) => {
+type GrantCodeDoneFunction = (err: Error | null, code?: string) => void;
+type IssueGrantCodeFunction = (client: any, redirectUri: string, user: any, res: any, issued: GrantCodeDoneFunction) => void;
+
+server.grant(oauth2orize_pkce.extensions());
+
+server.grant(oauth2orize.grant.code((async (client: IOAuthClient, redirectURI: string, user: IUser, ares: any, areq: any, done: GrantCodeDoneFunction) => {
 	const code = crypto.randomBytes(16).toString("hex");
 	try {
 		await createNew<IAuthorizationCode>(AuthorizationCode, {
@@ -171,22 +183,71 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 			code,
 			redirectURI,
 			uuid: user.uuid,
-			scopes: ares.scopes || [],
+			scopes: ares.scope || [],
+			expiresAt: moment().add(60, "seconds").toDate(),
+			codeChallenge: areq.codeChallenge || undefined,
+			codeChallengeMethod: areq.codeChallengeMethod || undefined,
 		}).save();
 		done(null, code);
 	}
 	catch (err) {
 		done(err);
 	}
-}));
+}) as unknown as IssueGrantCodeFunction));
 
-server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, redirectURI, done) => {
+// As defined in types for oauth2orize
+// The IssueExchangeCodeFunction is missing an undocumented optional extra parameter that allows access to the request body
+type ExchangeDoneFunction = (err: Error | null, accessToken?: string | boolean, refreshToken?: string, params?: any) => void;
+type IssueExchangeCodeFunction = (client: any, code: string, redirectURI: string, issued: ExchangeDoneFunction) => void;
+
+server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: string, redirectURI: string, body: any, done: ExchangeDoneFunction) => {
 	try {
 		let authCode = await AuthorizationCode.findOne({ code });
-		if (!authCode || client.clientID !== authCode.clientID || redirectURI !== authCode.redirectURI) {
+		if (!authCode) {
+			console.warn(`Could not find auth code to exchange for token: ${code}`);
 			done(null, false);
 			return;
 		}
+		if (client.clientID !== authCode.clientID) {
+			console.warn(`Client ID mismatch when exchanging for token: via request: ${client.clientID}, on auth code: ${authCode.clientID}`);
+			done(null, false);
+			return;
+		}
+		if (redirectURI !== authCode.redirectURI) {
+			console.warn(`Redirect URI mismatch when exchanging for token: via request: ${redirectURI}, on auth code: ${authCode.redirectURI}`);
+			done(null, false);
+			return;
+		}
+		if (moment().isAfter(moment(authCode.expiresAt))) {
+			console.warn(`Auth code is expired when exchanging for token: expired at ${authCode.expiresAt.toISOString()} (now: ${new Date().toISOString()})`);
+			done(null, false);
+			return;
+		}
+		if (client.public) {
+			// Verify PKCE code challenge
+			// Private apps have already verified their client secret in verifyClient()
+			let codeVerifier: string = body.code_verifier || "";
+			if (!authCode.codeChallenge || !authCode.codeChallengeMethod || !codeVerifier) {
+				console.warn(`Missing code challenge, challenge method, or code verifier in exchange for token: ${code} (challenge: ${authCode.codeChallenge}, method: ${authCode.codeChallengeMethod}, verifier: ${codeVerifier})`);
+				done(null, false);
+				return;
+			}
+			if (authCode.codeChallengeMethod === "S256") {
+				codeVerifier = crypto.createHash("sha256")
+					.update(codeVerifier)
+					.digest()
+					.toString("base64")
+					.replace(/\=/g, "")
+					.replace(/\+/g, "-")
+					.replace(/\//g, "_");
+			}
+			if (codeVerifier !== authCode.codeChallenge) {
+				console.warn(`Code challenge mismatch: computed: ${codeVerifier}, expected: ${authCode.codeChallenge}`);
+				done(null, false);
+				return;
+			}
+		}
+		await authCode.remove();
 		const token = crypto.randomBytes(128).toString("hex");
 		await createNew<IAccessToken>(AccessToken, {
 			token,
@@ -194,14 +255,13 @@ server.exchange(oauth2orize.exchange.code(async (client: IOAuthClient, code, red
 			uuid: authCode.uuid,
 			scopes: authCode.scopes,
 		}).save();
-		await authCode.remove();
 		const params = {};
 		done(null, token, undefined, params);
 	}
 	catch (err) {
 		done(err);
 	}
-}));
+}) as unknown as IssueExchangeCodeFunction));
 
 type IScopeWithValue = IScope & { value?: string };
 interface IAuthorizationTemplate extends TemplateContent {
@@ -222,6 +282,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		// This is so that changing example.com/endpoint to example.com/other_endpoint doesn't result in failure
 		let redirectOrigin = new URL(redirectURI).origin;
 		if (!client || (!client.redirectURIs.includes(redirectOrigin) && !client.redirectURIs.includes(redirectURI))) {
+			console.warn(`Client doesn't exist or redirect URI is not allowed: ${clientID} (${client ? client.name : "Not found"}), ${redirectURI}`);
 			done(null, false);
 			return;
 		}
@@ -230,7 +291,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	catch (err) {
 		done(err);
 	}
-}, async (client, user, scope, type, areq, done) => {
+}, async (client: IOAuthClient, user: IUser, scope, type, areq, done) => {
 	try {
 		let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
 		done(null, !!token, { scope }, null);
@@ -264,7 +325,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 		}
 	}
 	let scopeNames = scopes.map(scope => scope.name);
-	request.session.scopes = scopeNames;
+	request.session.scope = scopeNames;
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
@@ -303,7 +364,7 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 		return;
 	}
 	let user = request.user as Model<IUser>;
-	let scopes: string[] = request.session ? request.session.scopes || [] : [];
+	let scopes: string[] = request.session ? request.session.scope || [] : [];
 	for (let scope of scopes) {
 		let scopeValue = request.body[`scope-${scope}`];
 		if (scopeValue) {
@@ -352,8 +413,8 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
 	next();
 }, server.decision((request, done) => {
 	let session = (request as express.Request).session;
-	let scopes: string[] = session ? session.scopes || [] : [];
-	done(null, { scopes });
+	let scope: string[] = session ? session.scope || [] : [];
+	done(null, { scope });
 }));
 
 OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
