@@ -1,6 +1,5 @@
 import * as crypto from "crypto";
 import * as vm from "vm";
-import * as qs from "querystring";
 import { URL } from "url";
 import * as express from "express";
 import session from "express-session";
@@ -8,6 +7,7 @@ import connectMongo from "connect-mongo";
 const MongoStore = connectMongo(session);
 import passport from "passport";
 import * as oauth2orize from "oauth2orize";
+const oauth2orize_pkce = require("oauth2orize-pkce");
 import { BasicStrategy } from "passport-http";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
@@ -170,7 +170,12 @@ server.deserializeClient(async (uuid, done) => {
 	}
 });
 
-server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, user: IUser, ares, done) => {
+type GrantCodeDoneFunction = (err: Error | null, code?: string) => void;
+type IssueGrantCodeFunction = (client: any, redirectUri: string, user: any, res: any, issued: GrantCodeDoneFunction) => void;
+
+server.grant(oauth2orize_pkce.extensions());
+
+server.grant(oauth2orize.grant.code((async (client: IOAuthClient, redirectURI: string, user: IUser, ares: any, areq: any, done: GrantCodeDoneFunction) => {
 	const code = crypto.randomBytes(16).toString("hex");
 	try {
 		await createNew<IAuthorizationCode>(AuthorizationCode, {
@@ -180,15 +185,15 @@ server.grant(oauth2orize.grant.code(async (client: IOAuthClient, redirectURI, us
 			uuid: user.uuid,
 			scopes: ares.scopes || [],
 			expiresAt: moment().add(60, "seconds").toDate(),
-			codeChallenge: ares.codeChallenge || undefined,
-			codeChallengeMethod: ares.codeChallengeMethod || undefined,
+			codeChallenge: areq.codeChallenge || undefined,
+			codeChallengeMethod: areq.codeChallengeMethod || undefined,
 		}).save();
 		done(null, code);
 	}
 	catch (err) {
 		done(err);
 	}
-}));
+}) as unknown as IssueGrantCodeFunction));
 
 // As defined in types for oauth2orize
 // The IssueExchangeCodeFunction is missing an undocumented optional extra parameter that allows access to the request body
@@ -286,7 +291,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	catch (err) {
 		done(err);
 	}
-}, async (client, user, scope, type, areq, done) => {
+}, async (client: IOAuthClient, user: IUser, scope, type, areq, done) => {
 	try {
 		let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
 		done(null, !!token, { scope }, null);
@@ -301,11 +306,6 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	}
 	// Save request url in session so that we can go back to it in /authorize/decision if there was a validation error
 	request.session.authorizeURL = request.originalUrl;
-	const urlParams = qs.parse(request.originalUrl.split("?")[1]);
-	const codeChallenge: string | undefined = Array.isArray(urlParams.code_challenge) ? urlParams.code_challenge[0] : urlParams.code_challenge;
-	const codeChallengeMethod: string | undefined = Array.isArray(urlParams.code_challenge_method) ? urlParams.code_challenge_method[0] : urlParams.code_challenge_method;
-	request.session.codeChallenge = codeChallenge;
-	request.session.codeChallengeMethod = codeChallengeMethod;
 
 	let oauth2 = (request as any).oauth2;
 	let transactionID = oauth2.transactionID as string;
