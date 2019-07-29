@@ -115,7 +115,7 @@ async function verifyClient(clientID: string, clientSecret: string, done: (err: 
 		// Private apps must have a matching client secret
 		// Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
 		if (!client || (!client.public && client.clientSecret !== clientSecret)) {
-			console.warn(`Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"}`);
+			console.warn(`Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"})`);
 			done(null, false);
 			return;
 		}
