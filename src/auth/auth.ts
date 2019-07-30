@@ -336,7 +336,9 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
 		name: formatName(user),
 		email: user.email,
-		redirect: new URL(oauth2.redirectURI).origin,
+		redirect: client.public
+			? `a native app (${oauth2.redirectURI})`
+			: new URL(oauth2.redirectURI).origin,
 		appName: client.name,
 		transactionID,
 		scopes,
