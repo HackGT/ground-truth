@@ -341,6 +341,8 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 	let scopeNames = scopes.map(scope => scope.name);
 	request.session.scope = scopeNames;
 
+	let redirectURI = new URL(oauth2.redirectURI);
+
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
 		title: "Authorize",
@@ -350,9 +352,9 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
 		name: formatName(user),
 		email: user.email,
-		redirect: client.public
-			? `a native app (${oauth2.redirectURI})`
-			: new URL(oauth2.redirectURI).origin,
+		redirect: redirectURI.origin === "null" // null as a string is intentional due to DOM spec
+			? `a native app`
+			: redirectURI.origin,
 		appName: client.name,
 		transactionID,
 		scopes,
