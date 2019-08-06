@@ -8,7 +8,7 @@ import moment from "moment-timezone";
 import uuid from "uuid/v4";
 
 import { config, renderEmailHTML, renderEmailText, sendMailAsync } from "../common";
-import { postParser } from "../middleware";
+import { postParser, authenticateWithRedirect } from "../middleware";
 import { createNew, IConfig, Model, IUser, User } from "../schema";
 import { Request, Response, NextFunction, Router } from "express";
 
@@ -566,6 +566,57 @@ The ${config.server.name} Team.`;
 				console.error(err);
 				request.flash("error", "An error occurred while saving your new password");
 				response.redirect(path.join("/auth", request.url));
+			}
+		});
+
+		authRoutes.post("/changepassword", validateAndCacheHostName, authenticateWithRedirect, postParser, async (request, response) => {
+			let user = await User.findOne({ uuid: request.user!.uuid });
+			if (!user) {
+				request.flash("error", "User not logged in");
+				response.redirect("/login");
+				return;
+			}
+			if (!user.local || !user.local.hash) {
+				response.redirect("/");
+				return;
+			}
+
+			let oldPassword: string = request.body.oldpassword || "";
+			let currentHash = await pbkdf2Async(oldPassword, Buffer.from(user.local.salt || "", "hex"), PBKDF2_ROUNDS);
+			if (currentHash.toString("hex") !== user.local.hash) {
+				request.flash("error", "Incorrect current password");
+				response.redirect("/login/changepassword");
+				return;
+			}
+
+			let password1: string | undefined = request.body.password1;
+			let password2: string | undefined = request.body.password2;
+			if (!password1 || !password2) {
+				request.flash("error", "Missing new password or confirm password");
+				response.redirect(`/login/changepassword`);
+				return;
+			}
+			if (password1 !== password2) {
+				request.flash("error", "New passwords must match");
+				response.redirect(`/login/changepassword`);
+				return;
+			}
+
+			let salt = crypto.randomBytes(32);
+			let hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
+
+			try {
+				user.local!.salt = salt.toString("hex");
+				user.local!.hash = hash.toString("hex");
+				user.local!.resetCode = undefined;
+				await user.save();
+
+				response.redirect("/");
+			}
+			catch (err) {
+				console.error(err);
+				request.flash("error", "An error occurred while saving your new password");
+				response.redirect("/login/changepassword");
 			}
 		});
 	}

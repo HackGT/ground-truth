@@ -66,6 +66,7 @@ const IndexTemplate = new Template("index.hbs");
 const LoginTemplate = new Template("login.hbs");
 const ForgotPasswordTemplate = new Template("forgotpassword.hbs");
 const ResetPasswordTemplate = new Template("resetpassword.hbs");
+const ChangePasswordTemplate = new Template("changepassword.hbs");
 const AdminTemplate = new Template("admin.hbs");
 
 export let uiRoutes = express.Router();
@@ -156,6 +157,17 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 		resetCode: user.local!.resetCode!
 	};
 	response.send(ResetPasswordTemplate.render(templateData));
+});
+uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (request, response) => {
+	let templateData = {
+		siteTitle: config.server.name,
+		title: "Change Password",
+		includeJS: null,
+
+		error: request.flash("error"),
+		success: request.flash("success")
+	};
+	response.send(ChangePasswordTemplate.render(templateData));
 });
 
 uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
