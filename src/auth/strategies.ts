@@ -167,7 +167,7 @@ async function ExternalServiceCallback(
 	}
 	if (!user.verifiedEmail) {
 		request.logout();
-		request.flash("success", "Account created successfully. Please verify your email before signing in.");
+		request.flash("success", `Account created successfully. Please verify your email before signing in. ${resendVerificationEmailLink(request, user.uuid)}`);
 		done(null, false);
 		return;
 	}
@@ -396,7 +396,7 @@ export class Local implements RegistrationStrategy {
 				await sendVerificationEmail(request, user);
 			}
 			if (!user.verifiedEmail) {
-				request.flash("success", "Account created successfully. Please verify your email before signing in.");
+				request.flash("success", `Account created successfully. Please verify your email before signing in. ${resendVerificationEmailLink(request, user.uuid)}`);
 				done(null, false);
 				return;
 			}
@@ -419,7 +419,7 @@ export class Local implements RegistrationStrategy {
 					done(null, user);
 				}
 				else {
-					done(null, false, { "message": "You must verify your email before you can sign in" });
+					done(null, false, { "message": `You must verify your email before you can sign in. ${resendVerificationEmailLink(request, user.uuid)}` });
 				}
 			}
 			else {
@@ -472,7 +472,7 @@ export class Local implements RegistrationStrategy {
 				return;
 			}
 			if (!user.verifiedEmail) {
-				request.flash("error", "Please verify your email first");
+				request.flash("error", `Please verify your email first. ${resendVerificationEmailLink(request, user.uuid)}`);
 				response.redirect("/login");
 				return;
 			}
@@ -661,7 +661,13 @@ function createLink(request: Request, link: string): string {
 	}
 }
 
+export function resendVerificationEmailLink(request: Request, uuid: string): string {
+	const link = createLink(request, `/auth/resend/${uuid}`);
+	return `Haven't gotten it? <a href="${link}">Resend verification email</a>.`;
+}
+
 export async function sendVerificationEmail(request: Request, user: Model<IUser>) {
+	if (user.verifiedEmail) return;
 	// Send verification email (hostname validated by previous middleware)
 	user.emailVerificationCode = crypto.randomBytes(32).toString("hex");
 	await user.save();
