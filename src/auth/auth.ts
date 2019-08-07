@@ -96,7 +96,7 @@ app.all("/logout", (request, response) => {
 });
 
 authRouter.get("/resend/:uuid", validateAndCacheHostName, async (request, response) => {
-	let user = await User.findOne({ uuid: request.params.uuid || "" });
+	const user = await User.findOne({ uuid: request.params.uuid || "" });
 	if (user) {
 		await sendVerificationEmail(request, user);
 		const email = user.email
@@ -338,10 +338,10 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 			});
 		}
 	}
-	let scopeNames = scopes.map(scope => scope.name);
+	const scopeNames = scopes.map(scope => scope.name);
 	request.session.scope = scopeNames;
 
-	let redirectURI = new URL(oauth2.redirectURI);
+	const redirectURI = new URL(oauth2.redirectURI);
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
