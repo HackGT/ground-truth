@@ -25,7 +25,8 @@ import {
 } from "../schema";
 import { Template } from "../templates";
 import {
-	RegistrationStrategy, strategies
+	RegistrationStrategy, strategies,
+	validateAndCacheHostName, sendVerificationEmail, resendVerificationEmailLink,
 } from "./strategies";
 
 // Passport authentication
@@ -79,6 +80,9 @@ authRouter.get("/validatehost/:nonce", (request, response) => {
 	response.send(crypto.createHmac("sha256", config.secrets.session).update(nonce).digest().toString("hex"));
 });
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.all("/logout", (request, response) => {
 	request.logout();
 	if (request.session) {
@@ -91,8 +95,18 @@ app.all("/logout", (request, response) => {
 	}
 });
 
-app.use(passport.initialize());
-app.use(passport.session());
+authRouter.get("/resend/:uuid", validateAndCacheHostName, async (request, response) => {
+	const user = await User.findOne({ uuid: request.params.uuid || "" });
+	if (user) {
+		await sendVerificationEmail(request, user);
+		const email = user.email
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/&/g, "&amp;");
+		request.flash("success", `Resent a verification email to ${email}. ${resendVerificationEmailLink(request, user.uuid)}`);
+	}
+	response.redirect("/login");
+});
 
 // OAuth server stuff
 export let OAuthRouter = express.Router();
@@ -324,8 +338,10 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 			});
 		}
 	}
-	let scopeNames = scopes.map(scope => scope.name);
+	const scopeNames = scopes.map(scope => scope.name);
 	request.session.scope = scopeNames;
+
+	const redirectURI = new URL(oauth2.redirectURI);
 
 	response.send(AuthorizeTemplate.render({
 		siteTitle: config.server.name,
@@ -336,7 +352,9 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
 		name: formatName(user),
 		email: user.email,
-		redirect: new URL(oauth2.redirectURI).origin,
+		redirect: redirectURI.origin === "null" // null as a string is intentional due to DOM spec
+			? `a native app`
+			: redirectURI.origin,
 		appName: client.name,
 		transactionID,
 		scopes,

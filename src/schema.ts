@@ -235,6 +235,7 @@ export const Scope = mongoose.model<Model<IScope>>("Scope", new mongoose.Schema(
 
 export interface TemplateContent {
 	siteTitle: string;
+	contactEmail: string;
 	title: string;
 	includeJS: string | null;
 }

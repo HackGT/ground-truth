@@ -8,7 +8,7 @@ import moment from "moment-timezone";
 import uuid from "uuid/v4";
 
 import { config, renderEmailHTML, renderEmailText, sendMailAsync } from "../common";
-import { postParser } from "../middleware";
+import { postParser, authenticateWithRedirect } from "../middleware";
 import { createNew, IConfig, Model, IUser, User } from "../schema";
 import { Request, Response, NextFunction, Router } from "express";
 
@@ -167,7 +167,7 @@ async function ExternalServiceCallback(
 	}
 	if (!user.verifiedEmail) {
 		request.logout();
-		request.flash("success", "Account created successfully. Please verify your email before signing in.");
+		request.flash("success", `Account created successfully. Please verify your email before signing in. ${resendVerificationEmailLink(request, user.uuid)}`);
 		done(null, false);
 		return;
 	}
@@ -396,7 +396,7 @@ export class Local implements RegistrationStrategy {
 				await sendVerificationEmail(request, user);
 			}
 			if (!user.verifiedEmail) {
-				request.flash("success", "Account created successfully. Please verify your email before signing in.");
+				request.flash("success", `Account created successfully. Please verify your email before signing in. ${resendVerificationEmailLink(request, user.uuid)}`);
 				done(null, false);
 				return;
 			}
@@ -410,10 +410,16 @@ export class Local implements RegistrationStrategy {
 			if (hash.toString("hex") === user.local.hash) {
 				if (user.verifiedEmail) {
 					await checkAndSetAdmin(user);
+					if (request.session) {
+						request.session.email = undefined;
+						request.session.firstName = undefined;
+						request.session.preferredName = undefined;
+						request.session.lastName = undefined;
+					}
 					done(null, user);
 				}
 				else {
-					done(null, false, { "message": "You must verify your email before you can sign in" });
+					done(null, false, { "message": `You must verify your email before you can sign in. ${resendVerificationEmailLink(request, user.uuid)}` });
 				}
 			}
 			else {
@@ -466,7 +472,7 @@ export class Local implements RegistrationStrategy {
 				return;
 			}
 			if (!user.verifiedEmail) {
-				request.flash("error", "Please verify your email first");
+				request.flash("error", `Please verify your email first. ${resendVerificationEmailLink(request, user.uuid)}`);
 				response.redirect("/login");
 				return;
 			}
@@ -562,6 +568,57 @@ The ${config.server.name} Team.`;
 				response.redirect(path.join("/auth", request.url));
 			}
 		});
+
+		authRoutes.post("/changepassword", validateAndCacheHostName, authenticateWithRedirect, postParser, async (request, response) => {
+			let user = await User.findOne({ uuid: request.user!.uuid });
+			if (!user) {
+				request.flash("error", "User not logged in");
+				response.redirect("/login");
+				return;
+			}
+			if (!user.local || !user.local.hash) {
+				response.redirect("/");
+				return;
+			}
+
+			let oldPassword: string = request.body.oldpassword || "";
+			let currentHash = await pbkdf2Async(oldPassword, Buffer.from(user.local.salt || "", "hex"), PBKDF2_ROUNDS);
+			if (currentHash.toString("hex") !== user.local.hash) {
+				request.flash("error", "Incorrect current password");
+				response.redirect("/login/changepassword");
+				return;
+			}
+
+			let password1: string | undefined = request.body.password1;
+			let password2: string | undefined = request.body.password2;
+			if (!password1 || !password2) {
+				request.flash("error", "Missing new password or confirm password");
+				response.redirect(`/login/changepassword`);
+				return;
+			}
+			if (password1 !== password2) {
+				request.flash("error", "New passwords must match");
+				response.redirect(`/login/changepassword`);
+				return;
+			}
+
+			let salt = crypto.randomBytes(32);
+			let hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
+
+			try {
+				user.local!.salt = salt.toString("hex");
+				user.local!.hash = hash.toString("hex");
+				user.local!.resetCode = undefined;
+				await user.save();
+
+				response.redirect("/");
+			}
+			catch (err) {
+				console.error(err);
+				request.flash("error", "An error occurred while saving your new password");
+				response.redirect("/login/changepassword");
+			}
+		});
 	}
 }
 
@@ -655,7 +712,13 @@ function createLink(request: Request, link: string): string {
 	}
 }
 
+export function resendVerificationEmailLink(request: Request, uuid: string): string {
+	const link = createLink(request, `/auth/resend/${uuid}`);
+	return `Haven't gotten it? <a href="${link}">Resend verification email</a>.`;
+}
+
 export async function sendVerificationEmail(request: Request, user: Model<IUser>) {
+	if (user.verifiedEmail) return;
 	// Send verification email (hostname validated by previous middleware)
 	user.emailVerificationCode = crypto.randomBytes(32).toString("hex");
 	await user.save();

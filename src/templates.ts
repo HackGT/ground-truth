@@ -53,12 +53,18 @@ export class Template<T extends TemplateContent> {
 		this.template = Handlebars.compile(data);
 	}
 
-	public render(input: T): string {
+	public render(input: Partial<T>): string {
 		if (!config.server.isProduction) {
 			Handlebars.registerPartial("main", fs.readFileSync(path.resolve("src/ui", "partials", "main.hbs"), "utf8"));
 			this.loadTemplate();
 		}
-		return this.template!(input);
+		const renderData = {
+			siteTitle: config.server.name,
+			contactEmail: config.email.contactAddress,
+			includeJS: null,
+			...input
+		} as T;
+		return this.template!(renderData);
 	}
 }
 
@@ -66,6 +72,7 @@ const IndexTemplate = new Template("index.hbs");
 const LoginTemplate = new Template("login.hbs");
 const ForgotPasswordTemplate = new Template("forgotpassword.hbs");
 const ResetPasswordTemplate = new Template("resetpassword.hbs");
+const ChangePasswordTemplate = new Template("changepassword.hbs");
 const AdminTemplate = new Template("admin.hbs");
 
 export let uiRoutes = express.Router();
@@ -90,9 +97,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
 		}
 	}
 	let templateData = {
-		siteTitle: config.server.name,
 		title: "Home",
-		includeJS: null,
 
 		user: request.user,
 		loginMethod: await bestLoginMethod(request.user.email),
@@ -106,7 +111,6 @@ uiRoutes.route("/login").get(async (request, response) => {
 		return;
 	}
 	let templateData = {
-		siteTitle: config.server.name,
 		title: "Log in",
 		includeJS: "login",
 
@@ -121,9 +125,7 @@ uiRoutes.route("/login").get(async (request, response) => {
 
 uiRoutes.route("/login/forgot").get((request, response) => {
 	let templateData = {
-		siteTitle: config.server.name,
 		title: "Forgot Password",
-		includeJS: null,
 
 		error: request.flash("error"),
 		success: request.flash("success")
@@ -147,9 +149,7 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 		return;
 	}
 	let templateData = {
-		siteTitle: config.server.name,
 		title: "Reset Password",
-		includeJS: null,
 
 		error: request.flash("error"),
 		success: request.flash("success"),
@@ -157,10 +157,23 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 	};
 	response.send(ResetPasswordTemplate.render(templateData));
 });
+uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (request, response) => {
+	const user = request.user as IUser;
+	if (!user.local || !user.local.hash) {
+		response.redirect("/");
+		return;
+	}
+	let templateData = {
+		title: "Change Password",
+
+		error: request.flash("error"),
+		success: request.flash("success")
+	};
+	response.send(ChangePasswordTemplate.render(templateData));
+});
 
 uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 	let templateData = {
-		siteTitle: config.server.name,
 		title: "Admin",
 		includeJS: "admin",
 

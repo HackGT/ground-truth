@@ -19,6 +19,11 @@
 						<a class="button is-medium" href="/admin">Admin Settings</a>
 					</p>
 				{{/if}}
+				{{#ifCond loginMethod "local"}}
+					<p class="control">
+						<a class="button is-medium" href="/login/changepassword">Change password</a>
+					</p>
+				{{/ifCond}}
 				<p class="control">
 					<a class="button is-medium" href="/logout">Log out</a>
 				</p>
