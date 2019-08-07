@@ -159,6 +159,11 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 	response.send(ResetPasswordTemplate.render(templateData));
 });
 uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (request, response) => {
+	const user = request.user as IUser;
+	if (!user.local || !user.local.hash) {
+		response.redirect("/");
+		return;
+	}
 	let templateData = {
 		siteTitle: config.server.name,
 		title: "Change Password",
