@@ -161,6 +161,7 @@ namespace Login {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(credential)
 			});
+			window.location.reload();
 		}
 	})().catch(err => console.error(err));
 }

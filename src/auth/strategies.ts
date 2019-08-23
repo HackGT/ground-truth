@@ -334,11 +334,11 @@ export class FIDO2 implements RegistrationStrategy {
 	public readonly passportStrategy: Strategy;
 	private readonly timeout = 60000; // 60 seconds
 	private readonly fidoInstance = new Fido2Lib({
-		cryptoParams: [-7], // ECC only\
+		cryptoParams: [-7], // ECC only
 		rpName: `${config.server.name} Login System`,
 		timeout: this.timeout,
 		authenticatorRequireResidentKey: false,
-		authenticatorUserVerification: "required"
+		authenticatorUserVerification: "required" // Needed for secure passwordless login
 	});
 
 	constructor() {
@@ -346,73 +346,81 @@ export class FIDO2 implements RegistrationStrategy {
 	}
 
 	private async passportCallback(request: Request, done: PassportDone) {
+		const action = request.originalUrl.split("/").pop() || "";
+		if (action === "register") {
+			if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
+				done(null, false, { "message": "Invalid session values" });
+				return;
+			}
+			if (Date.now() >= request.session.registerChallengeTime + this.timeout) {
+				done(null, false, { "message": "Registration timed out. Please try again." });
+				return;
+			}
+
+			let attestationResult = {
+				...request.body,
+				id: Buffer.from(request.body.id.replace(/-/g, "+").replace(/_/g, "/"), "base64").buffer
+			};
+			try {
+				let result = await this.fidoInstance.attestationResult(attestationResult, {
+					rpId: request.hostname,
+					challenge: request.session.registerChallenge,
+					origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
+					factor: "first"
+				});
+				// Continue with creating user account
+				console.log(result);
+				done(null, false, { "message": "It worked but it's not done yet" });
+			}
+			catch (err) {
+				done(null, false, { "message": `Registration failed: ${err.message}` });
+			}
+		}
+		else if (action === "login") {
+
+		}
+	}
+
+	protected async registerRequest(request: Request, response: Response) {
+		if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
+			response.status(400).send({ "error": "Invalid session values" });
+			return;
+		}
+		const email = request.session.email.trim();
+
+		let options = await this.fidoInstance.attestationOptions();
+		let challenge = Buffer.from(options.challenge).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+		let user = {
+			id: uuid(), // Cannot exceed 64 bytes
+			name: email, // Aids in determining difference between accounts with similar displayNames according to spec
+			displayName: `${request.session.preferredName || request.session.firstName} ${request.session.lastName}`
+		};
+		options.user = user;
+
+		// Save data to session for validation in next step
+		request.session.userID = user.id;
+		request.session.registerChallenge = challenge;
+		request.session.registerChallengeTime = Date.now();
+
+		response.json({
+			...options,
+			challenge
+		});
+	}
+
+	protected async loginRequest(request: Request, response: Response) {
+
 	}
 
 	public use(authRoutes: Router) {
 		passport.use(this.name, this.passportStrategy);
 
 		authRoutes.route(`/${this.name}/register`)
-			.get(async (request, response) => {
-				if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
-					response.status(400).send({ "error": "Invalid session values" });
-					return;
-				}
-				const email = request.session.email.trim();
-
-				let options = await this.fidoInstance.attestationOptions();
-				let challenge = Buffer.from(options.challenge).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-				let user = {
-					id: uuid(), // Cannot exceed 64 bytes
-					name: email, // Aids in determining difference between accounts with similar displayNames according to spec
-					displayName: `${request.session.preferredName || request.session.firstName} ${request.session.lastName}`
-				};
-				options.user = user;
-
-				// Save data to session for validation in next step
-				request.session.userID = user.id;
-				request.session.registerChallenge = challenge;
-				request.session.registerChallengeTime = Date.now();
-
-				response.json({
-					...options,
-					challenge
-				});
-			})
-			.post(validateAndCacheHostName, bodyParser.json(), async (request, response) => {
-				if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
-					response.status(400).send({ "error": "Invalid session values" });
-					return;
-				}
-				if (Date.now() >= request.session.registerChallengeTime + this.timeout) {
-					response.status(408).send({ "error": "Registration timed out. Please try again." });
-					return;
-				}
-
-				let attestationResult = {
-					...request.body,
-					id: Buffer.from(request.body.id.replace(/-/g, "+").replace(/_/g, "/"), "base64").buffer
-				};
-				try {
-					let result = await this.fidoInstance.attestationResult(attestationResult, {
-						rpId: request.hostname,
-						challenge: request.session.registerChallenge,
-						origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
-						factor: "first"
-					});
-					// Continue with creating user account
-					console.log(result);
-					response.json({ "success": true });
-				}
-				catch (err) {
-					response.status(401).json({ "error": `Registration failed: ${err.message}` });
-				}
-			});
-
-		authRoutes.get(`/${this.name}`, validateAndCacheHostName, passport.authenticate(this.name, {
-			failureRedirect: "/login",
-			successReturnToOrRedirect: "/",
-			failureFlash: true
-		}));
+			.get(this.registerRequest.bind(this))
+			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
+		authRoutes.route(`/${this.name}/login`)
+			.get(this.loginRequest.bind(this))
+			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
 	}
 }
 
