@@ -93,16 +93,24 @@ export interface UserSessionData {
 
 async function ExternalServiceCallback(
 	request: Request,
-	serviceName: IConfig.OAuthServices | IConfig.CASServices,
+	serviceName: IConfig.OAuthServices | IConfig.CASServices | "fido2",
 	id: string,
-	username: string | undefined,
 	serviceEmail: string | undefined,
+	serviceInformation: {
+		username?: string;
+		[other: string]: unknown;
+	},
 	done: PassportDone
 ) {
 	if (request.user) {
 		request.logout();
 	}
 	let session = request.session as Partial<UserSessionData>;
+	let dbServiceInformation = {
+		id,
+		email: serviceEmail,
+		...serviceInformation
+	};
 
 	// If `user` exists, the user has already logged in with this service and is good-to-go
 	let user = await User.findOne({ [`services.${serviceName}.id`]: id });
@@ -119,11 +127,7 @@ async function ExternalServiceCallback(
 				user.services = {};
 			}
 			if (!user.services[serviceName]) {
-				user.services[serviceName] = {
-					id,
-					email: serviceEmail,
-					username
-				};
+				user.services[serviceName] = dbServiceInformation;
 			}
 			try {
 				user.markModified("services");
@@ -146,11 +150,7 @@ async function ExternalServiceCallback(
 				},
 			});
 			user.services = {};
-			user.services[serviceName] = {
-				id,
-				email: serviceEmail,
-				username
-			};
+			user.services[serviceName] = dbServiceInformation;
 			try {
 				user.markModified("services");
 				await user.save();
@@ -224,7 +224,7 @@ abstract class OAuthStrategy implements RegistrationStrategy {
 			serviceEmail = profile.emails[0].value.trim();
 		}
 
-		ExternalServiceCallback(request, serviceName, profile.id, profile.username, serviceEmail, done);
+		ExternalServiceCallback(request, serviceName, profile.id, serviceEmail, { username: profile.username }, done);
 	}
 
 	public use(authRoutes: Router, scope: string[]) {
@@ -308,7 +308,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 		}
 		let serviceEmail = `${username}@${this.emailDomain}`;
 
-		ExternalServiceCallback(request, this.name, username, username, serviceEmail, done);
+		ExternalServiceCallback(request, this.name, username, serviceEmail, { username }, done);
 	}
 
 	public use(authRoutes: Router) {
@@ -341,6 +341,13 @@ export class FIDO2 implements RegistrationStrategy {
 		authenticatorUserVerification: "required" // Needed for secure passwordless login
 	});
 
+	private fromBase64(input: string): ArrayBuffer {
+		return Buffer.from(input.replace(/-/g, "+").replace(/_/g, "/"), "base64").buffer;
+	}
+	private toBase64(input: ArrayBuffer): string {
+		return Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+	}
+
 	constructor() {
 		this.passportStrategy = new CustomStrategy(this.passportCallback.bind(this));
 	}
@@ -359,7 +366,7 @@ export class FIDO2 implements RegistrationStrategy {
 
 			let attestationResult = {
 				...request.body,
-				id: Buffer.from(request.body.id.replace(/-/g, "+").replace(/_/g, "/"), "base64").buffer
+				id: this.fromBase64(request.body.id)
 			};
 			try {
 				let result = await this.fidoInstance.attestationResult(attestationResult, {
@@ -369,8 +376,17 @@ export class FIDO2 implements RegistrationStrategy {
 					factor: "first"
 				});
 				// Continue with creating user account
-				console.log(result);
-				done(null, false, { "message": "It worked but it's not done yet" });
+				ExternalServiceCallback(
+					request,
+					this.name,
+					this.toBase64(result.authnrData.get("credId")),
+					request.session.email.trim(),
+					{
+						publicKey: result.authnrData.get("credentialPublicKeyPem"),
+						prevCounter: result.authnrData.get("counter"),
+					},
+					done
+				);
 			}
 			catch (err) {
 				done(null, false, { "message": `Registration failed: ${err.message}` });
@@ -389,7 +405,7 @@ export class FIDO2 implements RegistrationStrategy {
 		const email = request.session.email.trim();
 
 		let options = await this.fidoInstance.attestationOptions();
-		let challenge = Buffer.from(options.challenge).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+		let challenge = this.toBase64(options.challenge);
 		let user = {
 			id: uuid(), // Cannot exceed 64 bytes
 			name: email, // Aids in determining difference between accounts with similar displayNames according to spec
