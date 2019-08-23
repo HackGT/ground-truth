@@ -89,6 +89,9 @@ export interface UserSessionData {
 	firstName: string;
 	preferredName: string;
 	lastName: string;
+	userID: string;
+	registerChallenge: string;
+	registerChallengeTime: number;
 }
 
 async function ExternalServiceCallback(
@@ -353,14 +356,20 @@ export class FIDO2 implements RegistrationStrategy {
 	}
 
 	private async passportCallback(request: Request, done: PassportDone) {
+		let session = request.session as Partial<UserSessionData>;
 		const action = request.originalUrl.split("/").pop() || "";
 		if (action === "register") {
-			if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
+			if (!session.email || !session.firstName || !session.lastName) {
 				done(null, false, { "message": "Invalid session values" });
 				return;
 			}
-			if (Date.now() >= request.session.registerChallengeTime + this.timeout) {
+			if (Date.now() >= (session.registerChallengeTime || 0) + this.timeout) {
 				done(null, false, { "message": "Registration timed out. Please try again." });
+				return;
+			}
+			let email = session.email.trim().toLowerCase();
+			if (await User.findOne({ email })) {
+				done(null, false, { "message": "That email address is already in use" });
 				return;
 			}
 
@@ -371,7 +380,7 @@ export class FIDO2 implements RegistrationStrategy {
 			try {
 				let result = await this.fidoInstance.attestationResult(attestationResult, {
 					rpId: request.hostname,
-					challenge: request.session.registerChallenge,
+					challenge: session.registerChallenge || "",
 					origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
 					factor: "first"
 				});
@@ -380,7 +389,7 @@ export class FIDO2 implements RegistrationStrategy {
 					request,
 					this.name,
 					this.toBase64(result.authnrData.get("credId")),
-					request.session.email.trim(),
+					email,
 					{
 						publicKey: result.authnrData.get("credentialPublicKeyPem"),
 						prevCounter: result.authnrData.get("counter"),
@@ -398,25 +407,30 @@ export class FIDO2 implements RegistrationStrategy {
 	}
 
 	protected async registerRequest(request: Request, response: Response) {
-		if (!request.session || !request.session.email || !request.session.firstName || !request.session.lastName) {
+		let session = request.session as Partial<UserSessionData>;
+		if (!session.email || !session.firstName || !session.lastName) {
 			response.status(400).send({ "error": "Invalid session values" });
 			return;
 		}
-		const email = request.session.email.trim();
+		const email = session.email.trim().toLowerCase();
+		if (await User.findOne({ email })) {
+			response.status(400).send({ "error": "That email address is already in use" });
+			return;
+		}
 
 		let options = await this.fidoInstance.attestationOptions();
 		let challenge = this.toBase64(options.challenge);
 		let user = {
 			id: uuid(), // Cannot exceed 64 bytes
 			name: email, // Aids in determining difference between accounts with similar displayNames according to spec
-			displayName: `${request.session.preferredName || request.session.firstName} ${request.session.lastName}`
+			displayName: `${session.preferredName || session.firstName} ${session.lastName}`
 		};
 		options.user = user;
 
 		// Save data to session for validation in next step
-		request.session.userID = user.id;
-		request.session.registerChallenge = challenge;
-		request.session.registerChallengeTime = Date.now();
+		session.userID = user.id;
+		session.registerChallenge = challenge;
+		session.registerChallengeTime = Date.now();
 
 		response.json({
 			...options,
