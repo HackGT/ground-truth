@@ -337,7 +337,8 @@ export class FIDO2 implements RegistrationStrategy {
 		cryptoParams: [-7], // ECC only\
 		rpName: `${config.server.name} Login System`,
 		timeout: this.timeout,
-		authenticatorRequireResidentKey: false
+		authenticatorRequireResidentKey: false,
+		authenticatorUserVerification: "required"
 	});
 
 	constructor() {
