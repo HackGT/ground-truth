@@ -80,6 +80,9 @@ export let uiRoutes = express.Router();
 uiRoutes.route("/js/login.js").get((request, response) => {
 	fs.createReadStream(path.resolve("src/ui", "login.js")).pipe(response);
 });
+uiRoutes.route("/js/webauthnjson.dist.js").get((request, response) => {
+	fs.createReadStream(path.resolve("src/ui", "webauthnjson.dist.js")).pipe(response);
+});
 uiRoutes.route("/js/admin.js").get((request, response) => {
 	fs.createReadStream(path.resolve("src/ui", "admin.js")).pipe(response);
 });

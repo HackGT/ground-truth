@@ -1,3 +1,5 @@
+declare const webauthnJSON: typeof import("@github/webauthn-json");
+
 namespace Login {
 
 	const carousel = document.querySelector(".carousel") as HTMLDivElement;
@@ -148,4 +150,17 @@ namespace Login {
 	setUpStep(1);
 	setUpStep(2);
 	setUpStep(3);
+
+	(async () => {
+		if (webauthnJSON.supported()) {
+			let publicKey = await fetch("/auth/fido2/register").then(response => response.json());
+			let credential = await webauthnJSON.create({ publicKey });
+			await fetch(`/auth/fido2/register`, {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(credential)
+			});
+		}
+	})().catch(err => console.error(err));
 }

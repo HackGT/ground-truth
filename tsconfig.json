@@ -5,7 +5,8 @@
     "module": "commonjs",                     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
     "lib": [
       "es2018",
-      "es2018.promise"
+      "es2018.promise",
+      "dom"
     ],
 
     /* Strict Type-Checking Options */
@@ -24,5 +25,7 @@
   "references": [
     { "path": "src/ui" }
   ],
-  "exclude": ["src/ui"]
+  "exclude": [
+    "src/ui",
+  ]
 }
