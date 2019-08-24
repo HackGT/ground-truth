@@ -78,12 +78,23 @@ const AdminTemplate = new Template("admin.hbs");
 export let uiRoutes = express.Router();
 
 uiRoutes.route("/js/login.js").get((request, response) => {
+	response.type("js");
 	fs.createReadStream(path.resolve("src/ui", "login.js")).pipe(response);
 });
+uiRoutes.route("/js/webauthnjson.dist.js").get((request, response) => {
+	response.type("js");
+	fs.createReadStream(path.resolve("src/ui", "webauthnjson.dist.js")).pipe(response);
+});
+uiRoutes.route("/js/index.js").get((request, response) => {
+	response.type("js");
+	fs.createReadStream(path.resolve("src/ui", "index.js")).pipe(response);
+});
 uiRoutes.route("/js/admin.js").get((request, response) => {
+	response.type("js");
 	fs.createReadStream(path.resolve("src/ui", "admin.js")).pipe(response);
 });
 uiRoutes.route("/css/login.css").get((request, response) => {
+	response.type("css");
 	fs.createReadStream(path.resolve("src/ui", "login.css")).pipe(response);
 });
 
@@ -98,6 +109,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
 	}
 	let templateData = {
 		title: "Home",
+		includeJS: "index",
 
 		user: request.user,
 		loginMethod: await bestLoginMethod(request.user.email),

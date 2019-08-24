@@ -92,6 +92,13 @@
 						<br />
 					{{/inline}}
 
+					{{#ifIn "fido2" loginMethods}}
+						{{#> loginMethod}}
+							<a tabindex="-1" class="fido2 button" href="#" id="fido2">
+								Sign up with FIDO2 passwordless login (e.g. YubiKey)
+							</a>
+						{{/loginMethod}}
+					{{/ifIn}}
 					{{#ifIn "gatech" loginMethods}}
 						{{#> loginMethod}}
 							<a tabindex="-1" class="gatech button" href="/auth/gatech">

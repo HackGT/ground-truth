@@ -7,7 +7,7 @@ import { mongoose } from "./common";
 export namespace IConfig {
 	export type OAuthServices = "github" | "google" | "facebook";
 	export type CASServices = "gatech";
-	export type Services = "local" | OAuthServices | CASServices;
+	export type Services = "local" | "fido2" | OAuthServices | CASServices;
 	export interface Secrets {
 		adminKey: string;
 		session: string;
@@ -94,6 +94,9 @@ export interface IUser extends RootDocument {
 			// OAuth account email can be different than registration account email
 			email?: string;
 			username?: string;
+			publicKey?: string;
+			prevCounter?: number;
+			aaguid?: string;
 		};
 	};
 }

@@ -8,5 +8,5 @@
 		],
 		"moduleResolution": "node",
 	},
-	"files": [ "login.ts", "admin.ts" ]
+	"files": [ "login.ts", "index.ts", "admin.ts" ]
 }

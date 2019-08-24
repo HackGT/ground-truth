@@ -84,6 +84,13 @@ a.gatech {
 a.gatech:hover {
 	color: black;
 }
+a.fido2 {
+	color: white;
+	background-color: #9aca3c;
+}
+a.fido2:hover {
+	color: white;
+}
 
 .carousel {
 	display: flex;

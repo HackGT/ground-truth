@@ -62,6 +62,9 @@ export async function bestLoginMethod(email?: string): Promise<IConfig.Services 
 				if (user.services.gatech) {
 					type = "gatech";
 				}
+				if (user.services.fido2) {
+					type = "fido2";
+				}
 			}
 		}
 	}
