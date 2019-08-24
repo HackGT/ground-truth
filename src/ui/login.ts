@@ -64,9 +64,10 @@ namespace Login {
 							errorBlock.textContent = "Please input a valid email";
 							return;
 						}
+						const emailValue = email.value.trim().toLowerCase();
 
 						if (!passwordLogin.value) {
-							let { type } = await fetch(`/api/login-type?email=${encodeURIComponent(email.value.trim())}`).then(response => response.json());
+							let { type } = await fetch(`/api/login-type?email=${encodeURIComponent(emailValue)}`).then(response => response.json());
 							if (["gatech", "google", "github", "facebook"].includes(type)) {
 								window.location.href = `/auth/${type}`;
 								return;
@@ -78,16 +79,20 @@ namespace Login {
 								passwordLogin.focus();
 								return;
 							}
+							if (type === "fido2") {
+								await loginFIDO2(emailValue)
+								return;
+							}
 							await fetch(`/api/signup-data`, {
 								...commonFetchSettings,
-								body: serializeQueryString({ email: email.value.trim() })
+								body: serializeQueryString({ email: emailValue })
 							});
 						}
 						else {
 							await fetch(`/auth/login`, {
 								...commonFetchSettings,
 								body: serializeQueryString({
-									email: email.value.trim(),
+									email: emailValue,
 									password: passwordLogin.value
 								})
 							});
@@ -124,7 +129,7 @@ namespace Login {
 						await fetch(`/auth/signup`, {
 							...commonFetchSettings,
 							body: serializeQueryString({
-								email: email.value.trim(),
+								email: email.value.trim().toLowerCase(),
 								firstName: firstNameValue,
 								preferredName: preferredNameValue,
 								lastName: lastNameValue,
@@ -151,11 +156,28 @@ namespace Login {
 	setUpStep(2);
 	setUpStep(3);
 
-	(async () => {
-		if (webauthnJSON.supported()) {
-			let publicKey = await fetch("/auth/fido2/register").then(response => response.json());
+	const fido2Button = document.getElementById("fido2") as HTMLButtonElement | null;
+	if (fido2Button) {
+		fido2Button.addEventListener("click", async () => {
+			await registerFIDO2();
+		});
+	}
+
+	function checkFIDO2Support(): boolean {
+		const supported = webauthnJSON.supported();
+		if (!supported) {
+			errorBlock.textContent = "FIDO2 is not supported in your browser. Please upgrade to the latest version of Chrome, Firefox, or Edge.";
+		}
+		return supported;
+	}
+
+	async function registerFIDO2() {
+		if (!checkFIDO2Support()) return;
+
+		let publicKey = await fetch("/auth/fido2/register").then(response => response.json());
+		try {
 			let credential = await webauthnJSON.create({ publicKey });
-			await fetch(`/auth/fido2/register`, {
+			await fetch("/auth/fido2/register", {
 				method: "POST",
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
@@ -163,5 +185,32 @@ namespace Login {
 			});
 			window.location.reload();
 		}
-	})().catch(err => console.error(err));
+		catch (err) {
+			console.error(err);
+			errorBlock.textContent = "Couldn't sign you up with FIDO2. Please try again. (Did you close or cancel the dialog?)";
+		}
+	}
+
+	async function loginFIDO2(email: string) {
+		if (!checkFIDO2Support()) return;
+
+		let publicKey = await fetch(`/auth/fido2/login?email=${encodeURIComponent(email)}`).then(response => response.json());
+		try {
+			let credential = await webauthnJSON.get({ publicKey });
+			await fetch(`/auth/fido2/login`, {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					...credential,
+					email
+				})
+			});
+			window.location.reload();
+		}
+		catch (err) {
+			console.error(err);
+			errorBlock.textContent = "Couldn't log you in with FIDO2. Please try again. (Did you close or cancel the dialog?)";
+		}
+	}
 }
