@@ -13,12 +13,17 @@
 			</p>
 
 			<br />
-			<div class="field is-grouped is-grouped-centered">
+			<div class="field is-grouped is-grouped-centered is-multiline">
 				{{#if user.admin}}
 					<p class="control">
 						<a class="button is-medium" href="/admin">Admin Settings</a>
 					</p>
 				{{/if}}
+				{{#ifCond loginMethod "fido2"}}{{else}}
+					<p class="control">
+						<a class="button is-medium" href="#" id="fido2">Switch to passwordless login</a>
+					</p>
+				{{/ifCond}}
 				{{#ifCond loginMethod "local"}}
 					<p class="control">
 						<a class="button is-medium" href="/login/changepassword">Change password</a>

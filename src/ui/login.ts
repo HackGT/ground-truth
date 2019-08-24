@@ -1,6 +1,6 @@
-declare const webauthnJSON: typeof import("@github/webauthn-json");
 
 namespace Login {
+	declare const webauthnJSON: typeof import("@github/webauthn-json");
 
 	const carousel = document.querySelector(".carousel") as HTMLDivElement;
 	const errorBlock = document.querySelector(".is-danger > .message-body") as HTMLDivElement;
@@ -156,7 +156,7 @@ namespace Login {
 	setUpStep(2);
 	setUpStep(3);
 
-	const fido2Button = document.getElementById("fido2") as HTMLButtonElement | null;
+	const fido2Button = document.getElementById("fido2") as HTMLAnchorElement | null;
 	if (fido2Button) {
 		fido2Button.addEventListener("click", async () => {
 			await registerFIDO2();

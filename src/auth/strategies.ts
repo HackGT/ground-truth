@@ -9,7 +9,7 @@ import uuid from "uuid/v4";
 import { Fido2Lib } from "fido2-lib";
 import bodyParser = require("body-parser");
 
-import { config, renderEmailHTML, renderEmailText, sendMailAsync } from "../common";
+import { config, renderEmailHTML, renderEmailText, sendMailAsync, formatName } from "../common";
 import { postParser, authenticateWithRedirect } from "../middleware";
 import { createNew, IConfig, Model, IUser, User } from "../schema";
 import { Request, Response, NextFunction, Router } from "express";
@@ -407,6 +407,50 @@ export class FIDO2 implements RegistrationStrategy {
 				done(null, false, { "message": `Registration failed: ${err.message}` });
 			}
 		}
+		else if (action === "attach") {
+			if (Date.now() >= (session.fidoChallengeTime || 0) + this.timeout) {
+				done(null, false, { "message": "Registration timed out. Please try again." });
+				return;
+			}
+			const user = await User.findOne({ uuid: (request.user as IUser).uuid });
+			if (!user) {
+				done(null, false, { "message": "Logged in user does not exist" });
+				return;
+			}
+
+			let attestationResult = {
+				...request.body,
+				id: this.fromBase64(request.body.id)
+			};
+			try {
+				let result = await this.fidoInstance.attestationResult(attestationResult, {
+					rpId: request.hostname,
+					challenge: session.fidoChallenge || "",
+					origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
+					factor: "first"
+				});
+
+				if (!user.services) {
+					user.services = {};
+				}
+				if (!user.services.fido2) {
+					user.services.fido2 = {
+						id: this.toBase64(result.authnrData.get("credId")),
+						email: user.email,
+						publicKey: result.authnrData.get("credentialPublicKeyPem"),
+						prevCounter: result.authnrData.get("counter"),
+						aaguid: Buffer.from(result.authnrData.get("aaguid")).toString("hex")
+					};
+				}
+				user.markModified("services");
+				await user.save();
+				done(null, user);
+			}
+			catch (err) {
+				console.error(err);
+				done(null, false, { "message": `Registration failed: ${err.message}` });
+			}
+		}
 		else if (action === "login") {
 			if (Date.now() >= (session.fidoChallengeTime || 0) + this.timeout) {
 				done(null, false, { "message": "Login timed out. Please try again." });
@@ -497,6 +541,30 @@ export class FIDO2 implements RegistrationStrategy {
 		});
 	}
 
+	protected async attachRequest(request: Request, response: Response) {
+		let session = request.session as Partial<UserSessionData>;
+		const user = request.user as IUser;
+
+		let options = await this.fidoInstance.attestationOptions();
+		let challenge = this.toBase64(options.challenge);
+		options.user = {
+			id: user.uuid,
+			name: user.email, // Aids in determining difference between accounts with similar displayNames according to spec
+			displayName: formatName(user)
+		};
+		options.rp.id = request.hostname;
+
+		// Save data to session for validation in next step
+		session.userID = user.uuid;
+		session.fidoChallenge = challenge;
+		session.fidoChallengeTime = Date.now();
+
+		response.json({
+			...options,
+			challenge
+		});
+	}
+
 	protected async loginRequest(request: Request, response: Response) {
 		let session = request.session as Partial<UserSessionData>;
 		const email = (request.query.email as string || "").trim().toLowerCase();
@@ -534,6 +602,9 @@ export class FIDO2 implements RegistrationStrategy {
 		authRoutes.route(`/${this.name}/register`)
 			.get(validateAndCacheHostName, this.registerRequest.bind(this))
 			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
+		authRoutes.route(`/${this.name}/attach`)
+			.get(validateAndCacheHostName, authenticateWithRedirect, this.attachRequest.bind(this))
+			.post(validateAndCacheHostName, authenticateWithRedirect, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
 		authRoutes.route(`/${this.name}/login`)
 			.get(validateAndCacheHostName, this.loginRequest.bind(this))
 			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
