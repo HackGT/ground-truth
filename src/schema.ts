@@ -94,6 +94,9 @@ export interface IUser extends RootDocument {
 			// OAuth account email can be different than registration account email
 			email?: string;
 			username?: string;
+			publicKey?: string;
+			prevCounter?: number;
+			aaguid?: string;
 		};
 	};
 }

@@ -90,8 +90,8 @@ export interface UserSessionData {
 	preferredName: string;
 	lastName: string;
 	userID: string;
-	registerChallenge: string;
-	registerChallengeTime: number;
+	fidoChallenge: string;
+	fidoChallengeTime: number;
 }
 
 async function ExternalServiceCallback(
@@ -187,6 +187,9 @@ async function ExternalServiceCallback(
 		session.firstName = undefined;
 		session.preferredName = undefined;
 		session.lastName = undefined;
+		session.userID = undefined;
+		session.fidoChallenge = undefined;
+		session.fidoChallengeTime = undefined;
 	}
 	done(null, user);
 }
@@ -345,7 +348,8 @@ export class FIDO2 implements RegistrationStrategy {
 	});
 
 	private fromBase64(input: string): ArrayBuffer {
-		return Buffer.from(input.replace(/-/g, "+").replace(/_/g, "/"), "base64").buffer;
+		const nodeBuffer = Buffer.from(input.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+		return nodeBuffer.buffer.slice(nodeBuffer.byteOffset, nodeBuffer.byteOffset + nodeBuffer.byteLength);
 	}
 	private toBase64(input: ArrayBuffer): string {
 		return Buffer.from(input).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
@@ -356,14 +360,14 @@ export class FIDO2 implements RegistrationStrategy {
 	}
 
 	private async passportCallback(request: Request, done: PassportDone) {
-		let session = request.session as Partial<UserSessionData>;
 		const action = request.originalUrl.split("/").pop() || "";
+		let session = request.session as Partial<UserSessionData>;
 		if (action === "register") {
 			if (!session.email || !session.firstName || !session.lastName) {
 				done(null, false, { "message": "Invalid session values" });
 				return;
 			}
-			if (Date.now() >= (session.registerChallengeTime || 0) + this.timeout) {
+			if (Date.now() >= (session.fidoChallengeTime || 0) + this.timeout) {
 				done(null, false, { "message": "Registration timed out. Please try again." });
 				return;
 			}
@@ -380,7 +384,7 @@ export class FIDO2 implements RegistrationStrategy {
 			try {
 				let result = await this.fidoInstance.attestationResult(attestationResult, {
 					rpId: request.hostname,
-					challenge: session.registerChallenge || "",
+					challenge: session.fidoChallenge || "",
 					origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
 					factor: "first"
 				});
@@ -393,16 +397,70 @@ export class FIDO2 implements RegistrationStrategy {
 					{
 						publicKey: result.authnrData.get("credentialPublicKeyPem"),
 						prevCounter: result.authnrData.get("counter"),
+						aaguid: Buffer.from(result.authnrData.get("aaguid")).toString("hex")
 					},
 					done
 				);
 			}
 			catch (err) {
+				console.error(err);
 				done(null, false, { "message": `Registration failed: ${err.message}` });
 			}
 		}
 		else if (action === "login") {
+			if (Date.now() >= (session.fidoChallengeTime || 0) + this.timeout) {
+				done(null, false, { "message": "Login timed out. Please try again." });
+				return;
+			}
+			const email = (request.body.email as string || "").trim().toLowerCase();
+			const user = await User.findOne({ email });
+			if (!user) {
+				done(null, false, { "message": "Incorrect email" });
+				return;
+			}
+			if (!user.services || !user.services.fido2 || !user.services.fido2.id) {
+				done(null, false, { "message": "Your account is not set up for passwordless authentication" });
+				return;
+			}
 
+			let assertionResult = {
+				...request.body,
+				id: this.fromBase64(request.body.id),
+				response: {
+					authenticatorData: this.fromBase64(request.body.response.authenticatorData),
+					clientDataJSON: request.body.response.clientDataJSON,
+					signature: this.fromBase64(request.body.response.signature),
+					userHandle: undefined
+				}
+			};
+			try {
+				let result = await this.fidoInstance.assertionResult(assertionResult, {
+					rpId: request.hostname,
+					challenge: session.fidoChallenge || "",
+					origin: createLink(request, "").slice(0, -1), // Removes trailing slash from origin
+					factor: "first",
+					publicKey: user.services.fido2.publicKey || "",
+					prevCounter: user.services.fido2.prevCounter || Number.MAX_SAFE_INTEGER,
+					userHandle: user.services.fido2.id
+				});
+				// Save new counter to prevent replay attacks
+				user.services.fido2.prevCounter = result.authnrData.get("counter");
+				user.markModified("services");
+				await user.save();
+
+				ExternalServiceCallback(
+					request,
+					this.name,
+					request.body.id,
+					email,
+					{},
+					done
+				);
+			}
+			catch (err) {
+				console.error(err);
+				done(null, false, { "message": `Login failed: ${err.message}` });
+			}
 		}
 	}
 
@@ -426,11 +484,12 @@ export class FIDO2 implements RegistrationStrategy {
 			displayName: `${session.preferredName || session.firstName} ${session.lastName}`
 		};
 		options.user = user;
+		options.rp.id = request.hostname;
 
 		// Save data to session for validation in next step
 		session.userID = user.id;
-		session.registerChallenge = challenge;
-		session.registerChallengeTime = Date.now();
+		session.fidoChallenge = challenge;
+		session.fidoChallengeTime = Date.now();
 
 		response.json({
 			...options,
@@ -439,17 +498,44 @@ export class FIDO2 implements RegistrationStrategy {
 	}
 
 	protected async loginRequest(request: Request, response: Response) {
+		let session = request.session as Partial<UserSessionData>;
+		const email = (request.query.email as string || "").trim().toLowerCase();
+		const user = await User.findOne({ email });
+		if (!user) {
+			response.status(400).send({ "error": "Incorrect email" });
+			return;
+		}
+		if (!user.services || !user.services.fido2 || !user.services.fido2.id) {
+			response.status(401).send({ "error": "Your account is not set up for passwordless authentication" });
+			return;
+		}
 
+		let options = await this.fidoInstance.assertionOptions();
+		let challenge = this.toBase64(options.challenge);
+
+		session.userID = user.services.fido2.id;
+		session.fidoChallenge = challenge;
+		session.fidoChallengeTime = Date.now();
+
+		response.json({
+			...options,
+			challenge,
+			allowCredentials: [{
+				id: user.services.fido2.id,
+				type: "public-key",
+				transports: ["usb", "ble", "nfc"]
+			}]
+		});
 	}
 
 	public use(authRoutes: Router) {
 		passport.use(this.name, this.passportStrategy);
 
 		authRoutes.route(`/${this.name}/register`)
-			.get(this.registerRequest.bind(this))
+			.get(validateAndCacheHostName, this.registerRequest.bind(this))
 			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
 		authRoutes.route(`/${this.name}/login`)
-			.get(this.loginRequest.bind(this))
+			.get(validateAndCacheHostName, this.loginRequest.bind(this))
 			.post(validateAndCacheHostName, bodyParser.json(), passport.authenticate(this.name, { failureFlash: true }));
 	}
 }
