@@ -298,7 +298,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 		// Reject username@gatech.edu usernames because the CAS allows those for some reason
 		// Bonus fact: using a @gatech.edu username bypasses 2FA and the OIT team in charge refuses to fix this
 		if (username.indexOf("@") !== -1) {
-			done(null, false, { message: `Usernames of the format ${username} with an email domain are insecure and therefore disallowed. Please log in with ${username.split("@")[0]}. <a href="${this.logoutLink}" target="_blank">Click here</a> to do this.` });
+			done(null, false, { message: `Usernames of the format ${username} with an email domain are insecure and therefore disallowed. Please log in with <strong>${username.split("@")[0]}</strong> instead. <a href="${this.logoutLink}" target="_blank">Click here</a> to do this.` });
 			return;
 		}
 		let serviceEmail = `${username}@${this.emailDomain}`;
