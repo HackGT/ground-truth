@@ -78,12 +78,15 @@ const AdminTemplate = new Template("admin.hbs");
 export let uiRoutes = express.Router();
 
 uiRoutes.route("/js/login.js").get((request, response) => {
+	response.type("js");
 	fs.createReadStream(path.resolve("src/ui", "login.js")).pipe(response);
 });
 uiRoutes.route("/js/admin.js").get((request, response) => {
+	response.type("js");
 	fs.createReadStream(path.resolve("src/ui", "admin.js")).pipe(response);
 });
 uiRoutes.route("/css/login.css").get((request, response) => {
+	response.type("css");
 	fs.createReadStream(path.resolve("src/ui", "login.css")).pipe(response);
 });
 

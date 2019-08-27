@@ -280,7 +280,12 @@ export class Facebook extends OAuthStrategy {
 abstract class CASStrategy implements RegistrationStrategy {
 	public readonly passportStrategy: Strategy;
 
-	constructor(public readonly name: IConfig.CASServices, url: string, private readonly emailDomain: string) {
+	constructor(
+		public readonly name: IConfig.CASServices,
+		url: string,
+		private readonly emailDomain: string,
+		private readonly logoutLink: string,
+	) {
 		this.passportStrategy = new CASStrategyProvider({
 			casURL: url,
 			passReqToCallback: true
@@ -293,7 +298,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 		// Reject username@gatech.edu usernames because the CAS allows those for some reason
 		// Bonus fact: using a @gatech.edu username bypasses 2FA and the OIT team in charge refuses to fix this
 		if (username.indexOf("@") !== -1) {
-			done(null, false, { message: `Usernames of the format ${username} are insecure and therefore disallowed. Please log in with ${username.split("@")[0]}.` });
+			done(null, false, { message: `Usernames of the format ${username} with an email domain are insecure and therefore disallowed. Please log in with <strong>${username.split("@")[0]}</strong> instead. <a href="${this.logoutLink}" target="_blank">Click here</a> to do this.` });
 			return;
 		}
 		let serviceEmail = `${username}@${this.emailDomain}`;
@@ -315,7 +320,7 @@ abstract class CASStrategy implements RegistrationStrategy {
 export class GeorgiaTechCAS extends CASStrategy {
 	constructor() {
 		// Registration must be hosted on a *.hack.gt domain for this to work
-		super("gatech", "https://login.gatech.edu/cas", "gatech.edu");
+		super("gatech", "https://login.gatech.edu/cas", "gatech.edu", "https://login.gatech.edu/cas/logout");
 	}
 }
 
