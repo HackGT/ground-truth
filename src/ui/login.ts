@@ -73,6 +73,7 @@ namespace Login {
 								let passwordContainer = document.getElementById("hidden-password");
 								passwordContainer.classList.remove("hidden");
 								passwordContainer.classList.add("shown");
+								passwordLogin.disabled = false;
 								passwordLogin.focus();
 								return;
 							}
