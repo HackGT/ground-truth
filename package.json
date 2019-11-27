@@ -64,7 +64,7 @@
     "marked": "^0.6.2",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.23",
-    "mongoose": "^5.4.18",
+    "mongoose": "^5.7.5",
     "morgan": "^1.9.1",
     "oauth2orize": "^1.11.0",
     "oauth2orize-pkce": "^0.1.2",
