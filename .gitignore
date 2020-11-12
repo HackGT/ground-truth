@@ -60,7 +60,6 @@ typings/
 # next.js build output
 .next
 
-*.js
 !bugsnag.js
 *.d.ts
 *.map
