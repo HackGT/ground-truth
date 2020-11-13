@@ -1,5 +1,4 @@
 FROM node:11-alpine
-MAINTAINER Ryan Petschek <petschekr@gmail.com>
 
 ARG BUGSNAG
 
@@ -14,10 +13,11 @@ COPY . /usr/src/groundtruth
 # Set Timezone to EST
 RUN apk add tzdata
 ENV TZ="/usr/share/zoneinfo/America/New_York"
-ENV NODE_ENV="production"
 
 RUN npm install
 RUN npm run build
+
+ENV NODE_ENV="production"
 
 # Report a release to Bugsnag
 RUN npm run report-build
