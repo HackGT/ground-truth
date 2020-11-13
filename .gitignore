@@ -66,3 +66,5 @@ typings/
 *.tsbuildinfo
 
 src/config/config\.json
+
+dist

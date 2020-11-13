@@ -4,11 +4,11 @@
   "description": "Single sign on for HackGT apps",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -b",
-    "start": "node src/app.js",
+    "build": "gulp",
+    "start": "node dist/app.js",
     "report-build": "node bugsnag.js",
-    "debug": "node --nolazy --inspect-brk=9229 src/app.js"
+    "debug": "node --nolazy --inspect-brk=9229 src/app.js",
+    "dev": "nodemon --watch 'src/**/*' --exec 'ts-node' src/app.ts"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,6 @@
     "@sendgrid/mail": "^6.3.1",
     "bugsnag-build-reporter": "^1.0.2",
     "chalk": "^2.4.2",
-    "cheerio": "^1.0.0-rc.2",
     "compression": "^1.7.3",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^2.0.3",
@@ -40,7 +39,6 @@
     "html-to-text": "^5.1.1",
     "marked": "^0.6.2",
     "moment": "^2.24.0",
-    "moment-timezone": "^0.5.23",
     "mongoose": "^5.7.5",
     "morgan": "^1.9.1",
     "oauth2orize": "^1.11.0",
@@ -54,12 +52,12 @@
     "passport-http-bearer": "^1.0.1",
     "passport-local": "^1.0.0",
     "passport-oauth2-client-password": "^0.1.2",
-    "striptags": "^3.1.1",
-    "typescript": "^3.3.0",
+    "typescript": "^3.9.7",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.11",
+    "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
     "@types/compression": "0.0.36",
     "@types/connect-flash": "0.0.34",
     "@types/connect-mongo": "0.0.41",
@@ -69,7 +67,6 @@
     "@types/express-session": "^1.15.12",
     "@types/html-to-text": "^1.4.31",
     "@types/marked": "^0.6.3",
-    "@types/moment-timezone": "^0.5.12",
     "@types/mongoose": "^5.3.21",
     "@types/morgan": "^1.7.35",
     "@types/node": "^11.11.0",
@@ -82,6 +79,11 @@
     "@types/passport-http-bearer": "^1.0.33",
     "@types/passport-local": "^1.0.33",
     "@types/passport-oauth2-client-password": "^0.1.2",
-    "@types/uuid": "^3.4.4"
+    "@types/uuid": "^3.4.4",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "ts-node": "^9.0.0"
   }
 }
