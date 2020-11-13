@@ -85,6 +85,7 @@
     "gulp-bugsnag": "^1.0.0",
     "gulp-if": "^3.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
+    "nodemon": "^2.0.6",
     "ts-node": "^9.0.0"
   }
 }
