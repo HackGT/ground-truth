@@ -4,6 +4,8 @@ const babel = require('gulp-babel');
 const del = require('del');
 const gulpif = require('gulp-if');
 const { reportBuild } = require('gulp-bugsnag');
+const fs = require("fs");
+const path = require("path");
 
 const VERSION_NUMBER = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf8")).version;
 const tsProject = ts.createProject('./tsconfig.json');
