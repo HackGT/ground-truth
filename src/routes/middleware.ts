@@ -1,5 +1,4 @@
 import express from "express";
-import bodyParser from "body-parser";
 
 import { IUser, User } from "../schema";
 import { IConfig } from "../common";
@@ -32,7 +31,7 @@ export async function bestLoginMethod(email?: string): Promise<IConfig.Services 
     return type;
 }
 
-export const postParser = bodyParser.urlencoded({
+export const postParser = express.urlencoded({
     extended: false
 });
 
