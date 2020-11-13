@@ -110,13 +110,13 @@ export async function sendVerificationEmail(request: Request, user: Model<IUser>
     let markdown =
         `Hi {{name}},
 
-        Thanks for creating an account with ${config.server.name}! To verify your email, please [click here](${link}).
+Thanks for creating an account with ${config.server.name}! To verify your email, please [click here](${link}).
 
-        If you are registering for a ${config.server.name} event, please note that this does **not** complete your registration. After verifying your email, you will be directed to the event registration portal to submit an application.
+If you are registering for a ${config.server.name} event, please note that this does **not** complete your registration. After verifying your email, you will be directed to the event registration portal to submit an application.
 
-        Sincerely,
+Sincerely,
 
-        The ${config.server.name} Team.`;
+The ${config.server.name} Team.`;
 
     await sendMailAsync({
         from: config.email.from,
