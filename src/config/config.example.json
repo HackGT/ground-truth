@@ -20,7 +20,8 @@
 		"from": "HackGT Team <hello@hackgt.com>",
 		"host": "smtp.sendgrid.net",
 		"key": "<your API key>",
-		"port": 465
+		"port": 465,
+		"headerImage": "https://storage.googleapis.com/hackgt6-public/banner.pn"
 	},
 	"server": {
 		"isProduction": true,
@@ -29,5 +30,8 @@
 		"cookieSecureOnly": true,
 		"passwordResetExpiration": 3600000,
 		"mongoURL": "mongodb://localhost/ground-truth"
-	}
+	},
+	"loginMethods": [
+		"local"
+	]
 }
