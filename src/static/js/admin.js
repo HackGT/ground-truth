@@ -1,4 +1,3 @@
-
 function setUpHandlers(classname, handler) {
     let buttons = document.getElementsByClassName(classname);
     for (let i = 0; i < buttons.length; i++) {
