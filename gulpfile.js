@@ -19,7 +19,16 @@ gulp.task('clean', () => {
 gulp.task('build:js', () => {
     return gulp.src('src/static/js/*')
         .pipe(babel({
-            presets: ['@babel/env']
+            presets: [[
+                "@babel/preset-env",
+                {
+                    useBuiltIns: "entry",
+                    corejs: 3,
+                    targets: {
+                        esmodules: true,
+                    }
+                }
+            ]]
         }))
         .pipe(gulp.dest('dist/static/js'));
 });

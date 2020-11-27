@@ -4,6 +4,7 @@ const errorBlock = document.querySelector(".is-danger > .message-body");
 function getInput(id) {
     return document.getElementById(id);
 }
+
 const email = getInput("email");
 const firstName = getInput("first-name");
 const preferredName = getInput("preferred-name");
@@ -19,6 +20,7 @@ function setUpEnterHandler(input, nextID) {
         }
     });
 }
+
 setUpEnterHandler(email, 1);
 setUpEnterHandler(passwordLogin, 1);
 setUpEnterHandler(lastName, 2);
