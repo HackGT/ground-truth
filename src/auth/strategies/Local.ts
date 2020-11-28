@@ -20,15 +20,14 @@ const pbkdf2Async = async (password: string | Buffer, salt: string | Buffer, rou
     return util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
 };
 
-
 interface LocalStrategyOptions extends StrategyOptions {
     usernameField: string;
     passwordField: string;
 }
 
 export class Local implements RegistrationStrategy {
-    public readonly name = "local";
     public readonly passportStrategy: Strategy;
+    public readonly name = "local";
 
     constructor() {
         let options: LocalStrategyOptions = {

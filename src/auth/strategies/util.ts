@@ -3,8 +3,110 @@ import * as http from "http";
 import * as https from "https";
 import { Request, Response, NextFunction } from "express";
 
-import { config } from "../../common";
-import { IUser, Model } from "../../schema";
+import { config, IConfig } from "../../common";
+import { createNew, IUser, Model, User } from "../../schema";
+import { sendVerificationEmail, resendVerificationEmailLink } from "../../email";
+import { OAuthStrategy } from "./OAuthStrategy";
+import { PassportDone, UserSessionData } from "./types";
+
+export async function ExternalServiceCallback(
+    request: Request,
+    serviceName: IConfig.OAuthServices | IConfig.CASServices,
+    id: string,
+    username: string | undefined,
+    serviceEmail: string | undefined,
+    done: PassportDone
+) {
+    if (request.user) {
+        request.logout();
+    }
+    let session = request.session as Partial<UserSessionData>;
+
+    // If `user` exists, the user has already logged in with this service and is good-to-go
+    let user = await User.findOne({ [`services.${serviceName}.id`]: id });
+
+    if (session && session.email && session.firstName && session.lastName) {
+        let signupEmail = session.email.trim().toLowerCase();
+        // Only create / modify user account if email and name exist on the session (set by login page)
+        let existingUser = await User.findOne({ email: signupEmail });
+
+        if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
+            user = existingUser;
+            // Add new service
+            if (!user.services) {
+                user.services = {};
+            }
+            if (!user.services[serviceName]) {
+                user.services[serviceName] = {
+                    id,
+                    email: serviceEmail,
+                    username
+                };
+            }
+            try {
+                user.markModified("services");
+                await user.save();
+            }
+            catch (err) {
+                done(err);
+                return;
+            }
+        } else if (!user && !existingUser) {
+            // Create an account
+            user = createNew<IUser>(User, {
+                ...OAuthStrategy.defaultUserProperties,
+                email: signupEmail,
+                name: {
+                    first: session.firstName,
+                    preferred: session.preferredName,
+                    last: session.lastName,
+                },
+            });
+
+            user.services = {};
+            user.services[serviceName] = {
+                id,
+                email: serviceEmail,
+                username
+            };
+
+            try {
+                user.markModified("services");
+                await user.save();
+            } catch (err) {
+                done(err);
+                return;
+            }
+        }
+    }
+
+    if (!user) {
+        done(null, false, { "message": "Could not match login to existing account" });
+        return;
+    }
+
+    if (!user.verifiedEmail && !user.emailVerificationCode) {
+        await sendVerificationEmail(request, user);
+    }
+
+    if (!user.verifiedEmail) {
+        request.logout();
+        request.flash("success", `Account created successfully. Please verify your email before signing in. ${resendVerificationEmailLink(request, user.uuid)}`);
+        done(null, false);
+        return;
+    }
+
+    await checkAndSetAdmin(user);
+
+    if (session) {
+        session.email = undefined;
+        session.firstName = undefined;
+        session.preferredName = undefined;
+        session.lastName = undefined;
+    }
+
+    done(null, user);
+}
 
 export async function checkAndSetAdmin(user: Model<IUser>) {
     if (!user.verifiedEmail) return;

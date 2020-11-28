@@ -22,6 +22,11 @@ export namespace IConfig {
                 secret: string;
             }
         };
+        gatech: {
+            url: string;
+            emailDomain: string;
+            logoutLink: string;
+        }
         bugsnag: string | null;
     }
     export interface Email {
@@ -72,6 +77,11 @@ class Config implements IConfig.Main {
                 secret: ""
             }
         },
+        gatech: {
+            url: "https://login.gatech.edu/cas",
+            emailDomain: "gatech.edu",
+            logoutLink: "https://login.gatech.edu/cas/logout"
+        },
         bugsnag: null
     };
     public email: IConfig.Email = {
@@ -95,6 +105,7 @@ class Config implements IConfig.Main {
         adminDomains: ["hack.gt"],
         admins: [],
     };
+
     public loginMethods = ["local"] as IConfig.Services[];
     protected addLoginMethod(method: IConfig.Services) {
         if (this.loginMethods.indexOf(method) === -1) {
