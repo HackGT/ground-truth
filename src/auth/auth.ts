@@ -49,12 +49,12 @@ app.use(passport.session());
 
 app.all("/logout", (request, response) => {
     request.logout();
+
     if (request.session) {
         request.session.destroy(() => {
             response.redirect("/login");
         });
-    }
-    else {
+    } else {
         response.redirect("/login");
     }
 });
@@ -73,6 +73,7 @@ app.all("/logout", (request, response) => {
 async function verifyClient(clientID: string, clientSecret: string, done: (err: Error | null, client?: IOAuthClient | false) => void) {
     try {
         let client = await OAuthClient.findOne({ clientID });
+
         // Private apps must have a matching client secret
         // Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
         if (!client || (!client.public && client.clientSecret !== clientSecret)) {
@@ -80,9 +81,9 @@ async function verifyClient(clientID: string, clientSecret: string, done: (err: 
             done(null, false);
             return;
         }
+
         done(null, client);
-    }
-    catch (err) {
+    } catch (err) {
         done(err);
     }
 }
@@ -105,15 +106,16 @@ passport.use(new BearerStrategy(async (rawToken, done) => {
             done(null, false);
             return;
         }
+
         let user = await User.findOne({ uuid: token.uuid });
         if (!user) {
             console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
             done(null, false);
             return;
         }
+
         done(null, user, { scope: token.scopes, message: "" });
-    }
-    catch (err) {
+    } catch (err) {
         done(err);
     }
 }));

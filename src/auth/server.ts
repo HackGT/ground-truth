@@ -10,6 +10,7 @@ export const server = oauth2orize.createServer();
 server.serializeClient((client: IOAuthClient, done) => {
     done(null, client.uuid)
 });
+
 server.deserializeClient(async (uuid, done) => {
     try {
         let client = await OAuthClient.findOne({ uuid });
@@ -37,6 +38,7 @@ server.grant(oauth2orize.grant.code((async (client: IOAuthClient, redirectURI: s
             codeChallenge: areq.codeChallenge || undefined,
             codeChallengeMethod: areq.codeChallengeMethod || undefined,
         }).save();
+
         done(null, code);
     } catch (err) {
         done(err);
@@ -51,26 +53,31 @@ type IssueExchangeCodeFunction = (client: any, code: string, redirectURI: string
 server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: string, redirectURI: string, body: any, done: ExchangeDoneFunction) => {
     try {
         let authCode = await AuthorizationCode.findOne({ code });
+
         if (!authCode) {
             console.warn(`Could not find auth code to exchange for token: ${code}`);
             done(null, false);
             return;
         }
+
         if (client.clientID !== authCode.clientID) {
             console.warn(`Client ID mismatch when exchanging for token: via request: ${client.clientID}, on auth code: ${authCode.clientID}`);
             done(null, false);
             return;
         }
+
         if (redirectURI !== authCode.redirectURI) {
             console.warn(`Redirect URI mismatch when exchanging for token: via request: ${redirectURI}, on auth code: ${authCode.redirectURI}`);
             done(null, false);
             return;
         }
+
         if (moment().isAfter(moment(authCode.expiresAt))) {
             console.warn(`Auth code is expired when exchanging for token: expired at ${authCode.expiresAt.toISOString()} (now: ${new Date().toISOString()})`);
             done(null, false);
             return;
         }
+
         if (client.public) {
             // Verify PKCE code challenge
             // Private apps have already verified their client secret in verifyClient()
@@ -95,6 +102,7 @@ server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: st
                 return;
             }
         }
+
         await authCode.remove();
         const token = crypto.randomBytes(128).toString("hex");
         await createNew<IAccessToken>(AccessToken, {
@@ -103,10 +111,10 @@ server.exchange(oauth2orize.exchange.code((async (client: IOAuthClient, code: st
             uuid: authCode.uuid,
             scopes: authCode.scopes,
         }).save();
+
         const params = {};
         done(null, token, undefined, params);
-    }
-    catch (err) {
+    } catch (err) {
         done(err);
     }
 }) as unknown as IssueExchangeCodeFunction));
