@@ -14,7 +14,12 @@
 				"id": "",
 				"secret": ""
 			}
-		}
+		},
+		"gatech": {
+            "url": "https://login.gatech.edu/cas",
+            "emailDomain": "gatech.edu",
+            "logoutLink": "https://login.gatech.edu/cas/logout"
+        }
 	},
 	"email": {
 		"from": "HackGT Team <hello@hackgt.com>",
