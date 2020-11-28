@@ -16,12 +16,14 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
             return;
         }
     }
+
     let templateData = {
         title: "Home",
 
         user: request.user,
         loginMethod: await bestLoginMethod(request.user.email),
     };
+
     response.send(IndexTemplate.render(templateData));
 });
 
@@ -30,6 +32,7 @@ uiRoutes.route("/login").get(async (request, response) => {
         response.redirect("/");
         return;
     }
+
     let templateData = {
         title: "Log in",
         includeJS: "login",
@@ -40,6 +43,7 @@ uiRoutes.route("/login").get(async (request, response) => {
         localOnly: config.loginMethods && config.loginMethods.length === 1 && config.loginMethods[0] === "local",
         email: request.session ? request.session.email : null,
     };
+
     response.send(LoginTemplate.render(templateData));
 });
 
@@ -50,17 +54,18 @@ uiRoutes.route("/login/forgot").get((request, response) => {
         error: request.flash("error"),
         success: request.flash("success")
     };
+
     response.send(ForgotPasswordTemplate.render(templateData));
 });
 
 uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
     let user = await User.findOne({ "local.resetCode": request.params.code });
+
     if (!user) {
         request.flash("error", "Invalid password reset code");
         response.redirect("/login");
         return;
-    }
-    else if (!user.local || !user.local.resetCode || Date.now() - user.local.resetRequestedTime!.valueOf() > config.server.passwordResetExpiration) {
+    } else if (!user.local || !user.local.resetCode || Date.now() - user.local.resetRequestedTime!.valueOf() > config.server.passwordResetExpiration) {
         request.flash("error", "Your password reset link has expired. Please request a new one.");
         if (user.local) {
             user.local.resetCode = undefined;
@@ -69,6 +74,7 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
         response.redirect("/login");
         return;
     }
+
     let templateData = {
         title: "Reset Password",
 
@@ -76,6 +82,7 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
         success: request.flash("success"),
         resetCode: user.local!.resetCode!
     };
+
     response.send(ResetPasswordTemplate.render(templateData));
 });
 
@@ -85,12 +92,14 @@ uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (req
         response.redirect("/");
         return;
     }
+
     let templateData = {
         title: "Change Password",
 
         error: request.flash("error"),
         success: request.flash("success")
     };
+
     response.send(ChangePasswordTemplate.render(templateData));
 });
 
@@ -113,5 +122,6 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
         admins: config.server.admins,
         currentAdmins: await User.find({ admin: true }).sort("name.last")
     };
+
     response.send(AdminTemplate.render(templateData));
 });

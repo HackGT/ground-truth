@@ -40,16 +40,14 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
             return;
         }
         done(null, client, redirectURI);
-    }
-    catch (err) {
+    } catch (err) {
         done(err);
     }
 }, async (client: IOAuthClient, user: IUser, scope, type, areq, done) => {
     try {
         let token = await AccessToken.findOne({ clientID: client.clientID, uuid: user.uuid })
         done(null, !!token, { scope }, null);
-    }
-    catch (err) {
+    } catch (err) {
         done(err, false, { scope }, null);
     }
 }), async (request, response) => {
@@ -121,8 +119,10 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
         next();
         return;
     }
+
     let user = request.user as Model<IUser>;
     let scopes: string[] = request.session ? request.session.scope || [] : [];
+
     for (let scope of scopes) {
         let scopeValue = request.body[`scope-${scope}`];
         if (scopeValue) {
@@ -147,8 +147,7 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
                         response.redirect(request.session.authorizeURL);
                         return;
                     }
-                }
-                catch {
+                } catch {
                     request.flash("error", `An error occurred while validating scope "${scope}"`);
                     response.redirect(request.session.authorizeURL);
                     return;
@@ -158,13 +157,13 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
                 user.scopes = {};
             }
             user.scopes[scope] = scopeValue;
-        }
-        else {
+        } else {
             request.flash("error", "All data fields must be filled out");
             response.redirect(request.session.authorizeURL);
             return;
         }
     }
+
     user.markModified("scopes");
     await user.save();
     request.session.authorizeURL = undefined;

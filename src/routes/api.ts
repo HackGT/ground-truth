@@ -26,18 +26,23 @@ apiRoutes.post("/user/logout", passport.authenticate("bearer", { session: false 
     for (let token of existingTokens) {
         await token.remove();
     }
+
     let userDB = await User.findOne({ uuid: user.uuid });
     if (userDB) {
         userDB.forceLogOut = true;
         await userDB.save();
     }
 
-    response.json({ "success": true });
+    response.json({
+        success: true
+    });
 });
 
 apiRoutes.get("/login-type", async (request, response) => {
     let email = request.query.email as string | undefined;
-    response.json({ type: await bestLoginMethod(email) });
+    response.json({
+        type: await bestLoginMethod(email)
+    });
 });
 
 apiRoutes.post("/signup-data", postParser, (request, response) => {
