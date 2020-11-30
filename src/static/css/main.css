@@ -166,3 +166,16 @@ a.gatech:hover {
 .checkbox:hover, .radio:hover {
 	color: #aaa;
 }
+
+#admin-app-content > dt > .secret-arrow {
+	cursor: pointer;
+}
+
+#admin-app-content > dt {
+	font-weight: bold;
+	margin-top: 0.75em;
+}
+
+#admin-app-content > dd {
+	word-break: break-word;
+}

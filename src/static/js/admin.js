@@ -4,10 +4,10 @@ function setUpHandlers(classname, handler) {
         buttons[i].addEventListener("click", async e => {
             let button = e.target;
             button.disabled = true;
+
             try {
                 await handler(button.dataset.uuid, button);
-            }
-            finally {
+            } finally {
                 button.disabled = false;
             }
         });
@@ -38,12 +38,12 @@ async function sendRequest(url, data) {
     let response = await fetch(url, options).then(response => response.json());
     if (!response.success) {
         alert(response.error);
-    }
-    else {
+    } else {
         window.location.reload();
     }
 }
 
+// AUTHORIZED APPLICATIONS SECTION
 setUpHandlers("rename", async (uuid, button) => {
     let name = prompt("New name:", button.dataset.name);
     if (!name) return;
@@ -66,12 +66,21 @@ setUpHandlers("delete-app", async (uuid, button) => {
 
     await sendRequest(`/api/admin/app/${uuid}/delete`);
 });
-setUpHandlers("delete-scope", async (name, button) => {
-    if (!confirm("Are you sure you want to delete this scope?")) return;
 
-    await sendRequest(`/api/admin/scope/delete`, { name });
-})
+// Handles hiding and showing secrets on arrow click
+const secretArrows = document.getElementsByClassName("secret-arrow");
+const secretSpans = document.getElementsByClassName("secret-container");
+for (let i = 0; i < secretArrows.length; i++) {
+    secretArrows[i].addEventListener("click", async e => {
+        secretSpans[i].classList.toggle("is-hidden");
 
+        const arrowIcon = secretArrows[i].children[0];
+        arrowIcon.classList.toggle("fa-arrow-right");
+        arrowIcon.classList.toggle("fa-arrow-down");
+    });
+}
+
+// ADD APPLICATION SECTION
 let addApplicationButton = document.getElementById("add-application");
 addApplicationButton.addEventListener("click", async () => {
     try {
@@ -98,6 +107,14 @@ addApplicationButton.addEventListener("click", async () => {
     }
 });
 
+// SCOPES SECTION
+setUpHandlers("delete-scope", async (name, button) => {
+    if (!confirm("Are you sure you want to delete this scope?")) return;
+
+    await sendRequest(`/api/admin/scope/delete`, { name });
+});
+
+// ADD SCOPE SECTION
 let addScopeButton = document.getElementById("add-scope");
 addScopeButton.addEventListener("click", async () => {
     try {
@@ -124,6 +141,7 @@ addScopeButton.addEventListener("click", async () => {
     }
 });
 
+// ADMIN SECTION
 let addAdminButton = document.getElementById("admin-promote");
 addAdminButton.addEventListener("click", async () => {
     let emailField = document.getElementById("admin-email");

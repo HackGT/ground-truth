@@ -6,17 +6,21 @@
             <div class="column is-one-third">
                 <h1 class="title">{{this.name}}</h1>
                 <p class="content">
-                <ul>
-                    <li>UUID: <strong>{{this.uuid}}</strong></li>
-                    <li>Client ID: <strong>{{this.clientID}}</strong></li>
-                    {{#if this.public}}
-                        <li>Client Secret: <strong>N/A</strong></li>
-                    {{else}}
-                        <li>Client Secret: <strong>{{this.clientSecret}}</strong></li>
-                    {{/if}}
-                    <li>Client Type: <strong>{{#if this.public}}Public (e.g. native app){{else}}Private (e.g. server-based){{/if}}</strong></li>
-                    <li>
-                        Allowed redirect URIs:
+                <dl id="admin-app-content">
+                    <dt>UUID</dt>
+                    <dd>{{this.uuid}}</dd>
+
+                    <dt>Client Type</dt>
+                    <dd>{{#if this.public}}Public (e.g. native app){{else}}Private (e.g. server-based){{/if}}</dd>
+
+                    <dt>Client ID</dt>
+                    <dd>{{this.clientID}}</dd>
+
+                    <dt>Client Secret <span class="icon secret-arrow"><i class="fas fa-arrow-right"></i></span></dt>
+                    <dd class="is-hidden secret-container">{{#if this.public}}N/A{{else}}{{this.clientSecret}}{{/if}}</dd>
+
+                    <dt>Allowed Redirect URIs</dt>
+                    <dd>
                         <ul>
                             {{#each this.redirectURIs}}
                                 <li>
@@ -25,21 +29,22 @@
                                 </li>
                             {{/each}}
                         </ul>
-                    </li>
-                    <li>Issued tokens: <strong>{{this.tokens}}</strong></li>
-                </ul>
+                    </dd>
+                    <dt>Issued Tokens</dt>
+                    <dd>{{this.tokens}}</dd>
+                </dl>
                 </p>
                 <br />
-                <div class="field is-grouped is-grouped-centered is-multiline">
+                <div class="field is-grouped is-multiline">
                     <p class="control">
                         <button class="button is-primary is-outlined rename" data-uuid="{{this.uuid}}" data-name="{{this.name}}">Rename</button>
                     </p>
                     <p class="control">
-                        <button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}" data-uris="{{join this.redirectURIs}}">Edit redirect URIs</button>
+                        <button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}" data-uris="{{join this.redirectURIs}}">Edit Redirect URIs</button>
                     </p>
                     {{#if this.public}}{{else}}
                         <p class="control">
-                            <button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate secret</button>
+                            <button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate Secret</button>
                         </p>
                     {{/if}}
                     <p class="control">
