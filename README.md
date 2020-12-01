@@ -54,7 +54,7 @@ As an admin, visit `/login` and click through to the admin panel.
 
 To create an app, you'll need the name of your application and which URI(s) it will redirect back to once authentication is complete.
 
-This can include something like `http://localhost:3000` during development, but you should remove localhost URLs when running your app in production for better security.
+This can include something like `http://localhost:3000` during development, but you should ideally create different development and production apps for better security.
 
 ![Add an OAuth application](https://i.imgur.com/aKxH2mH.png)
 
