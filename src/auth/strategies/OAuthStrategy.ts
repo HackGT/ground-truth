@@ -24,6 +24,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
             "uuid": uuid(),
             "verifiedEmail": false,
             "admin": false,
+            "member": false,
             "forceLogOut": false,
 
             "services": {},

@@ -213,7 +213,7 @@ adminRoutes.post("/scope/delete", async (request, response) => {
     }
 });
 
-async function changeAdminStatus(isAdmin: boolean, request: express.Request, response: express.Response) {
+async function changeUserStatus(fields: ("admin" | "member")[], newStatus: boolean, request: express.Request, response: express.Response) {
     let user = await User.findOne({ email: (request.body.email || "").trim().toLowerCase() });
     if (!user) {
         response.status(400).json({
@@ -223,7 +223,7 @@ async function changeAdminStatus(isAdmin: boolean, request: express.Request, res
     }
 
     try {
-        user.admin = isAdmin;
+        fields.forEach(field => user![field] = newStatus);
         await user.save();
         response.json({
             success: true
@@ -231,10 +231,13 @@ async function changeAdminStatus(isAdmin: boolean, request: express.Request, res
     } catch (err) {
         console.error(err);
         response.status(500).json({
-            error: "An error occurred while setting admin status"
+            error: "An error occurred while setting new status"
         });
     }
 }
 
-adminRoutes.post("/add", changeAdminStatus.bind(null, true));
-adminRoutes.post("/remove", changeAdminStatus.bind(null, false));
+adminRoutes.post("/add-admin", changeUserStatus.bind(null, ["admin"], true));
+adminRoutes.post("/remove-admin", changeUserStatus.bind(null, ["admin"], false));
+
+adminRoutes.post("/add-member", changeUserStatus.bind(null, ["member"], true));
+adminRoutes.post("/remove-member", changeUserStatus.bind(null, ["member", "admin"], false)); // Set both to false when removing member

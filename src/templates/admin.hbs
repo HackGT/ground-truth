@@ -96,7 +96,7 @@
             <br />
             <div class="field is-grouped is-grouped-centered">
                 <p class="control">
-                    <button class="button is-info is-outlined" id="add-application">Add application</button>
+                    <button class="button is-info is-outlined" id="add-application">Add Application</button>
                 </p>
             </div>
         </div>
@@ -190,7 +190,7 @@
             <br />
             <div class="field is-grouped is-grouped-centered">
                 <p class="control">
-                    <button class="button is-info is-outlined" id="add-scope">Add scope</button>
+                    <button class="button is-info is-outlined" id="add-scope">Add Scope</button>
                 </p>
             </div>
         </div>
@@ -198,12 +198,12 @@
 
     <hr />
 
-    <h1 class="title">Admins</h1>
-    <h2 class="subtitle">The people who can access this page</h2>
+    <h1 class="title">Users</h1>
+    <h2 class="subtitle">Members can access internal tools, admins can see this page</h2>
     <section class="columns">
         <div class="column">
-            <h1 class="title">Preconfigured</h1>
-            <h2 class="subtitle">You can only change these in config.json or server environment variables</h2>
+            <h4 class="title is-4">Preconfigured Admins</h4>
+            <h6 class="subtitle is-6">You can only change these in config.json or server environment variables</h6>
             <p>Email domains:</p>
             <ul>
                 {{#each adminDomains}}
@@ -228,34 +228,62 @@
             </ul>
         </div>
         <div class="column">
-            <h1 class="title">Current</h1>
-            <h2 class="subtitle">Active users with admin privileges</h2>
-            <ul>
-                {{#each currentAdmins}}
-                    <li class="single-line-button">
-                        <span class="icon"><i class="fas fa-user-cog"></i></span>
-                        <strong>{{formatName this.name}}</strong> ({{this.email}})
-                        {{#ifCond this.uuid ../uuid}}{{else}}
-                    <button class="button is-danger is-outlined delete-admin" data-email="{{this.email}}">Demote</button>
-                        {{/ifCond}}
-                    </li>
-                {{/each}}
-            </ul>
-        </div>
-        <div class="column">
-            <h1 class="title">New</h1>
-            <h2 class="subtitle">Promote an existing user to gain admin privileges</h2>
-            <div class="field">
-                <label class="label" for="admin-email">Email</label>
+            <h4 class="title is-4">New Member</h4>
+            <h6 class="subtitle is-6">Make a user a member. This allows them to access internal tools.</h6>
+            <label class="label" for="member-email">Email</label>
+            <div class="field field-body is-grouped">
+                <div class="control is-expanded">
+                    <input class="input" type="email" id="member-email" placeholder="george.p@burdell.com">
+                </div>
                 <div class="control">
-                    <input class="input" type="email" id="admin-email" placeholder="george.p@burdell.com">
+                    <button class="button is-info is-outlined" id="member-add">Add Member</button>
                 </div>
             </div>
-            <div class="field is-grouped is-grouped-centered">
-                <p class="control">
-                    <button class="button is-primary is-outlined" id="admin-promote">Promote</button>
-                </p>
-            </div>
+        </div>
+    </section>
+    <section>
+        <h4 class="title is-4">Current Members</h4>
+        <h6 class="subtitle is-6">Active users with member privileges</h6>
+        <div class="table-container">
+            <table class="table is-fullwidth" id="admin-user-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Member?</th>
+                        <th>Admin?</th>
+                        <th>Actions</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each currentMembers}}
+                        <tr>
+                            <td>{{formatName this.name}}</td>
+                            <td>{{this.email}}</td>
+                            <td>{{#if this.member}}<span class="icon"><i class="fas fa-check"></i></span>{{/if}}</td>
+                            <td>{{#if this.admin}}<span class="icon"><i class="fas fa-check"></i></span>{{/if}}</td>
+                            <td>
+                                {{#ifNotCond this.uuid ../uuid}}
+                                    {{#if this.admin}}
+                                        <button class="button is-danger is-outlined is-small delete-admin" data-email="{{this.email}}">Demote</button>
+                                    {{else}}
+                                        <button class="button is-success is-outlined is-small add-admin" data-email="{{this.email}}">Promote</button>
+                                    {{/if}}
+                                {{/ifNotCond}}
+                            </td>
+                            <td>
+                                {{#ifNotCond this.uuid ../uuid}}
+                                    <button class="button is-danger is-outlined is-small delete-member" data-email="{{this.email}}">
+                                        <span class="icon"><i class="fas fa-times"></i></span>
+                                        <span>Remove Member</span>
+                                    </button>
+                                {{/ifNotCond}}
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
         </div>
     </section>
 

@@ -32,6 +32,7 @@ export interface IUser extends RootDocument {
     verifiedEmail: boolean;
     emailVerificationCode?: string;
     admin: boolean;
+    member: boolean;
 
     forceLogOut: boolean;
 
@@ -75,7 +76,14 @@ export const User = mongoose.model<Model<IUser>>("User", new mongoose.Schema({
 
     verifiedEmail: Boolean,
     emailVerificationCode: String,
-    admin: Boolean,
+    admin: {
+        type: Boolean,
+        default: false
+    },
+    member: {
+        type: Boolean,
+        default: false
+    },
 
     forceLogOut: Boolean,
 
