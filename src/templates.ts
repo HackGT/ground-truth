@@ -25,6 +25,13 @@ Handlebars.registerHelper("ifCond", function (this: any, v1: any, v2: any, optio
     return options.inverse(this);
 });
 
+Handlebars.registerHelper("ifNotCond", function (this: any, v1: any, v2: any, options: any) {
+    if (v1 === v2) {
+        return options.inverse(this);
+    }
+    return options.fn(this);
+});
+
 Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], options: any) {
     if (list.includes(elem)) {
         return options.fn(this);

@@ -179,3 +179,11 @@ a.gatech:hover {
 #admin-app-content > dd {
 	word-break: break-word;
 }
+
+#admin-user-table {
+	background-color: #212121;
+}
+
+ #admin-user-table, #admin-user-table tr > th {
+	color: white;
+}

@@ -142,24 +142,34 @@ addScopeButton.addEventListener("click", async () => {
 });
 
 // ADMIN SECTION
-let addAdminButton = document.getElementById("admin-promote");
-addAdminButton.addEventListener("click", async () => {
-    let emailField = document.getElementById("admin-email");
+let addMemberButton = document.getElementById("member-add");
+addMemberButton.addEventListener("click", async () => {
+    let emailField = document.getElementById("member-email");
+
     try {
-        addAdminButton.disabled = true;
+        addMemberButton.disabled = true;
         let email = emailField.value.trim();
         if (!email) return;
 
-        await sendRequest("/api/admin/add", { email });
-    }
-    finally {
+        await sendRequest("/api/admin/add-member", { email });
+    } finally {
         emailField.value = "";
-        addAdminButton.disabled = false;
+        addMemberButton.disabled = false;
     }
 });
 
 setUpHandlers("delete-admin", async (uuid, button) => {
     if (!confirm("Are you sure you want to revoke admin privileges from this user?")) return;
 
-    await sendRequest("/api/admin/remove", { email: button.dataset.email });
+    await sendRequest("/api/admin/remove-admin", { email: button.dataset.email });
+});
+
+setUpHandlers("add-admin", async (uuid, button) => {
+    await sendRequest("/api/admin/add-admin", { email: button.dataset.email });
+});
+
+setUpHandlers("delete-member", async (uuid, button) => {
+    if (!confirm("Are you sure you want to remove this member as a user? They will also be removed as an admin if applicable.")) return;
+
+    await sendRequest("/api/admin/remove-member", { email: button.dataset.email });
 });

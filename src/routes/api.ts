@@ -12,11 +12,13 @@ export let apiRoutes = express.Router();
 apiRoutes.get("/user", passport.authenticate("bearer", { session: false }), async (request, response) => {
     let user = request.user as IUser;
     response.json({
-        "uuid": user.uuid,
-        "name": formatName(user),
-        "nameParts": user.name,
-        "email": user.email,
-        "scopes": (user.scopes && Object.keys(user.scopes).length > 0) ? user.scopes : null
+        uuid: user.uuid,
+        name: formatName(user),
+        nameParts: user.name,
+        email: user.email,
+        admin: user.admin,
+        member: user.member,
+        scopes: (user.scopes && Object.keys(user.scopes).length > 0) ? user.scopes : null
     });
 });
 
