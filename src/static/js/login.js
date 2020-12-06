@@ -64,7 +64,7 @@ function setUpStep(step) {
                     }
 
                     if (!passwordLogin.value) {
-                        let { type } = await fetch(`/api/login-type?email=${encodeURIComponent(email.value.trim())}`).then(response => response.json());
+                        let { type } = await fetch(`/api/client/login-type?email=${encodeURIComponent(email.value.trim())}`).then(response => response.json());
                         if (["gatech", "google", "github", "facebook"].includes(type)) {
                             window.location.href = `/auth/${type}`;
                             return;
@@ -77,7 +77,7 @@ function setUpStep(step) {
                             passwordLogin.focus();
                             return;
                         }
-                        await fetch(`/api/signup-data`, {
+                        await fetch(`/api/client/signup-data`, {
                             ...commonFetchSettings,
                             body: serializeQueryString({ email: email.value.trim() })
                         });
@@ -102,7 +102,7 @@ function setUpStep(step) {
                         errorBlock.textContent = "Please enter your first and last name. We use it to identify you online and at events!"
                         return;
                     }
-                    await fetch(`/api/signup-data`, {
+                    await fetch(`/api/client/signup-data`, {
                         ...commonFetchSettings,
                         body: serializeQueryString({
                             firstName: firstNameValue,

@@ -37,18 +37,18 @@
                 <br />
                 <div class="field is-grouped is-multiline">
                     <p class="control">
-                        <button class="button is-primary is-outlined rename" data-uuid="{{this.uuid}}" data-name="{{this.name}}">Rename</button>
+                        <button class="button is-primary is-outlined rename" data-id="{{this.id}}" data-name="{{this.name}}">Rename</button>
                     </p>
                     <p class="control">
-                        <button class="button is-info is-outlined edit-redirects" data-uuid="{{this.uuid}}" data-uris="{{join this.redirectURIs}}">Edit Redirect URIs</button>
+                        <button class="button is-info is-outlined edit-redirects" data-id="{{this.id}}" data-uris="{{join this.redirectURIs}}">Edit Redirect URIs</button>
                     </p>
                     {{#if this.public}}{{else}}
                         <p class="control">
-                            <button class="button is-warning is-outlined regenerate-secret" data-uuid="{{this.uuid}}">Regenerate Secret</button>
+                            <button class="button is-warning is-outlined regenerate-secret" data-id="{{this.id}}">Regenerate Secret</button>
                         </p>
                     {{/if}}
                     <p class="control">
-                        <button class="button is-danger is-outlined delete-app" data-uuid="{{this.uuid}}">Delete</button>
+                        <button class="button is-danger is-outlined delete-app" data-id="{{this.id}}">Delete</button>
                     </p>
                 </div>
             </div>
@@ -134,7 +134,7 @@
                 <br />
                 <div class="field is-grouped is-grouped-centered is-multiline">
                     <p class="control">
-                        <button class="button is-danger is-outlined delete-scope" data-uuid="{{this.name}}">Delete</button>
+                        <button class="button is-danger is-outlined delete-scope" data-id="{{this.id}}">Delete</button>
                     </p>
                 </div>
             </div>

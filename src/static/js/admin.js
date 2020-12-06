@@ -2,13 +2,12 @@ function setUpHandlers(classname, handler) {
     let buttons = document.getElementsByClassName(classname);
     for (let i = 0; i < buttons.length; i++) {
         buttons[i].addEventListener("click", async e => {
-            let button = e.target;
-            button.disabled = true;
+            buttons[i].disabled = true;
 
             try {
-                await handler(button.dataset.uuid, button);
+                await handler(buttons[i].dataset.id, buttons[i]);
             } finally {
-                button.disabled = false;
+                buttons[i].disabled = false;
             }
         });
     }
@@ -20,9 +19,9 @@ function serializeQueryString(data) {
     }).join("&");
 }
 
-async function sendRequest(url, data) {
+async function sendRequest(url, method, data) {
     let options = {
-        method: "POST",
+        method,
         credentials: "include"
     };
     if (data) {
@@ -44,27 +43,27 @@ async function sendRequest(url, data) {
 }
 
 // AUTHORIZED APPLICATIONS SECTION
-setUpHandlers("rename", async (uuid, button) => {
+setUpHandlers("rename", async (id, button) => {
     let name = prompt("New name:", button.dataset.name);
     if (!name) return;
 
-    await sendRequest(`/api/admin/app/${uuid}/rename`, { name: name.trim() });
+    await sendRequest(`/api/apps/${id}/rename`, "PUT", { name: name.trim() });
 });
-setUpHandlers("edit-redirects", async (uuid, button) => {
+setUpHandlers("edit-redirects", async (id, button) => {
     let uris = prompt("Redirect URIs (comma separated):", button.dataset.uris);
     if (!uris) return;
 
-    await sendRequest(`/api/admin/app/${uuid}/redirects`, { redirectURIs: uris.trim() });
+    await sendRequest(`/api/apps/${id}/redirects`, "PUT", { redirectURIs: uris.trim() });
 });
-setUpHandlers("regenerate-secret", async (uuid, button) => {
+setUpHandlers("regenerate-secret", async (id, button) => {
     if (!confirm("Are you sure you want to regenerate this app's client secret? This will require reconfiguring this application with the newly generated secret.")) return;
 
-    await sendRequest(`/api/admin/app/${uuid}/regenerate`);
+    await sendRequest(`/api/apps/${id}/regenerate`, "PUT");
 });
-setUpHandlers("delete-app", async (uuid, button) => {
+setUpHandlers("delete-app", async (id, button) => {
     if (!confirm("Are you sure you want to delete this app?")) return;
 
-    await sendRequest(`/api/admin/app/${uuid}/delete`);
+    await sendRequest(`/api/apps/${id}`, "DELETE");
 });
 
 // Handles hiding and showing secrets on arrow click
@@ -100,7 +99,7 @@ addApplicationButton.addEventListener("click", async () => {
             return;
         }
 
-        await sendRequest("/api/admin/app", { name, redirectURIs, clientType });
+        await sendRequest("/api/apps", "POST", { name, redirectURIs, clientType });
     }
     finally {
         addApplicationButton.disabled = false;
@@ -108,10 +107,10 @@ addApplicationButton.addEventListener("click", async () => {
 });
 
 // SCOPES SECTION
-setUpHandlers("delete-scope", async (name, button) => {
+setUpHandlers("delete-scope", async (id, button) => {
     if (!confirm("Are you sure you want to delete this scope?")) return;
 
-    await sendRequest(`/api/admin/scope/delete`, { name });
+    await sendRequest(`/api/scopes/${id}`, "DELETE");
 });
 
 // ADD SCOPE SECTION
@@ -127,7 +126,7 @@ addScopeButton.addEventListener("click", async () => {
         let validatorCode = document.getElementById("scope-validator");
         let errorMessage = document.getElementById("scope-error-message");
 
-        await sendRequest("/api/admin/scope", {
+        await sendRequest("/api/scopes", "POST", {
             name: name.value,
             question: question.value,
             type: type.value,
@@ -141,7 +140,7 @@ addScopeButton.addEventListener("click", async () => {
     }
 });
 
-// ADMIN SECTION
+// USER SECTION
 let addMemberButton = document.getElementById("member-add");
 addMemberButton.addEventListener("click", async () => {
     let emailField = document.getElementById("member-email");
@@ -151,25 +150,25 @@ addMemberButton.addEventListener("click", async () => {
         let email = emailField.value.trim();
         if (!email) return;
 
-        await sendRequest("/api/admin/add-member", { email });
+        await sendRequest(`/api/members`, "POST", { email, member: true });
     } finally {
         emailField.value = "";
         addMemberButton.disabled = false;
     }
 });
 
-setUpHandlers("delete-admin", async (uuid, button) => {
+setUpHandlers("delete-admin", async (id, button) => {
     if (!confirm("Are you sure you want to revoke admin privileges from this user?")) return;
 
-    await sendRequest("/api/admin/remove-admin", { email: button.dataset.email });
+    await sendRequest(`/api/members`, "POST", { email: button.dataset.email, admin: false });
 });
 
-setUpHandlers("add-admin", async (uuid, button) => {
-    await sendRequest("/api/admin/add-admin", { email: button.dataset.email });
+setUpHandlers("add-admin", async (id, button) => {
+    await sendRequest(`/api/members`, "POST", { email: button.dataset.email, admin: true });
 });
 
-setUpHandlers("delete-member", async (uuid, button) => {
+setUpHandlers("delete-member", async (id, button) => {
     if (!confirm("Are you sure you want to remove this member as a user? They will also be removed as an admin if applicable.")) return;
 
-    await sendRequest("/api/admin/remove-member", { email: button.dataset.email });
+    await sendRequest(`/api/members`, "POST", { email: button.dataset.email, admin: false, member: false });
 });

@@ -91,8 +91,8 @@ app.use("/auth", authRouter);
 import { OAuthRouter } from "./routes/oauth";
 app.use("/oauth", OAuthRouter);
 
-import { apiRoutes } from "./routes/api";
-app.use("/api", apiRoutes);
+import { apiRouter } from "./routes/api";
+app.use("/api", apiRouter);
 
 app.use("/static", express.static(path.join(__dirname, "static")));
 
