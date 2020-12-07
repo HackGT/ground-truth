@@ -187,3 +187,12 @@ a.gatech:hover {
  #admin-user-table, #admin-user-table tr > th {
 	color: white;
 }
+
+#admin-navigation.tabs li a {
+	color: white;
+}
+
+#admin-navigation.tabs li.is-active a {
+	color: #3273dc;
+	font-weight: bold;
+}

@@ -1,3 +1,29 @@
+// Navigation tab handlers
+let navigationTabs = document.getElementById("admin-navigation").getElementsByTagName("li");
+
+for (let index = 0; index < navigationTabs.length; index++) {
+    let currentTab = navigationTabs[index];
+
+    currentTab.addEventListener("click", async e => {
+        let tabContents = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+        }
+
+        for (i = 0; i < navigationTabs.length; i++) {
+            navigationTabs[i].classList.remove("is-active");
+        }
+
+        document.getElementById(currentTab.dataset.content).style.display = "block";
+        currentTab.classList.add("is-active");
+    })
+}
+
+// If there is a current tab in local storage, set that tab otherwise the first one
+let activeTabName = localStorage.getItem("activeTabId");
+localStorage.removeItem("activeTabId");
+document.getElementById(activeTabName || "admin-tab-1").click();
+
 function setUpHandlers(classname, handler) {
     let buttons = document.getElementsByClassName(classname);
     for (let i = 0; i < buttons.length; i++) {
@@ -38,6 +64,10 @@ async function sendRequest(url, method, data) {
     if (!response.success) {
         alert(response.error);
     } else {
+        // Remember current tab on refresh
+        let activeTab = document.getElementById("admin-navigation").querySelector("li.is-active");
+        localStorage.setItem("activeTabId", activeTab.id);
+
         window.location.reload();
     }
 }
