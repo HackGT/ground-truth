@@ -103,6 +103,8 @@ After authorization, use the `/api/user` endpoint via GET to access user data. A
 		preferred,	// Preferred name (if provided)
 		last		// Last name
 	},
+	admin,			// Boolean value if user is admin
+	member,			// Boolean value if user is member
 	email,			// Email
 	scopes			// Object of scope data
 }
