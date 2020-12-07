@@ -91,8 +91,19 @@ app.use("/auth", authRouter);
 import { OAuthRouter } from "./routes/oauth";
 app.use("/oauth", OAuthRouter);
 
-import { apiRouter } from "./routes/api";
-app.use("/api", apiRouter);
+import { appsRouter } from "./routes/api/apps";
+import { membersRouter } from "./routes/api/members";
+import { scopesRouter } from "./routes/api/scopes";
+import { clientRouter } from "./routes/api/client";
+import { userRouter } from "./routes/api/user";
+
+// Routes for admin page
+app.use("/api/apps", appsRouter);
+app.use("/api/members", membersRouter);
+app.use("/api/scopes", scopesRouter);
+
+app.use("/api/client", clientRouter);
+app.use("/api/user", userRouter);
 
 app.use("/static", express.static(path.join(__dirname, "static")));
 
