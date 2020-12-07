@@ -1,247 +1,259 @@
 {{#> main }}
-    <h1 class="title">Authorized applications</h1>
-    <h2 class="subtitle">These apps can authenticate users via OAuth 2 with user permission</h2>
-    <section class="columns is-multiline">
-        {{#each apps}}
-            <div class="column is-one-third">
-                <h1 class="title">{{this.name}}</h1>
-                <p class="content">
-                <dl id="admin-app-content">
-                    <dt>UUID</dt>
-                    <dd>{{this.uuid}}</dd>
+    <div class="tabs is-centered is-medium" id="admin-navigation">
+        <ul>
+            <!-- data-content field of tab should match the id of the corresponding div -->
+            <li data-content="tab-applications" id="admin-tab-1"><a>Applications</a></li>
+            <li data-content="tab-scopes" id="admin-tab-2"><a>Scopes</a></li>
+            <li data-content="tab-users" id="admin-tab-3"><a>Users</a></li>
+        </ul>
+    </div>
 
-                    <dt>Client Type</dt>
-                    <dd>{{#if this.public}}Public (e.g. native app){{else}}Private (e.g. server-based){{/if}}</dd>
+    <div id="tab-applications" class="tab-content">
+        <h1 class="title">Authorized applications</h1>
+        <h2 class="subtitle">These apps can authenticate users via OAuth 2 with user permission</h2>
+        <section class="columns is-multiline">
+            {{#each apps}}
+                <div class="column is-one-third">
+                    <h1 class="title">{{this.name}}</h1>
+                    <p class="content">
+                    <dl id="admin-app-content">
+                        <dt>UUID</dt>
+                        <dd>{{this.uuid}}</dd>
 
-                    <dt>Client ID</dt>
-                    <dd>{{this.clientID}}</dd>
+                        <dt>Client Type</dt>
+                        <dd>{{#if this.public}}Public (e.g. native app){{else}}Private (e.g. server-based){{/if}}</dd>
 
-                    <dt>Client Secret <span class="icon secret-arrow"><i class="fas fa-arrow-right"></i></span></dt>
-                    <dd class="is-hidden secret-container">{{#if this.public}}N/A{{else}}{{this.clientSecret}}{{/if}}</dd>
+                        <dt>Client ID</dt>
+                        <dd>{{this.clientID}}</dd>
 
-                    <dt>Allowed Redirect URIs</dt>
-                    <dd>
-                        <ul>
-                            {{#each this.redirectURIs}}
-                                <li>
-                                    <span class="icon"><i class="fas fa-link"></i></span>
-                                    {{this}}
-                                </li>
-                            {{/each}}
-                        </ul>
-                    </dd>
-                    <dt>Issued Tokens</dt>
-                    <dd>{{this.tokens}}</dd>
-                </dl>
-                </p>
-                <br />
-                <div class="field is-grouped is-multiline">
-                    <p class="control">
-                        <button class="button is-primary is-outlined rename" data-id="{{this.id}}" data-name="{{this.name}}">Rename</button>
+                        <dt>Client Secret <span class="icon secret-arrow"><i class="fas fa-arrow-right"></i></span></dt>
+                        <dd class="is-hidden secret-container">{{#if this.public}}N/A{{else}}{{this.clientSecret}}{{/if}}</dd>
+
+                        <dt>Allowed Redirect URIs</dt>
+                        <dd>
+                            <ul>
+                                {{#each this.redirectURIs}}
+                                    <li>
+                                        <span class="icon"><i class="fas fa-link"></i></span>
+                                        {{this}}
+                                    </li>
+                                {{/each}}
+                            </ul>
+                        </dd>
+                        <dt>Issued Tokens</dt>
+                        <dd>{{this.tokens}}</dd>
+                    </dl>
                     </p>
-                    <p class="control">
-                        <button class="button is-info is-outlined edit-redirects" data-id="{{this.id}}" data-uris="{{join this.redirectURIs}}">Edit Redirect URIs</button>
-                    </p>
-                    {{#if this.public}}{{else}}
-                        <p class="control">
-                            <button class="button is-warning is-outlined regenerate-secret" data-id="{{this.id}}">Regenerate Secret</button>
-                        </p>
-                    {{/if}}
-                    <p class="control">
-                        <button class="button is-danger is-outlined delete-app" data-id="{{this.id}}">Delete</button>
-                    </p>
-                </div>
-            </div>
-        {{else}}
-            <div class="column is-half is-offset-one-quarter has-text-centered">
-                <p><em>No apps</em></p>
-            </div>
-        {{/each}}
-    </section>
-
-    <hr />
-
-    <h1 class="title">Add an application</h1>
-    <h2 class="subtitle">This allows an application to authenticate users via OAuth 2</h2>
-    <section class="columns">
-        <div class="column is-half is-offset-one-quarter">
-            <div class="field">
-                <label class="label" for="name">App name</label>
-                <div class="control">
-                    <input class="input" type="text" id="name" placeholder="My awesome new app" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="redirect-uris">Redirect URIs (comma separated)</label>
-                <div class="control">
-                    <input class="input" type="url" id="redirect-uris" placeholder="e.g. https://localhost:3000" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label">Client type</label>
-                <p>Private applications must pass along a <code>client_secret</code> parameter when exchanging an authorization code for a long-term access token. This can only work for mediums like server-based apps where the client secret cannot be leaked. Native apps cannot guarantee the security of their secret and so should use <a href="https://www.oauth.com/oauth2-servers/pkce" target="_blank">PKCE</a> to generate and use a per-request secret instead. Public applications <em>should not</em> store or pass along a client secret.</p>
-                <br />
-                <div class="control ">
-                    <label class="radio">
-                        <input type="radio" name="client-type" value="private" checked />
-                        Private (e.g. server-based)
-                    </label>
                     <br />
-                    <label class="radio">
-                        <input type="radio" name="client-type" value="public" />
-                        Public (e.g. native app)
-                    </label>
+                    <div class="field is-grouped is-multiline">
+                        <p class="control">
+                            <button class="button is-primary is-outlined rename" data-id="{{this.id}}" data-name="{{this.name}}">Rename</button>
+                        </p>
+                        <p class="control">
+                            <button class="button is-info is-outlined edit-redirects" data-id="{{this.id}}" data-uris="{{join this.redirectURIs}}">Edit Redirect URIs</button>
+                        </p>
+                        {{#if this.public}}{{else}}
+                            <p class="control">
+                                <button class="button is-warning is-outlined regenerate-secret" data-id="{{this.id}}">Regenerate Secret</button>
+                            </p>
+                        {{/if}}
+                        <p class="control">
+                            <button class="button is-danger is-outlined delete-app" data-id="{{this.id}}">Delete</button>
+                        </p>
+                    </div>
+                </div>
+            {{else}}
+                <div class="column is-half is-offset-one-quarter has-text-centered">
+                    <p><em>No apps</em></p>
+                </div>
+            {{/each}}
+        </section>
+
+        <hr />
+
+        <h1 class="title">Add an application</h1>
+        <h2 class="subtitle">This allows an application to authenticate users via OAuth 2</h2>
+        <section class="columns">
+            <div class="column is-half is-offset-one-quarter">
+                <div class="field">
+                    <label class="label" for="name">App name</label>
+                    <div class="control">
+                        <input class="input" type="text" id="name" placeholder="My awesome new app" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="redirect-uris">Redirect URIs (comma separated)</label>
+                    <div class="control">
+                        <input class="input" type="url" id="redirect-uris" placeholder="e.g. https://localhost:3000" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Client type</label>
+                    <p>Private applications must pass along a <code>client_secret</code> parameter when exchanging an authorization code for a long-term access token. This can only work for mediums like server-based apps where the client secret cannot be leaked. Native apps cannot guarantee the security of their secret and so should use <a href="https://www.oauth.com/oauth2-servers/pkce" target="_blank">PKCE</a> to generate and use a per-request secret instead. Public applications <em>should not</em> store or pass along a client secret.</p>
+                    <br />
+                    <div class="control ">
+                        <label class="radio">
+                            <input type="radio" name="client-type" value="private" checked />
+                            Private (e.g. server-based)
+                        </label>
+                        <br />
+                        <label class="radio">
+                            <input type="radio" name="client-type" value="public" />
+                            Public (e.g. native app)
+                        </label>
+                    </div>
+                </div>
+                <br />
+                <div class="field is-grouped is-grouped-centered">
+                    <p class="control">
+                        <button class="button is-info is-outlined" id="add-application">Add Application</button>
+                    </p>
                 </div>
             </div>
-            <br />
-            <div class="field is-grouped is-grouped-centered">
-                <p class="control">
-                    <button class="button is-info is-outlined" id="add-application">Add Application</button>
-                </p>
+        </section>
+    </div>
+
+    <div id="tab-scopes" class="tab-content">
+        <h1 class="title">OAuth Scopes</h1>
+        <h2 class="subtitle">Additional information users must enter before they can authorize an app</h2>
+        <section class="columns is-multiline">
+            {{#each scopes}}
+                <div class="column is-one-third">
+                    <h1 class="title"><code>{{this.name}}</code></h1>
+                    <p class="content">
+                    <ul>
+                        <li>Question: <strong>{{this.question}}</strong></li>
+                        <li>Type: <code>{{this.type}}</code></li>
+                        {{#if this.icon}}
+                            <li>
+                                Icon:
+                                <span class="icon"><i class="fas fa-{{this.icon}}"></i></span>
+                                (<code>{{this.icon}}</code>)
+                            </li>
+                        {{else}}
+                            <li><em>No icon set</em></li>
+                        {{/if}}
+                        {{#if this.validator.code}}
+                            <li>Validator: <code>{{this.validator.code}}</code></li>
+                            <li>Error message: <strong>{{this.validator.errorMessage}}</strong></li>
+                        {{else}}
+                            <li><em>No validator configured</em></li>
+                        {{/if}}
+                    </ul>
+                    </p>
+                    <br />
+                    <div class="field is-grouped is-grouped-centered is-multiline">
+                        <p class="control">
+                            <button class="button is-danger is-outlined delete-scope" data-id="{{this.id}}">Delete</button>
+                        </p>
+                    </div>
+                </div>
+            {{else}}
+                <div class="column is-half is-offset-one-quarter has-text-centered">
+                    <p><em>No scopes</em></p>
+                </div>
+            {{/each}}
+        </section>
+
+        <hr />
+
+        <h1 class="title">Add a scope</h1>
+        <h2 class="subtitle">This allows an application to collect additional information from its users</h2>
+        <section class="columns">
+            <div class="column is-half is-offset-one-quarter">
+                <div class="field">
+                    <label class="label" for="scope-name">Scope name (should be lowercase and cannot contain spaces or commas)</label>
+                    <div class="control">
+                        <input class="input" type="text" id="scope-name" placeholder="e.g. phone" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="scope-question">Scope question</label>
+                    <div class="control">
+                        <input class="input" type="text" id="scope-question" placeholder="e.g. What's your phone number?" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="scope-type">Input type (<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Form_<input>_types" target="_blank">see complete list</a>)</label>
+                    <div class="control">
+                        <input class="input" type="text" id="scope-type" value="text" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="scope-icon">Icon (optional; <a href="https://fontawesome.com/icons?d=gallery&s=solid" target="_blank">see complete list</a>)</label>
+                    <div class="control">
+                        <input class="input" type="text" id="scope-icon" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="scope-validator">Validation code (optional)</label>
+                    <div class="control">
+                        <textarea class="textarea" id="scope-validator" placeholder="e.g. value === &quot;correct answer&quot;"></textarea>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="scope-error-message">Validation error message (optional)</label>
+                    <div class="control">
+                        <input class="input" type="text" id="scope-error-message" />
+                    </div>
+                </div>
+                <br />
+                <div class="field is-grouped is-grouped-centered">
+                    <p class="control">
+                        <button class="button is-info is-outlined" id="add-scope">Add Scope</button>
+                    </p>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
-    <hr />
-
-    <h1 class="title">OAuth Scopes</h1>
-    <h2 class="subtitle">Additional information users must enter before they can authorize an app</h2>
-    <section class="columns is-multiline">
-        {{#each scopes}}
-            <div class="column is-one-third">
-                <h1 class="title"><code>{{this.name}}</code></h1>
-                <p class="content">
+    <div id="tab-users" class="tab-content">
+        <h1 class="title">Users</h1>
+        <h2 class="subtitle">Members can access internal tools, admins can see this page</h2>
+        <section class="columns">
+            <div class="column">
+                <h4 class="title is-4">Preconfigured Admins</h4>
+                <h6 class="subtitle is-6">You can only change these in config.json or server environment variables</h6>
+                <p>Email domains:</p>
                 <ul>
-                    <li>Question: <strong>{{this.question}}</strong></li>
-                    <li>Type: <code>{{this.type}}</code></li>
-                    {{#if this.icon}}
+                    {{#each adminDomains}}
                         <li>
-                            Icon:
-                            <span class="icon"><i class="fas fa-{{this.icon}}"></i></span>
-                            (<code>{{this.icon}}</code>)
+                            <span class="icon"><i class="fas fa-at"></i></span>
+                            <strong>{{this}}</strong>
                         </li>
                     {{else}}
-                        <li><em>No icon set</em></li>
-                    {{/if}}
-                    {{#if this.validator.code}}
-                        <li>Validator: <code>{{this.validator.code}}</code></li>
-                        <li>Error message: <strong>{{this.validator.errorMessage}}</strong></li>
-                    {{else}}
-                        <li><em>No validator configured</em></li>
-                    {{/if}}
+                        <li><em>None</em></li>
+                    {{/each}}
                 </ul>
-                </p>
-                <br />
-                <div class="field is-grouped is-grouped-centered is-multiline">
-                    <p class="control">
-                        <button class="button is-danger is-outlined delete-scope" data-id="{{this.id}}">Delete</button>
-                    </p>
+                <p>Specific emails:</p>
+                <ul>
+                    {{#each admins}}
+                        <li>
+                            <span class="icon"><i class="fas fa-envelope"></i></span>
+                            <strong>{{this}}</strong>
+                        </li>
+                    {{else}}
+                        <li><em>None</em></li>
+                    {{/each}}
+                </ul>
+            </div>
+            <div class="column">
+                <h4 class="title is-4">New Member</h4>
+                <h6 class="subtitle is-6">Make a user a member. This allows them to access internal tools. You can add multiple members at once by separating their emails with a comma.</h6>
+                <label class="label" for="member-email">Email(s)</label>
+                <div class="field field-body is-grouped">
+                    <div class="control is-expanded">
+                        <input class="input" type="email" id="member-email" placeholder="george.p@burdell.com, user@hack.gt">
+                    </div>
+                    <div class="control">
+                        <button class="button is-info is-outlined" id="member-add">Add Member</button>
+                    </div>
                 </div>
             </div>
-        {{else}}
-            <div class="column is-half is-offset-one-quarter has-text-centered">
-                <p><em>No scopes</em></p>
-            </div>
-        {{/each}}
-    </section>
+        </section>
 
-    <hr />
+        <hr />
 
-    <h1 class="title">Add a scope</h1>
-    <h2 class="subtitle">This allows an application to collect additional information from its users</h2>
-    <section class="columns">
-        <div class="column is-half is-offset-one-quarter">
-            <div class="field">
-                <label class="label" for="scope-name">Scope name (should be lowercase and cannot contain spaces or commas)</label>
-                <div class="control">
-                    <input class="input" type="text" id="scope-name" placeholder="e.g. phone" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="scope-question">Scope question</label>
-                <div class="control">
-                    <input class="input" type="text" id="scope-question" placeholder="e.g. What's your phone number?" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="scope-type">Input type (<a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Form_<input>_types" target="_blank">see complete list</a>)</label>
-                <div class="control">
-                    <input class="input" type="text" id="scope-type" value="text" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="scope-icon">Icon (optional; <a href="https://fontawesome.com/icons?d=gallery&s=solid" target="_blank">see complete list</a>)</label>
-                <div class="control">
-                    <input class="input" type="text" id="scope-icon" />
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="scope-validator">Validation code (optional)</label>
-                <div class="control">
-                    <textarea class="textarea" id="scope-validator" placeholder="e.g. value === &quot;correct answer&quot;"></textarea>
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="scope-error-message">Validation error message (optional)</label>
-                <div class="control">
-                    <input class="input" type="text" id="scope-error-message" />
-                </div>
-            </div>
-            <br />
-            <div class="field is-grouped is-grouped-centered">
-                <p class="control">
-                    <button class="button is-info is-outlined" id="add-scope">Add Scope</button>
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <hr />
-
-    <h1 class="title">Users</h1>
-    <h2 class="subtitle">Members can access internal tools, admins can see this page</h2>
-    <section class="columns">
-        <div class="column">
-            <h4 class="title is-4">Preconfigured Admins</h4>
-            <h6 class="subtitle is-6">You can only change these in config.json or server environment variables</h6>
-            <p>Email domains:</p>
-            <ul>
-                {{#each adminDomains}}
-                    <li>
-                        <span class="icon"><i class="fas fa-at"></i></span>
-                        <strong>{{this}}</strong>
-                    </li>
-                {{else}}
-                    <li><em>None</em></li>
-                {{/each}}
-            </ul>
-            <p>Specific emails:</p>
-            <ul>
-                {{#each admins}}
-                    <li>
-                        <span class="icon"><i class="fas fa-envelope"></i></span>
-                        <strong>{{this}}</strong>
-                    </li>
-                {{else}}
-                    <li><em>None</em></li>
-                {{/each}}
-            </ul>
-        </div>
-        <div class="column">
-            <h4 class="title is-4">New Member</h4>
-            <h6 class="subtitle is-6">Make a user a member. This allows them to access internal tools. You can add multiple members at once by separating their emails with a comma.</h6>
-            <label class="label" for="member-email">Email(s)</label>
-            <div class="field field-body is-grouped">
-                <div class="control is-expanded">
-                    <input class="input" type="email" id="member-email" placeholder="george.p@burdell.com, user@hack.gt">
-                </div>
-                <div class="control">
-                    <button class="button is-info is-outlined" id="member-add">Add Member</button>
-                </div>
-            </div>
-        </div>
-    </section>
-    <section>
         <h4 class="title is-4">Current Members</h4>
         <h6 class="subtitle is-6">Active users with member privileges</h6>
         <div class="table-container">
@@ -285,6 +297,6 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </div>
 
     {{/main}}

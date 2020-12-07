@@ -1,3 +1,29 @@
+// Navigation tab handlers
+let navigationTabs = document.getElementById("admin-navigation").getElementsByTagName("li");
+
+for (let index = 0; index < navigationTabs.length; index++) {
+    let currentTab = navigationTabs[index];
+
+    currentTab.addEventListener("click", async e => {
+        let tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+        }
+
+        for (let i = 0; i < navigationTabs.length; i++) {
+            navigationTabs[i].classList.remove("is-active");
+        }
+
+        document.getElementById(currentTab.dataset.content).style.display = "block";
+        currentTab.classList.add("is-active");
+    })
+}
+
+// If there is a current tab in local storage, set that tab otherwise the first one
+let activeTabName = localStorage.getItem("activeTabId");
+localStorage.removeItem("activeTabId");
+document.getElementById(activeTabName || "admin-tab-1").click();
+
 function setUpHandlers(classname, handler) {
     let buttons = document.getElementsByClassName(classname);
     for (let i = 0; i < buttons.length; i++) {
@@ -38,11 +64,15 @@ async function sendRequest(url, method, data) {
     if (!response.success) {
         alert(response.error);
     } else {
+        // Remember current tab on refresh
+        let activeTab = document.getElementById("admin-navigation").querySelector("li.is-active");
+        localStorage.setItem("activeTabId", activeTab.id);
+
         window.location.reload();
     }
 }
 
-// AUTHORIZED APPLICATIONS SECTION
+// APPLICATIONS TAB
 setUpHandlers("rename", async (id, button) => {
     let name = prompt("New name:", button.dataset.name);
     if (!name) return;
@@ -79,7 +109,6 @@ for (let i = 0; i < secretArrows.length; i++) {
     });
 }
 
-// ADD APPLICATION SECTION
 let addApplicationButton = document.getElementById("add-application");
 addApplicationButton.addEventListener("click", async () => {
     try {
@@ -106,14 +135,13 @@ addApplicationButton.addEventListener("click", async () => {
     }
 });
 
-// SCOPES SECTION
+// SCOPES TAB
 setUpHandlers("delete-scope", async (id, button) => {
     if (!confirm("Are you sure you want to delete this scope?")) return;
 
     await sendRequest(`/api/scopes/${id}`, "DELETE");
 });
 
-// ADD SCOPE SECTION
 let addScopeButton = document.getElementById("add-scope");
 addScopeButton.addEventListener("click", async () => {
     try {
@@ -140,7 +168,7 @@ addScopeButton.addEventListener("click", async () => {
     }
 });
 
-// USER SECTION
+// USERS TAB
 let addMemberButton = document.getElementById("member-add");
 addMemberButton.addEventListener("click", async () => {
     let emailField = document.getElementById("member-email");
