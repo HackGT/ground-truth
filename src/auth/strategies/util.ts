@@ -25,16 +25,17 @@ export async function ExternalServiceCallback(
     // If `user` exists, the user has already logged in with this service and is good-to-go
     let user = await User.findOne({ [`services.${serviceName}.id`]: id });
 
+    let enteredEmail = session.email?.trim().toLowerCase();
+
     // Ensure that the oauth method used is linked to the user with the same email address that is entered
-    if (session.email && user && session.email !== user.email) {
-        done(null, false, { message: "Login method is linked to another email. Please try again with a different email address." });
+    if (enteredEmail && user && enteredEmail !== user.email) {
+        done(null, false, { message: "The 3rd party account you chose does not match the email address that you are trying to log in with. Please make sure your email address and the selected account match." });
         return;
     }
 
-    if (session && session.email && session.firstName && session.lastName) {
-        let signupEmail = session.email.trim().toLowerCase();
+    if (session && enteredEmail && session.firstName && session.lastName) {
         // Only create / modify user account if email and name exist on the session (set by login page)
-        let existingUser = await User.findOne({ email: signupEmail });
+        let existingUser = await User.findOne({ email: enteredEmail });
 
         if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
             user = existingUser;
@@ -62,7 +63,7 @@ export async function ExternalServiceCallback(
             // Create an account
             user = createNew<IUser>(User, {
                 ...OAuthStrategy.defaultUserProperties,
-                email: signupEmail,
+                email: enteredEmail,
                 name: {
                     first: session.firstName,
                     preferred: session.preferredName,
@@ -88,7 +89,7 @@ export async function ExternalServiceCallback(
     }
 
     if (!user) {
-        done(null, false, { message: "Could not match login to an existing account. Please try again with a different login method." });
+        done(null, false, { message: "Could not match login to an existing account. Please try again with a different account or login method." });
         return;
     }
 
