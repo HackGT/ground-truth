@@ -64,11 +64,19 @@ function setUpStep(step) {
                     }
 
                     if (!passwordLogin.value) {
+                        await fetch(`/api/attach-session-data`, {
+                            ...commonFetchSettings,
+                            body: serializeQueryString({
+                                email: email.value.trim()
+                            })
+                        });
+
                         let { type } = await fetch(`/api/login-type?email=${encodeURIComponent(email.value.trim())}`).then(response => response.json());
                         if (["gatech", "google", "github", "facebook"].includes(type)) {
                             window.location.href = `/auth/${type}`;
                             return;
                         }
+
                         if (type === "local") {
                             let passwordContainer = document.getElementById("hidden-password");
                             passwordContainer.classList.remove("hidden");
@@ -77,12 +85,8 @@ function setUpStep(step) {
                             passwordLogin.focus();
                             return;
                         }
-                        await fetch(`/api/signup-data`, {
-                            ...commonFetchSettings,
-                            body: serializeQueryString({ email: email.value.trim() })
-                        });
-                    }
-                    else {
+                    } else {
+                        // User has entered a value in the password field, so try login via local strategy
                         await fetch(`/auth/login`, {
                             ...commonFetchSettings,
                             body: serializeQueryString({
@@ -102,7 +106,8 @@ function setUpStep(step) {
                         errorBlock.textContent = "Please enter your first and last name. We use it to identify you online and at events!"
                         return;
                     }
-                    await fetch(`/api/signup-data`, {
+
+                    await fetch(`/api/attach-session-data`, {
                         ...commonFetchSettings,
                         body: serializeQueryString({
                             firstName: firstNameValue,

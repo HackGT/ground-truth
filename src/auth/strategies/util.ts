@@ -25,10 +25,17 @@ export async function ExternalServiceCallback(
     // If `user` exists, the user has already logged in with this service and is good-to-go
     let user = await User.findOne({ [`services.${serviceName}.id`]: id });
 
-    if (session && session.email && session.firstName && session.lastName) {
-        let signupEmail = session.email.trim().toLowerCase();
+    let enteredEmail = session.email?.trim().toLowerCase();
+
+    // Ensure that the oauth method used is linked to the user with the same email address that is entered
+    if (enteredEmail && user && enteredEmail !== user.email) {
+        done(null, false, { message: "The 3rd party account you chose does not match the email address that you are trying to log in with. Please make sure your email address and the selected account match." });
+        return;
+    }
+
+    if (session && enteredEmail && session.firstName && session.lastName) {
         // Only create / modify user account if email and name exist on the session (set by login page)
-        let existingUser = await User.findOne({ email: signupEmail });
+        let existingUser = await User.findOne({ email: enteredEmail });
 
         if (!user && serviceEmail && existingUser && existingUser.verifiedEmail && existingUser.email === serviceEmail) {
             user = existingUser;
@@ -36,6 +43,7 @@ export async function ExternalServiceCallback(
             if (!user.services) {
                 user.services = {};
             }
+
             if (!user.services[serviceName]) {
                 user.services[serviceName] = {
                     id,
@@ -43,11 +51,11 @@ export async function ExternalServiceCallback(
                     username
                 };
             }
+
             try {
                 user.markModified("services");
                 await user.save();
-            }
-            catch (err) {
+            } catch (err) {
                 done(err);
                 return;
             }
@@ -55,7 +63,7 @@ export async function ExternalServiceCallback(
             // Create an account
             user = createNew<IUser>(User, {
                 ...OAuthStrategy.defaultUserProperties,
-                email: signupEmail,
+                email: enteredEmail,
                 name: {
                     first: session.firstName,
                     preferred: session.preferredName,
@@ -81,7 +89,7 @@ export async function ExternalServiceCallback(
     }
 
     if (!user) {
-        done(null, false, { "message": "Could not match login to existing account" });
+        done(null, false, { message: "Could not match login to an existing account. Please try again with a different account or login method." });
         return;
     }
 
