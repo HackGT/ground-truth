@@ -152,7 +152,6 @@ addMemberButton.addEventListener("click", async () => {
 
         await sendRequest(`/api/members`, "POST", { email, member: true });
     } finally {
-        emailField.value = "";
         addMemberButton.disabled = false;
     }
 });

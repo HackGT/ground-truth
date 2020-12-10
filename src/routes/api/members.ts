@@ -10,23 +10,26 @@ membersRouter.use(postParser);
 
 membersRouter.post("/", async (request, response) => {
     try {
-        let user = await User.findOne({ email: request.body.email });
+        const emails = (request.body.email as string || "").replace(/\s/g, "").split(",");
 
-        if (!user) {
+        let users = await User.find({ email: { $in: emails } });
+
+        if (users.length != emails.length) {
             response.status(400).json({
-                error: "No existing user found"
+                error: "Error finding user with email(s) provided"
             });
             return;
         }
 
-        // Only allow updating these two fields
-        user.member = request.body.member || user.member;
-        user.admin = request.body.admin || user.admin;
+        // Only allow updating these two fields if provided
+        const updateOptions = {
+            ...request.body.member && { member: request.body.member },
+            ...request.body.admin && { admin: request.body.admin }
+        }
 
-        await user.save();
-        response.json({
-            success: true
-        });
+        await User.updateMany({ email: { $in: emails } }, updateOptions)
+
+        response.json({ success: true });
     } catch (err) {
         console.error(err);
         response.status(500).json({
