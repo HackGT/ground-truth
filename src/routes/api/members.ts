@@ -12,15 +12,6 @@ membersRouter.post("/", async (request, response) => {
     try {
         const emails = (request.body.email as string || "").replace(/\s/g, "").split(",");
 
-        let users = await User.find({ email: { $in: emails } });
-
-        if (users.length != emails.length) {
-            response.status(400).json({
-                error: "Error finding user with email(s) provided"
-            });
-            return;
-        }
-
         // Only allow updating these two fields if provided
         const updateOptions = {
             ...request.body.member && { member: request.body.member },
