@@ -120,7 +120,7 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 
         adminDomains: config.server.adminDomains,
         admins: config.server.admins,
-        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).sort("name.last")
+        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).sort("name.first")
     };
 
     response.send(AdminTemplate.render(templateData));
