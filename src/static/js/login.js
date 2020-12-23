@@ -77,7 +77,7 @@ function setUpStep(step) {
                             passwordLogin.focus();
                             return;
                         }
-                        await fetch(`/api/client/signup-data`, {
+                        await fetch(`/api/client/attach-session-data`, {
                             ...commonFetchSettings,
                             body: serializeQueryString({ email: email.value.trim() })
                         });
@@ -102,7 +102,7 @@ function setUpStep(step) {
                         errorBlock.textContent = "Please enter your first and last name. We use it to identify you online and at events!"
                         return;
                     }
-                    await fetch(`/api/client/signup-data`, {
+                    await fetch(`/api/client/attach-session-data`, {
                         ...commonFetchSettings,
                         body: serializeQueryString({
                             firstName: firstNameValue,

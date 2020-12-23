@@ -12,7 +12,7 @@ clientRouter.get("/login-type", async (request, response) => {
     });
 });
 
-clientRouter.post("/signup-data", postParser, (request, response) => {
+clientRouter.post("/attach-session-data", postParser, (request, response) => {
     function attachToSession(bodyProperty: keyof UserSessionData) {
         if (!request.session) return;
 
