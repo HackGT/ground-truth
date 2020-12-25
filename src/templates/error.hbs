@@ -1,0 +1,17 @@
+{{#> main }}
+    <section class="columns">
+        <div class="column is-half is-offset-one-quarter center" id="authorize">
+            <h1 class="title">{{this.errorTitle}}</h1>
+            <h4 class="subtitle" style="margin-top: 15px">{{this.errorSubtitle}}</h4>
+            {{#if this.errorMessage}}
+                <h6 class="title is-6" style="margin-top: 20px">{{this.errorMessage}}</h6>
+            {{/if}}
+            {{#if this.button}}
+                <div class="field is-grouped is-grouped-centered">
+                    <p class="control">
+                        <a class="button is-medium" href="/">Return Home</a>
+                    </p>
+                </div>
+            {{/if}}
+    </section>
+    {{/main}}

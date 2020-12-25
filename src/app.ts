@@ -13,6 +13,7 @@ import {
     // Configuration
     config
 } from "./common";
+import { ErrorTemplate } from "./templates";
 
 // Set up Express and its middleware
 export let app = express();
@@ -107,9 +108,6 @@ app.use("/api/user", userRouter);
 
 app.use("/static", express.static(path.join(__dirname, "static")));
 
-import { uiRoutes } from "./routes/ui";
-app.use("/", uiRoutes);
-
 app.route("/version").get((request, response) => {
     response.json({
         "version": VERSION_NUMBER,
@@ -118,9 +116,26 @@ app.route("/version").get((request, response) => {
     });
 });
 
+import { uiRoutes } from "./routes/ui";
+app.use("/", uiRoutes);
+
 if (bugsnagMiddleware) {
     app.use(bugsnagMiddleware.errorHandler);
 }
+
+// Error handler middleware
+app.use((error: any, request: express.Request, response: express.Response, next: express.NextFunction) => {
+    console.error(error.stack);
+    let templateData = {
+        title: "Server Error",
+        errorTitle: "An Error Occurred",
+        errorSubtitle: "Sorry, something went wrong. Please try again later.",
+        errorMessage: "Error Message: " + error.message,
+        button: true
+    };
+
+    response.status(500).send(ErrorTemplate.render(templateData));
+});
 
 app.listen(PORT, () => {
     console.log(`Ground Truth system v${VERSION_NUMBER} @ ${VERSION_HASH} started on port ${PORT}`);
