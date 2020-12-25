@@ -3,7 +3,7 @@ import * as express from "express";
 import { config } from "../common";
 import { authenticateWithRedirect, isAdmin, bestLoginMethod } from "./middleware";
 import { User, IUser, OAuthClient, AccessToken, Scope } from "../schema";
-import { AdminTemplate, ChangePasswordTemplate, ForgotPasswordTemplate, IndexTemplate, LoginTemplate, ResetPasswordTemplate } from "../templates";
+import { AdminTemplate, ChangePasswordTemplate, ForgotPasswordTemplate, IndexTemplate, LoginTemplate, ErrorTemplate, ResetPasswordTemplate } from "../templates";
 
 export let uiRoutes = express.Router();
 
@@ -124,4 +124,15 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
     };
 
     response.send(AdminTemplate.render(templateData));
+});
+
+uiRoutes.route("*").all(authenticateWithRedirect, async (request, response) => {
+    let templateData = {
+        title: "404 Not Found",
+        errorTitle: "404 Error - Page Not Found",
+        errorSubtitle: "Sorry, we couldn't find what you were looking for.",
+        button: true
+    };
+
+    response.status(404).send(ErrorTemplate.render(templateData));
 });
