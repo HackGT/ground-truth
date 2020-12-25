@@ -5,6 +5,7 @@ import moment from "moment";
 import passport from "passport";
 import { Request, Router } from "express";
 import { Strategy as LocalStrategy } from "passport-local";
+import passwordValidator from "password-validator";
 
 import { config } from "../../common";
 import { postParser, authenticateWithRedirect } from "../../routes/middleware";
@@ -41,34 +42,44 @@ export class Local implements RegistrationStrategy {
     protected async passportCallback(request: Request, email: string, password: string, done: PassportDone) {
         email = email.trim().toLowerCase();
         let user = await User.findOne({ email });
+
         if (user && request.path.match(/\/signup$/i)) {
-            done(null, false, { "message": "That email address is already in use" });
-        }
-        else if (user && (!user.local || !user.local.hash)) {
-            done(null, false, { "message": "Please log back in with an external provider" });
-        }
-        else if (!user || !user.local) {
+            done(null, false, { message: "That email address is already in use" });
+        } else if (user && (!user.local || !user.local.hash)) {
+            done(null, false, { message: "Please log back in with an external provider" });
+        } else if (!user || !user.local) {
             // User hasn't signed up yet
             if (!request.path.match(/\/signup$/i)) {
                 // Only create the user when targeting /signup
-                done(null, false, { "message": "Incorrect email or password" });
+                done(null, false, { message: "Incorrect email or password" });
                 return;
             }
-            let firstName: string = request.body.firstName || "";
-            let preferredName: string | undefined = request.body.preferredName;
-            let lastName: string = request.body.lastName || "";
+
+            const firstName: string = request.body.firstName || "";
+            const preferredName: string | undefined = request.body.preferredName;
+            const lastName: string = request.body.lastName || "";
+
+            const passwordSchema = new passwordValidator();
+            passwordSchema
+                .is().min(8)        // Minimum length 8
+                .has().uppercase()  // Must have uppercase letters
+                .has().lowercase()  // Must have lowercase letters
+                .has().digits()     // Must have digits
+
             if (!email) {
-                done(null, false, { "message": "Missing email" });
+                done(null, false, { message: "Missing email" });
+                return;
+            } else if (!password) {
+                done(null, false, { message: "Missing password" });
+                return;
+            } else if (!firstName || !lastName) {
+                done(null, false, { message: "Missing first or last name" });
+                return;
+            } else if (!passwordSchema.validate(password)) {
+                done(null, false, { message: "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number" });
                 return;
             }
-            else if (!password) {
-                done(null, false, { "message": "Missing password" });
-                return;
-            }
-            else if (!firstName || !lastName) {
-                done(null, false, { "message": "Missing first or last name" });
-                return;
-            }
+
             let salt = crypto.randomBytes(32);
             let hash = await pbkdf2Async(password, salt, PBKDF2_ROUNDS);
             user = createNew<IUser>(User, {
@@ -85,10 +96,10 @@ export class Local implements RegistrationStrategy {
                     "rounds": PBKDF2_ROUNDS,
                 }
             });
+
             try {
                 await user.save();
-            }
-            catch (err) {
+            } catch (err) {
                 done(err);
                 return;
             }
@@ -104,13 +115,13 @@ export class Local implements RegistrationStrategy {
             await checkAndSetAdmin(user);
 
             done(null, user);
-        }
-        else {
+        } else {
             // Log the user in
             let hash = await pbkdf2Async(password, Buffer.from(user.local.salt || "", "hex"), PBKDF2_ROUNDS);
             if (hash.toString("hex") === user.local.hash) {
                 if (user.verifiedEmail) {
                     await checkAndSetAdmin(user);
+
                     if (request.session) {
                         request.session.email = undefined;
                         request.session.firstName = undefined;
@@ -118,13 +129,11 @@ export class Local implements RegistrationStrategy {
                         request.session.lastName = undefined;
                     }
                     done(null, user);
+                } else {
+                    done(null, false, { message: `You must verify your email before you can sign in. ${resendVerificationEmailLink(request, user.uuid)}` });
                 }
-                else {
-                    done(null, false, { "message": `You must verify your email before you can sign in. ${resendVerificationEmailLink(request, user.uuid)}` });
-                }
-            }
-            else {
-                done(null, false, { "message": "Incorrect email or password" });
+            } else {
+                done(null, false, { message: "Incorrect email or password" });
             }
         }
     }
