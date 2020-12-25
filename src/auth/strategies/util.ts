@@ -81,7 +81,7 @@ export async function ExternalServiceCallback(
     }
 
     if (!user) {
-        done(null, false, { "message": "Could not match login to existing account" });
+        done(null, false, { message: "Could not match login to existing account" });
         return;
     }
 
