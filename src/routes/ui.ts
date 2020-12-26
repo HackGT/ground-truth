@@ -20,7 +20,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
     let templateData = {
         title: "Home",
 
-        user: request.user,
+        user: request.user.toObject(),
         loginMethod: await bestLoginMethod(request.user.email),
     };
 
@@ -110,17 +110,16 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 
         uuid: request.user.uuid,
 
-        apps: await Promise.all((await OAuthClient.find()).map(async client => {
-            let tokens = await AccessToken.countDocuments({ clientID: client.clientID });
-            (client as any).tokens = tokens;
+        apps: await Promise.all((await OAuthClient.find().lean()).map(async (client: any) => {
+            client.tokens = await AccessToken.countDocuments({ clientID: client.clientID });
             return client;
         })),
 
-        scopes: await Scope.find(),
+        scopes: await Scope.find().lean(),
 
         adminDomains: config.server.adminDomains,
         admins: config.server.admins,
-        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).sort("name.first")
+        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).lean().sort("name.first")
     };
 
     response.send(AdminTemplate.render(templateData));
