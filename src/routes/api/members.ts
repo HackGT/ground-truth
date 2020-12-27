@@ -1,12 +1,13 @@
 import express from "express";
+import csrf from "csurf";
 
 import { User } from "../../schema";
-import { isAdmin, postParser } from "../middleware";
+import { isAdmin } from "../middleware";
 
 export let membersRouter = express.Router();
 
 membersRouter.use(isAdmin);
-membersRouter.use(postParser);
+membersRouter.use(csrf());
 
 membersRouter.post("/", async (request, response) => {
     try {

@@ -1,8 +1,11 @@
 import express from "express";
+import csrf from "csurf";
 
-import { bestLoginMethod, postParser } from "../middleware";
+import { bestLoginMethod } from "../middleware";
 
 export let clientRouter = express.Router();
+
+clientRouter.use(csrf());
 
 clientRouter.get("/login-type", async (request, response) => {
     let email = request.query.email as string | undefined;
@@ -11,7 +14,7 @@ clientRouter.get("/login-type", async (request, response) => {
     });
 });
 
-clientRouter.post("/attach-session-data", postParser, (request, response) => {
+clientRouter.post("/attach-session-data", (request, response) => {
     function attachToSession(bodyProperty: "email" | "firstName" | "preferredName" | "lastName") {
         if (!request.session) return;
 

@@ -8,7 +8,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import passwordValidator from "password-validator";
 
 import { config } from "../../common";
-import { postParser, authenticateWithRedirect } from "../../routes/middleware";
+import { authenticateWithRedirect } from "../../routes/middleware";
 import { User, createNew, IUser } from "../../schema";
 import { checkAndSetAdmin, createLink, validateAndCacheHostName } from "./util";
 import { OAuthStrategy } from "./OAuthStrategy";
@@ -141,13 +141,13 @@ export class Local implements RegistrationStrategy {
     public use(authRoutes: Router) {
         passport.use(this.passportStrategy);
 
-        authRoutes.post("/signup", validateAndCacheHostName, postParser, passport.authenticate("local", { failureFlash: true }), (request, response) => {
+        authRoutes.post("/signup", validateAndCacheHostName, passport.authenticate("local", { failureFlash: true }), (request, response) => {
             // This works because the client just reloads the page once the requests completes
             // which displays the flash message (if error) or redirects to the next page (if success)
             response.json({ success: true });
         });
 
-        authRoutes.post("/login", postParser, passport.authenticate("local", { failureFlash: true }), (request, response) => {
+        authRoutes.post("/login", passport.authenticate("local", { failureFlash: true }), (request, response) => {
             // Same as comment above
             response.json({ success: true });
         });
@@ -166,7 +166,7 @@ export class Local implements RegistrationStrategy {
             response.redirect("/login");
         });
 
-        authRoutes.post("/forgot", validateAndCacheHostName, postParser, async (request, response) => {
+        authRoutes.post("/forgot", validateAndCacheHostName, async (request, response) => {
             let email: string | undefined = request.body.email;
             if (!email || !email.toString().trim()) {
                 request.flash("error", "Invalid email");
@@ -230,7 +230,7 @@ The ${config.server.name} Team.`;
             }
         });
 
-        authRoutes.post("/forgot/:code", validateAndCacheHostName, postParser, async (request, response) => {
+        authRoutes.post("/forgot/:code", validateAndCacheHostName, async (request, response) => {
             let user = await User.findOne({ "local.resetCode": request.params.code });
             if (!user) {
                 request.flash("error", "Invalid password reset code");
@@ -279,7 +279,7 @@ The ${config.server.name} Team.`;
             }
         });
 
-        authRoutes.post("/changepassword", validateAndCacheHostName, authenticateWithRedirect, postParser, async (request, response) => {
+        authRoutes.post("/changepassword", validateAndCacheHostName, authenticateWithRedirect, async (request, response) => {
             let user = await User.findOne({ uuid: request.user!.uuid });
             if (!user) {
                 request.flash("error", "User not logged in");

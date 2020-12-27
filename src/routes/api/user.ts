@@ -2,7 +2,6 @@ import express from "express";
 import passport from "passport";
 
 import { IUser, User, AccessToken } from "../../schema";
-import { postParser } from "../middleware";
 import { formatName } from "../../email";
 
 export let userRouter = express.Router();
@@ -20,7 +19,7 @@ userRouter.get("/", passport.authenticate("bearer", { session: false }), async (
     });
 });
 
-userRouter.post("/logout", passport.authenticate("bearer", { session: false }), postParser, async (request, response) => {
+userRouter.post("/logout", passport.authenticate("bearer", { session: false }), async (request, response) => {
     let user = request.user as IUser;
     let existingTokens = await AccessToken.find({ "uuid": user.uuid });
     for (let token of existingTokens) {

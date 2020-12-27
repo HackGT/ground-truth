@@ -1,14 +1,15 @@
 import crypto from "crypto";
 import express from "express";
 import uuid from "uuid";
+import csrf from "csurf";
 
 import { createNew, IOAuthClient, OAuthClient, AccessToken } from "../../schema";
-import { isAdmin, postParser } from "../middleware";
+import { isAdmin } from "../middleware";
 
 export let appsRouter = express.Router();
 
 appsRouter.use(isAdmin);
-appsRouter.use(postParser);
+appsRouter.use(csrf());
 
 appsRouter.post("/", async (request, response) => {
     try {
