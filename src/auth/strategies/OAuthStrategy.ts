@@ -21,7 +21,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
 
     public static get defaultUserProperties() {
         return {
-            "uuid": uuid(),
+            "uuid": uuid.v4(),
             "verifiedEmail": false,
             "admin": false,
             "member": false,

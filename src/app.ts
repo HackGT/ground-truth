@@ -35,7 +35,7 @@ if (config.secrets.bugsnag) {
     console.info("Bugsnag API key not set");
 }
 
-morgan.token("sessionid", (request, response) => {
+morgan.token("sessionid", (request: express.Request, response) => {
     const FAILURE_MESSAGE = "Unknown session";
     if (!request.cookies["groundtruthid"]) {
         return FAILURE_MESSAGE;
@@ -48,7 +48,7 @@ morgan.token("sessionid", (request, response) => {
     return FAILURE_MESSAGE;
 });
 morgan.format("hackgt", (tokens, request, response) => {
-    let statusColorizer: (input: string) => string = input => input; // Default passthrough function
+    let statusColorizer: (input?: string) => string | undefined = input => input; // Default passthrough function
 
     if (response.statusCode >= 500) {
         statusColorizer = chalk.default.red;

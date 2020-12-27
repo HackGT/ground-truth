@@ -67,7 +67,7 @@ export function isAdmin(request: express.Request, response: express.Response, ne
             next(err);
             return;
         }
-        if (!request.user.admin) {
+        if (!request.user?.admin) {
             response.redirect("/");
             return;
         }

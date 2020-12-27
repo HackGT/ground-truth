@@ -6,23 +6,11 @@ import passport from "passport";
 import { config } from "../common";
 import { postParser, authenticateWithRedirect } from "../routes/middleware";
 import { Model, IUser, AccessToken, IOAuthClient, OAuthClient, IScope, Scope } from "../schema";
-import { Template, TemplateContent } from "../templates";
+import { AuthorizeTemplate } from "../templates";
 import { server } from "../auth/server";
 import { formatName } from "../email";
 
 type IScopeWithValue = IScope & { value?: string };
-
-interface IAuthorizationTemplate extends TemplateContent {
-    name: string;
-    email: string;
-    appName: string;
-    redirect: string;
-    transactionID: string;
-    scopes: IScopeWithValue[];
-    error?: string;
-}
-
-const AuthorizeTemplate = new Template<IAuthorizationTemplate>("authorize.hbs");
 
 export let OAuthRouter = express.Router();
 
@@ -80,7 +68,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
 
     const redirectURI = new URL(oauth2.redirectURI);
 
-    response.send(AuthorizeTemplate.render({
+    let templateData = {
         siteTitle: config.server.name,
         title: "Authorize",
         includeJS: null,
@@ -95,7 +83,9 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
         appName: client.name,
         transactionID,
         scopes,
-    }));
+    }
+
+    response.send(AuthorizeTemplate.render(templateData));
 });
 
 interface IScopeValidatorContext {
@@ -129,7 +119,7 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
             let scopeDetails = await Scope.findOne({ name: scope });
             if (!scopeDetails) {
                 request.flash("error", `Scope "${scope}" is not specified in DB`);
-                response.redirect(request.session.authorizeURL);
+                response.redirect(request.session.authorizeURL!);
                 return;
             }
             if (scopeDetails.validator && scopeDetails.validator.code) {
@@ -144,12 +134,12 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
                     let success = vm.runInNewContext(scopeDetails.validator.code, context, { timeout: 500 });
                     if (!success) {
                         request.flash("error", `Error validating "${scope}": ${scopeDetails.validator.errorMessage}`);
-                        response.redirect(request.session.authorizeURL);
+                        response.redirect(request.session.authorizeURL!);
                         return;
                     }
                 } catch {
                     request.flash("error", `An error occurred while validating scope "${scope}"`);
-                    response.redirect(request.session.authorizeURL);
+                    response.redirect(request.session.authorizeURL!);
                     return;
                 }
             }
@@ -159,7 +149,7 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request
             user.scopes[scope] = scopeValue;
         } else {
             request.flash("error", "All data fields must be filled out");
-            response.redirect(request.session.authorizeURL);
+            response.redirect(request.session.authorizeURL!);
             return;
         }
     }

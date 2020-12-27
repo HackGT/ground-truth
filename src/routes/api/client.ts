@@ -1,6 +1,5 @@
 import express from "express";
 
-import { UserSessionData } from "../../auth/strategies/types";
 import { bestLoginMethod, postParser } from "../middleware";
 
 export let clientRouter = express.Router();
@@ -13,7 +12,7 @@ clientRouter.get("/login-type", async (request, response) => {
 });
 
 clientRouter.post("/attach-session-data", postParser, (request, response) => {
-    function attachToSession(bodyProperty: keyof UserSessionData) {
+    function attachToSession(bodyProperty: "email" | "firstName" | "preferredName" | "lastName") {
         if (!request.session) return;
 
         let value = request.body[bodyProperty] as string | undefined;

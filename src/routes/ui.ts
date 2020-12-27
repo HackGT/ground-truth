@@ -20,8 +20,9 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
     let templateData = {
         title: "Home",
 
+        // @ts-ignore
         user: request.user.toObject(),
-        loginMethod: await bestLoginMethod(request.user.email),
+        loginMethod: await bestLoginMethod(request.user?.email),
     };
 
     response.send(IndexTemplate.render(templateData));
@@ -108,7 +109,7 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
         title: "Admin",
         includeJS: "admin",
 
-        uuid: request.user.uuid,
+        uuid: request.user?.uuid,
 
         apps: await Promise.all((await OAuthClient.find().lean()).map(async (client: any) => {
             client.tokens = await AccessToken.countDocuments({ clientID: client.clientID });
