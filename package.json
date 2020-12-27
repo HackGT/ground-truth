@@ -20,10 +20,9 @@
   },
   "homepage": "https://github.com/HackGT/ground-truth#readme",
   "dependencies": {
-    "@bugsnag/js": "^6.0.0",
-    "@bugsnag/plugin-express": "^6.0.0",
     "@sendgrid/mail": "^7.4.0",
-    "bugsnag-build-reporter": "^1.0.2",
+    "@sentry/node": "^5.29.2",
+    "@sentry/tracing": "^5.29.2",
     "chalk": "^4.1.0",
     "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
@@ -84,8 +83,6 @@
     "del": "^6.0.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
-    "gulp-bugsnag": "^1.0.0",
-    "gulp-if": "^3.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "nodemon": "^2.0.6",
     "ts-node": "^9.1.1"

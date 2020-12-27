@@ -1,7 +1,5 @@
 FROM node:11-alpine
 
-ARG BUGSNAG
-
 # Deis wants bash
 RUN apk update && apk add bash
 RUN apk add git

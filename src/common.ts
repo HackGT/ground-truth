@@ -27,7 +27,7 @@ export namespace IConfig {
             emailDomain: string;
             logoutLink: string;
         }
-        bugsnag: string | null;
+        sentryDSN: string | null;
     }
     export interface Email {
         from: string;
@@ -82,7 +82,7 @@ class Config implements IConfig.Main {
             emailDomain: "gatech.edu",
             logoutLink: "https://login.gatech.edu/cas/logout"
         },
-        bugsnag: null
+        sentryDSN: null
     };
     public email: IConfig.Email = {
         from: "HackGT Team <hello@hackgt.com>",
@@ -191,8 +191,8 @@ class Config implements IConfig.Main {
         if (process.env.FACEBOOK_CLIENT_SECRET) {
             this.secrets.oauth.facebook.secret = process.env.FACEBOOK_CLIENT_SECRET;
         }
-        if (process.env.BUGSNAG) {
-            this.secrets.bugsnag = process.env.BUGSNAG;
+        if (process.env.SENTRY_DSN) {
+            this.secrets.sentryDSN = process.env.SENTRY_DSN;
         }
         // Email
         if (process.env.EMAIL_FROM) {
