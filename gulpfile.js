@@ -2,12 +2,7 @@ const gulp = require("gulp");
 const ts = require('gulp-typescript');
 const babel = require('gulp-babel');
 const del = require('del');
-const gulpif = require('gulp-if');
-const { reportBuild } = require('gulp-bugsnag');
-const fs = require("fs");
-const path = require("path");
 
-const VERSION_NUMBER = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf8")).version;
 const tsProject = ts.createProject('./tsconfig.json');
 
 // Clean dist folder
@@ -33,17 +28,10 @@ gulp.task('build:js', () => {
         .pipe(gulp.dest('dist/static/js'));
 });
 
-// If production environment and bugsnag api key, report build to bugsnag
 gulp.task('build:ts', () => {
     return tsProject.src()
         .pipe(tsProject())
         .pipe(gulp.dest('dist'))
-        .pipe(gulpif(process.env.NODE_ENV == "production" && process.env.BUGSNAG, reportBuild({
-            apiKey: process.env.BUGSNAG,
-            appVersion: VERSION_NUMBER,
-            releaseStage: "production",
-            autoAssignRelease: true
-        })));
 });
 
 gulp.task('build', gulp.parallel(

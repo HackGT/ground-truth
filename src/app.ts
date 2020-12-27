@@ -6,6 +6,8 @@ import * as chalk from "chalk";
 import * as path from "path";
 import morgan from "morgan";
 import flash from "connect-flash";
+import * as Sentry from "@sentry/node";
+import * as Tracing from "@sentry/tracing";
 
 import {
     // Constants
@@ -18,21 +20,22 @@ import { ErrorTemplate } from "./templates";
 // Set up Express and its middleware
 export let app = express();
 
-// Bugsnag Setup
-import bugsnag from "@bugsnag/js";
-import bugsnagExpress from "@bugsnag/plugin-express";
-let bugsnagMiddleware: any | null = null;
-if (config.secrets.bugsnag) {
-    const bugsnagClient = bugsnag({
-        apiKey: config.secrets.bugsnag,
-        appVersion: VERSION_NUMBER
+// Sentry setup
+if (config.secrets.sentryDSN) {
+    Sentry.init({
+        dsn: config.secrets.sentryDSN,
+        integrations: [
+            new Sentry.Integrations.Http({ tracing: true }), // Enable HTTP calls tracing
+            new Tracing.Integrations.Express({ app }) // Enable Express.js middleware tracing
+        ],
+        tracesSampleRate: 1.0,
     });
-    bugsnagClient.use(bugsnagExpress);
-    bugsnagMiddleware = bugsnagClient.getPlugin("express");
-    // Must come first to capture errors downstream
-    app.use(bugsnagMiddleware.requestHandler);
-} else {
-    console.info("Bugsnag API key not set");
+
+    app.use(Sentry.Handlers.requestHandler({
+        user: ["id", "uuid", "email"],
+        ip: true
+    }));
+    app.use(Sentry.Handlers.tracingHandler());
 }
 
 morgan.token("sessionid", (request: express.Request, response) => {
@@ -119,8 +122,9 @@ app.route("/version").get((request, response) => {
 import { uiRoutes } from "./routes/ui";
 app.use("/", uiRoutes);
 
-if (bugsnagMiddleware) {
-    app.use(bugsnagMiddleware.errorHandler);
+// The sentry error handler must be before any other error middleware and after all controllers
+if (config.secrets.sentryDSN) {
+    app.use(Sentry.Handlers.errorHandler());
 }
 
 // Error handler middleware
