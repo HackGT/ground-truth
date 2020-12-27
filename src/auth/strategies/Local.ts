@@ -21,6 +21,13 @@ const pbkdf2Async = async (password: string | Buffer, salt: string | Buffer, rou
     return util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
 };
 
+const passwordSchema = new passwordValidator();
+passwordSchema
+    .is().min(8)        // Minimum length 8
+    .has().uppercase()  // Must have uppercase letters
+    .has().lowercase()  // Must have lowercase letters
+    .has().digits()     // Must have digits
+
 interface LocalStrategyOptions extends StrategyOptions {
     usernameField: string;
     passwordField: string;
@@ -58,13 +65,6 @@ export class Local implements RegistrationStrategy {
             const firstName: string = request.body.firstName || "";
             const preferredName: string | undefined = request.body.preferredName;
             const lastName: string = request.body.lastName || "";
-
-            const passwordSchema = new passwordValidator();
-            passwordSchema
-                .is().min(8)        // Minimum length 8
-                .has().uppercase()  // Must have uppercase letters
-                .has().lowercase()  // Must have lowercase letters
-                .has().digits()     // Must have digits
 
             if (!email) {
                 done(null, false, { message: "Missing email" });
@@ -249,13 +249,17 @@ The ${config.server.name} Team.`;
 
             let password1: string | undefined = request.body.password1;
             let password2: string | undefined = request.body.password2;
+
             if (!password1 || !password2) {
                 request.flash("error", "Missing new password or confirm password");
                 response.redirect(`/login/forgot/${request.params.code}`);
                 return;
-            }
-            if (password1 !== password2) {
+            } else if (password1 !== password2) {
                 request.flash("error", "Passwords must match");
+                response.redirect(`/login/forgot/${request.params.code}`);
+                return;
+            } else if (!passwordSchema.validate(password1)) {
+                request.flash("error", "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number");
                 response.redirect(`/login/forgot/${request.params.code}`);
                 return;
             }
@@ -301,13 +305,17 @@ The ${config.server.name} Team.`;
 
             let password1: string | undefined = request.body.password1;
             let password2: string | undefined = request.body.password2;
+
             if (!password1 || !password2) {
                 request.flash("error", "Missing new password or confirm password");
                 response.redirect(`/login/changepassword`);
                 return;
-            }
-            if (password1 !== password2) {
+            } else if (password1 !== password2) {
                 request.flash("error", "New passwords must match");
+                response.redirect(`/login/changepassword`);
+                return;
+            } else if (!passwordSchema.validate(password1)) {
+                request.flash("error", "New password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number");
                 response.redirect(`/login/changepassword`);
                 return;
             }
