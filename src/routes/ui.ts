@@ -1,4 +1,5 @@
 import * as express from "express";
+import csrf from "csurf";
 
 import { config } from "../common";
 import { authenticateWithRedirect, isAdmin, bestLoginMethod } from "./middleware";
@@ -28,7 +29,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
     response.send(IndexTemplate.render(templateData));
 });
 
-uiRoutes.route("/login").get(async (request, response) => {
+uiRoutes.route("/login").get(csrf(), async (request, response) => {
     if (request.isAuthenticated() && request.user && (request.user as IUser).verifiedEmail) {
         response.redirect("/");
         return;
@@ -43,23 +44,27 @@ uiRoutes.route("/login").get(async (request, response) => {
         loginMethods: config.loginMethods,
         localOnly: config.loginMethods && config.loginMethods.length === 1 && config.loginMethods[0] === "local",
         email: request.session ? request.session.email : null,
+
+        csrfToken: request.csrfToken()
     };
 
     response.send(LoginTemplate.render(templateData));
 });
 
-uiRoutes.route("/login/forgot").get((request, response) => {
+uiRoutes.route("/login/forgot").get(csrf(), (request, response) => {
     let templateData = {
         title: "Forgot Password",
 
         error: request.flash("error"),
-        success: request.flash("success")
+        success: request.flash("success"),
+
+        csrfToken: request.csrfToken()
     };
 
     response.send(ForgotPasswordTemplate.render(templateData));
 });
 
-uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
+uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
     let user = await User.findOne({ "local.resetCode": request.params.code });
 
     if (!user) {
@@ -81,13 +86,15 @@ uiRoutes.route("/login/forgot/:code").get(async (request, response) => {
 
         error: request.flash("error"),
         success: request.flash("success"),
-        resetCode: user.local!.resetCode!
+        resetCode: user.local!.resetCode!,
+
+        csrfToken: request.csrfToken()
     };
 
     response.send(ResetPasswordTemplate.render(templateData));
 });
 
-uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (request, response) => {
+uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, csrf(), async (request, response) => {
     const user = request.user as IUser;
     if (!user.local || !user.local.hash) {
         response.redirect("/");
@@ -98,13 +105,15 @@ uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, async (req
         title: "Change Password",
 
         error: request.flash("error"),
-        success: request.flash("success")
+        success: request.flash("success"),
+
+        csrfToken: request.csrfToken()
     };
 
     response.send(ChangePasswordTemplate.render(templateData));
 });
 
-uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
+uiRoutes.route("/admin").get(isAdmin, csrf(), async (request, response) => {
     let templateData = {
         title: "Admin",
         includeJS: "admin",
@@ -120,7 +129,9 @@ uiRoutes.route("/admin").get(isAdmin, async (request, response) => {
 
         adminDomains: config.server.adminDomains,
         admins: config.server.admins,
-        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).lean().sort("name.first")
+        currentMembers: await User.find({ $or: [{ member: true }, { admin: true }] }).lean().sort("name.first"),
+
+        csrfToken: request.csrfToken()
     };
 
     response.send(AdminTemplate.render(templateData));

@@ -1,3 +1,5 @@
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 // Navigation tab handlers
 let navigationTabs = document.getElementById("admin-navigation").getElementsByTagName("li");
 
@@ -54,7 +56,8 @@ async function sendRequest(url, method, data) {
         options = {
             ...options,
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                "CSRF-Token": csrfToken
             },
             body: serializeQueryString(data)
         };

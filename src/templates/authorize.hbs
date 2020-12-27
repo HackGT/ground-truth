@@ -48,6 +48,7 @@
 
                 <div class="field is-grouped is-grouped-centered">
                     <input type="hidden" name="transaction_id" value="{{transactionID}}" />
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}">
                     <p class="control">
                         <input type="submit" class="button is-danger is-outlined" value="Cancel" name="cancel" formnovalidate />
                     </p>

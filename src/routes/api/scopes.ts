@@ -1,12 +1,13 @@
 import express from "express";
+import csrf from "csurf";
 
 import { createNew, Scope, IScope } from "../../schema";
-import { isAdmin, postParser } from "../middleware";
+import { isAdmin } from "../middleware";
 
 export let scopesRouter = express.Router();
 
 scopesRouter.use(isAdmin);
-scopesRouter.use(postParser);
+scopesRouter.use(csrf());
 
 scopesRouter.post("/", async (request, response) => {
     try {

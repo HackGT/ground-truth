@@ -8,6 +8,7 @@ import morgan from "morgan";
 import flash from "connect-flash";
 import * as Sentry from "@sentry/node";
 import * as Tracing from "@sentry/tracing";
+import helmet from "helmet";
 
 import {
     // Constants
@@ -76,7 +77,9 @@ morgan.format("hackgt", (tokens, request, response) => {
 });
 
 // Middleware
+app.use(helmet());
 app.use(compression());
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(undefined, COOKIE_OPTIONS as cookieParser.CookieParseOptions));
 app.use(morgan("hackgt"));
 app.use(flash());
@@ -129,6 +132,12 @@ if (config.secrets.sentryDSN) {
 
 // Error handler middleware
 app.use((error: any, request: express.Request, response: express.Response, next: express.NextFunction) => {
+    // Error code by csurf when CSRF token validation fails
+    if (error.code == "EBADCSRFTOKEN") {
+        response.status(403).json({ error: "User is not authorized" });
+        return;
+    }
+
     console.error(error.stack);
     let templateData = {
         title: "Server Error",

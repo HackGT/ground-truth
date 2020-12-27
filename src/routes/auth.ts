@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import * as express from "express";
+import csrf from "csurf";
 
 import { config } from "../common";
 import { User } from "../schema";
@@ -9,6 +10,8 @@ import { validateAndCacheHostName } from "../auth/strategies/util";
 import { sendVerificationEmail, resendVerificationEmailLink } from "../email";
 
 export let authRouter = express.Router();
+
+authRouter.use(csrf());
 
 let authenticationMethods: RegistrationStrategy[] = [];
 console.info(`Using authentication methods: ${config.loginMethods.join(", ")}`);

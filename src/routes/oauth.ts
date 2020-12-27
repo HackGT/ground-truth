@@ -2,9 +2,10 @@ import * as vm from "vm";
 import { URL } from "url";
 import * as express from "express";
 import passport from "passport";
+import csrf from "csurf";
 
 import { config } from "../common";
-import { postParser, authenticateWithRedirect } from "../routes/middleware";
+import { authenticateWithRedirect } from "../routes/middleware";
 import { Model, IUser, AccessToken, IOAuthClient, OAuthClient, IScope, Scope } from "../schema";
 import { AuthorizeTemplate } from "../templates";
 import { server } from "../auth/server";
@@ -13,8 +14,6 @@ import { formatName } from "../email";
 type IScopeWithValue = IScope & { value?: string };
 
 export let OAuthRouter = express.Router();
-
-OAuthRouter.use(postParser);
 
 OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
     try {
@@ -38,7 +37,7 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
     } catch (err) {
         done(err, false, { scope }, null);
     }
-}), async (request, response) => {
+}), csrf(), async (request, response) => {
     if (!request.session) {
         response.status(500).send("Session not enabled but is required");
         return;
@@ -83,6 +82,8 @@ OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(asy
         appName: client.name,
         transactionID,
         scopes,
+
+        csrfToken: request.csrfToken()
     }
 
     response.send(AuthorizeTemplate.render(templateData));
@@ -100,7 +101,7 @@ interface IScopeValidatorContext {
     value: string;
 }
 
-OAuthRouter.post("/authorize/decision", authenticateWithRedirect, async (request, response, next) => {
+OAuthRouter.post("/authorize/decision", authenticateWithRedirect, csrf(), async (request, response, next) => {
     if (!request.session) {
         response.status(500).send("Session not enabled but is required");
         return;

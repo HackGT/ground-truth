@@ -31,10 +31,6 @@ export async function bestLoginMethod(email?: string): Promise<IConfig.Services 
     return type;
 }
 
-export const postParser = express.urlencoded({
-    extended: false
-});
-
 export async function authenticateWithRedirect(request: express.Request, response: express.Response, next: express.NextFunction) {
     response.setHeader("Cache-Control", "private");
     let user = request.user as IUser | undefined;

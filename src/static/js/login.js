@@ -1,3 +1,5 @@
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 const carousel = document.querySelector(".carousel");
 const errorBlock = document.querySelector(".is-danger > .message-body");
 
@@ -30,7 +32,8 @@ const commonFetchSettings = {
     method: "POST",
     credentials: "include",
     headers: {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        "CSRF-Token": csrfToken
     },
 };
 
