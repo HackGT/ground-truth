@@ -283,7 +283,7 @@ export const COOKIE_OPTIONS = {
 // Database connection
 //
 import mongoose from "mongoose";
-mongoose.connect(config.server.mongoURL, { useNewUrlParser: true }).catch(err => {
+mongoose.connect(config.server.mongoURL, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).catch(err => {
     throw err;
 });
 export { mongoose };

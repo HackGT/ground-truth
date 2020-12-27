@@ -95,3 +95,4 @@ export const ResetPasswordTemplate = new Template("resetpassword.hbs");
 export const ChangePasswordTemplate = new Template("changepassword.hbs");
 export const AdminTemplate = new Template("admin.hbs");
 export const ErrorTemplate = new Template("error.hbs");
+export const AuthorizeTemplate = new Template("authorize.hbs");

@@ -7,7 +7,7 @@ import { config, IConfig } from "../../common";
 import { createNew, IUser, Model, User } from "../../schema";
 import { sendVerificationEmail, resendVerificationEmailLink } from "../../email";
 import { OAuthStrategy } from "./OAuthStrategy";
-import { PassportDone, UserSessionData } from "./types";
+import { PassportDone } from "./types";
 
 export async function ExternalServiceCallback(
     request: Request,
@@ -20,13 +20,12 @@ export async function ExternalServiceCallback(
     if (request.user) {
         request.logout();
     }
-    let session = request.session as Partial<UserSessionData>;
 
     // If `user` exists, the user has already logged in with this service and is good-to-go
     let user = await User.findOne({ [`services.${serviceName}.id`]: id });
 
-    if (session && session.email && session.firstName && session.lastName) {
-        let signupEmail = session.email.trim().toLowerCase();
+    if (request.session && request.session.email && request.session.firstName && request.session.lastName) {
+        let signupEmail = request.session.email.trim().toLowerCase();
         // Only create / modify user account if email and name exist on the session (set by login page)
         let existingUser = await User.findOne({ email: signupEmail });
 
@@ -57,9 +56,9 @@ export async function ExternalServiceCallback(
                 ...OAuthStrategy.defaultUserProperties,
                 email: signupEmail,
                 name: {
-                    first: session.firstName,
-                    preferred: session.preferredName,
-                    last: session.lastName,
+                    first: request.session.firstName,
+                    preferred: request.session.preferredName,
+                    last: request.session.lastName,
                 },
             });
 
@@ -98,11 +97,11 @@ export async function ExternalServiceCallback(
 
     await checkAndSetAdmin(user);
 
-    if (session) {
-        session.email = undefined;
-        session.firstName = undefined;
-        session.preferredName = undefined;
-        session.lastName = undefined;
+    if (request.session) {
+        request.session.email = undefined;
+        request.session.firstName = undefined;
+        request.session.preferredName = undefined;
+        request.session.lastName = undefined;
     }
 
     done(null, user);

@@ -29,9 +29,21 @@ export interface RegistrationStrategy {
     use(authRoutes: Router, scope?: string[]): void;
 }
 
-export interface UserSessionData {
-    email: string;
-    firstName: string;
-    preferredName: string;
-    lastName: string;
+declare module "express-session" {
+    interface Session {
+        email?: string;
+        firstName?: string;
+        preferredName?: string;
+        lastName?: string;
+        authorizeURL?: string;
+        scope?: string[];
+        returnTo?: string;
+        passport: any;
+    }
+}
+
+declare global {
+    namespace Express {
+        interface User extends IUser { }
+    }
 }
