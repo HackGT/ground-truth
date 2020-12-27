@@ -2,10 +2,11 @@ import express from "express";
 import csrf from "csurf";
 
 import { User } from "../../schema";
-import { isAdmin } from "../middleware";
+import { isAdmin, rateLimit } from "../middleware";
 
 export let membersRouter = express.Router();
 
+membersRouter.use(rateLimit["api-admin"]);
 membersRouter.use(isAdmin);
 membersRouter.use(csrf());
 

@@ -2,11 +2,13 @@ import * as express from "express";
 import csrf from "csurf";
 
 import { config } from "../common";
-import { authenticateWithRedirect, isAdmin, bestLoginMethod } from "./middleware";
+import { authenticateWithRedirect, isAdmin, bestLoginMethod, rateLimit } from "./middleware";
 import { User, IUser, OAuthClient, AccessToken, Scope } from "../schema";
 import { AdminTemplate, ChangePasswordTemplate, ForgotPasswordTemplate, IndexTemplate, LoginTemplate, ErrorTemplate, ResetPasswordTemplate } from "../templates";
 
 export let uiRoutes = express.Router();
+
+uiRoutes.use(rateLimit["ui"]);
 
 uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
     if (request.session) {
