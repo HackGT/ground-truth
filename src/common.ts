@@ -44,6 +44,7 @@ export namespace IConfig {
         cookieMaxAge: number;
         cookieSecureOnly: boolean;
         mongoURL: string;
+        rateLimitCollection: string;
         passwordResetExpiration: number;
         defaultTimezone: string;
         name: string;
@@ -99,6 +100,7 @@ class Config implements IConfig.Main {
         cookieMaxAge: 1000 * 60 * 60 * 24 * 30 * 6, // 6 months
         cookieSecureOnly: false,
         mongoURL: "mongodb://localhost/auth",
+        rateLimitCollection: "ratelimit",
         passwordResetExpiration: 1000 * 60 * 60, // 1 hour
         defaultTimezone: "America/New_York",
         name: "HackGT",

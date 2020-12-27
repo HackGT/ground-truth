@@ -4,10 +4,11 @@ import uuid from "uuid";
 import csrf from "csurf";
 
 import { createNew, IOAuthClient, OAuthClient, AccessToken } from "../../schema";
-import { isAdmin } from "../middleware";
+import { isAdmin, rateLimit } from "../middleware";
 
 export let appsRouter = express.Router();
 
+appsRouter.use(rateLimit["api-admin"]);
 appsRouter.use(isAdmin);
 appsRouter.use(csrf());
 

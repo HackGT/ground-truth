@@ -3,8 +3,11 @@ import passport from "passport";
 
 import { IUser, User, AccessToken } from "../../schema";
 import { formatName } from "../../email";
+import { rateLimit } from "../middleware";
 
 export let userRouter = express.Router();
+
+userRouter.use(rateLimit["api-user"]);
 
 userRouter.get("/", passport.authenticate("bearer", { session: false }), async (request, response) => {
     let user = request.user as IUser;

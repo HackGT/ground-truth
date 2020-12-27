@@ -8,9 +8,11 @@ import { strategies } from "../auth/strategies/index";
 import { RegistrationStrategy } from "../auth/strategies/types";
 import { validateAndCacheHostName } from "../auth/strategies/util";
 import { sendVerificationEmail, resendVerificationEmailLink } from "../email";
+import { rateLimit } from "./middleware";
 
 export let authRouter = express.Router();
 
+authRouter.use(rateLimit["auth-general"]);
 authRouter.use(csrf());
 
 let authenticationMethods: RegistrationStrategy[] = [];
@@ -31,8 +33,21 @@ authRouter.get("/validatehost/:nonce", (request, response) => {
     response.send(crypto.createHmac("sha256", config.secrets.session).update(nonce).digest().toString("hex"));
 });
 
+authRouter.get("/verify/:code", rateLimit["verify-code"], async (request, response) => {
+    let user = await User.findOne({ emailVerificationCode: request.params.code });
+    if (!user) {
+        request.flash("error", "Invalid email verification code");
+    }
+    else {
+        user.verifiedEmail = true;
+        user.emailVerificationCode = undefined;
+        await user.save();
+        request.flash("success", "Thanks for verifying your email. You can now log in.");
+    }
+    response.redirect("/login");
+});
 
-authRouter.get("/resend/:uuid", validateAndCacheHostName, async (request, response) => {
+authRouter.get("/resend/:uuid", rateLimit["send-email-verify"], validateAndCacheHostName, async (request, response) => {
     const user = await User.findOne({ uuid: request.params.uuid || "" });
     if (user) {
         await sendVerificationEmail(request, user);

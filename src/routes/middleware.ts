@@ -1,7 +1,9 @@
 import express from "express";
+import { IRateLimiterMongoOptions, RateLimiterMongo } from "rate-limiter-flexible";
 
 import { IUser, User } from "../schema";
-import { IConfig } from "../common";
+import { config, IConfig, mongoose } from "../common";
+import { ErrorTemplate } from "../templates";
 
 export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
     let type: IConfig.Services | "unknown" = "unknown";
@@ -69,4 +71,54 @@ export function isAdmin(request: express.Request, response: express.Response, ne
         }
         next();
     });
+}
+
+
+const createRateLimit = (options: Partial<IRateLimiterMongoOptions>, setHeaders = true): express.RequestHandler => {
+    const rateLimiter = new RateLimiterMongo({
+        storeClient: mongoose.connection,
+        tableName: config.server.rateLimitCollection,
+        ...options
+    });
+
+    return (request, response, next) => {
+        rateLimiter.consume(request.ip)
+            .then((rateLimitRes) => {
+                if (setHeaders) {
+                    response.set("X-RateLimit-Limit", options.points?.toString());
+                    response.set("X-RateLimit-Remaining", rateLimitRes.remainingPoints.toString());
+                    response.set("X-RateLimit-Reset", (rateLimitRes.msBeforeNext / 1000).toString());
+                }
+
+                next();
+            })
+            .catch(() => {
+                let templateData = {
+                    title: "Too Many Requests",
+                    errorTitle: "429 - An Error Occurred",
+                    errorSubtitle: "Sorry, too many requests have been sent. Please try again later.",
+                    button: true
+                };
+
+                response.status(429).send(ErrorTemplate.render(templateData));
+            });
+    }
+};
+
+export const rateLimit = {
+    "local-signup": createRateLimit({ points: 30, duration: 60 * 60, keyPrefix: "local-signup" }),                      // 30 per 60 min
+    "local-login-slow": createRateLimit({ points: 200, duration: 60 * 60 * 24, keyPrefix: "local-login-slow" }),        // 200 per 1 day
+    "local-login": createRateLimit({ points: 40, duration: 60 * 15, keyPrefix: "local-login" }),                        // 40 per 15 min
+    "verify-code": createRateLimit({ points: 100, duration: 60 * 60 * 24, keyPrefix: "verify-code" }),                  // 100 per 1 day
+    "send-email-verify": createRateLimit({ points: 50, duration: 60 * 60 * 6, keyPrefix: "send-email-verify" }),        // 50 per 6 hours
+    "forgot-code": createRateLimit({ points: 100, duration: 60 * 60 * 24, keyPrefix: "forgot-code" }),                  // 100 per 1 day
+    "send-email-forgot": createRateLimit({ points: 50, duration: 60 * 60 * 6, keyPrefix: "send-email-forgot" }),        // 50 per 6 hours
+    "local-change-password": createRateLimit({ points: 20, duration: 60 * 60, keyPrefix: "local-change-password" }),    // 20 per 60 min
+    "api-admin": createRateLimit({ points: 500, duration: 60 * 30, keyPrefix: "api-admin" }),                           // 500 per 30 min
+    "api-user": createRateLimit({ points: 3000, duration: 60 * 2, keyPrefix: "api-user" }),                             // 3000 per 2 min
+    "api-client": createRateLimit({ points: 500, duration: 60 * 5, keyPrefix: "api-client" }),                          // 500 per 5 min
+    "ui": createRateLimit({ points: 1000, duration: 60 * 2, keyPrefix: "ui" }),                                         // 1000 per 2 min
+    "oauth-authorize": createRateLimit({ points: 200, duration: 60 * 30, keyPrefix: "oauth-authorize" }),               // 200 per 30 min
+    "oauth-token": createRateLimit({ points: 2000, duration: 60 * 5, keyPrefix: "oauth-token" }),                       // 2000 per 5 min
+    "auth-general": createRateLimit({ points: 10000, duration: 60 * 1, keyPrefix: "auth-general" }),                    // 10000 per 1 min
 }

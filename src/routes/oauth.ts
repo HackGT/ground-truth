@@ -5,7 +5,7 @@ import passport from "passport";
 import csrf from "csurf";
 
 import { config } from "../common";
-import { authenticateWithRedirect } from "../routes/middleware";
+import { authenticateWithRedirect, rateLimit } from "../routes/middleware";
 import { Model, IUser, AccessToken, IOAuthClient, OAuthClient, IScope, Scope } from "../schema";
 import { AuthorizeTemplate } from "../templates";
 import { server } from "../auth/server";
@@ -15,7 +15,7 @@ type IScopeWithValue = IScope & { value?: string };
 
 export let OAuthRouter = express.Router();
 
-OAuthRouter.get("/authorize", authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
+OAuthRouter.get("/authorize", rateLimit["oauth-authorize"], authenticateWithRedirect, server.authorization(async (clientID, redirectURI, done) => {
     try {
         let client = await OAuthClient.findOne({ clientID });
         // Redirect URIs are allowed on a same-origin basis
@@ -101,7 +101,7 @@ interface IScopeValidatorContext {
     value: string;
 }
 
-OAuthRouter.post("/authorize/decision", authenticateWithRedirect, csrf(), async (request, response, next) => {
+OAuthRouter.post("/authorize/decision", rateLimit["oauth-authorize"], authenticateWithRedirect, csrf(), async (request, response, next) => {
     if (!request.session) {
         response.status(500).send("Session not enabled but is required");
         return;
@@ -165,4 +165,4 @@ OAuthRouter.post("/authorize/decision", authenticateWithRedirect, csrf(), async 
     done(null, { scope });
 }));
 
-OAuthRouter.post("/token", passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
+OAuthRouter.post("/token", rateLimit["oauth-token"], passport.authenticate(["basic", "oauth2-client-password"], { session: false }), server.token(), server.errorHandler());
