@@ -77,7 +77,15 @@ morgan.format("hackgt", (tokens, request, response) => {
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "script-src": ["'self'", "https://www.google.com/recaptcha/", "https://www.gstatic.com/recaptcha/"],
+            "frame-src": ["https://www.google.com/recaptcha/"]
+        }
+    }
+}));
 app.use(compression());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(undefined, COOKIE_OPTIONS as cookieParser.CookieParseOptions));

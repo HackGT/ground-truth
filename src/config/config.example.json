@@ -1,6 +1,10 @@
 {
 	"secrets": {
 		"session": "<a random string>",
+		"recaptcha": {
+			"siteKey": "",
+			"secretKey": ""
+		},
 		"oauth": {
 			"github": {
 				"id": "",

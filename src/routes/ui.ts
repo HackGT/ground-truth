@@ -47,7 +47,8 @@ uiRoutes.route("/login").get(csrf(), async (request, response) => {
         localOnly: config.loginMethods && config.loginMethods.length === 1 && config.loginMethods[0] === "local",
         email: request.session ? request.session.email : null,
 
-        csrfToken: request.csrfToken()
+        csrfToken: request.csrfToken(),
+        recaptchaSiteKey: config.secrets.recaptcha.siteKey
     };
 
     response.send(LoginTemplate.render(templateData));
@@ -60,7 +61,8 @@ uiRoutes.route("/login/forgot").get(csrf(), (request, response) => {
         error: request.flash("error"),
         success: request.flash("success"),
 
-        csrfToken: request.csrfToken()
+        csrfToken: request.csrfToken(),
+        recaptchaSiteKey: config.secrets.recaptcha.siteKey
     };
 
     response.send(ForgotPasswordTemplate.render(templateData));
@@ -90,7 +92,8 @@ uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
         success: request.flash("success"),
         resetCode: user.local!.resetCode!,
 
-        csrfToken: request.csrfToken()
+        csrfToken: request.csrfToken(),
+        recaptchaSiteKey: config.secrets.recaptcha.siteKey
     };
 
     response.send(ResetPasswordTemplate.render(templateData));
@@ -109,7 +112,8 @@ uiRoutes.route("/login/changepassword").get(authenticateWithRedirect, csrf(), as
         error: request.flash("error"),
         success: request.flash("success"),
 
-        csrfToken: request.csrfToken()
+        csrfToken: request.csrfToken(),
+        recaptchaSiteKey: config.secrets.recaptcha.siteKey
     };
 
     response.send(ChangePasswordTemplate.render(templateData));
