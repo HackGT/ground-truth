@@ -16,6 +16,10 @@ export namespace IConfig {
     export interface Secrets {
         adminKey: string;
         session: string;
+        recaptcha: {
+            siteKey: string;
+            secretKey: string;
+        },
         oauth: {
             [Service in OAuthServices]: {
                 id: string;
@@ -64,6 +68,10 @@ class Config implements IConfig.Main {
     public secrets: IConfig.Secrets = {
         adminKey: crypto.randomBytes(32).toString("hex"),
         session: crypto.randomBytes(32).toString("hex"),
+        recaptcha: {
+            siteKey: "",
+            secretKey: ""
+        },
         oauth: {
             github: {
                 id: "",
@@ -161,9 +169,14 @@ class Config implements IConfig.Main {
         // Secrets
         if (process.env.ADMIN_KEY_SECRET) {
             this.secrets.adminKey = process.env.ADMIN_KEY_SECRET;
-        }
-        else {
+        } else {
             console.warn("Setting random admin key! Cannot use the service-to-service APIs.");
+        }
+        if (process.env.RECAPTCHA_SITE_KEY) {
+            this.secrets.recaptcha.siteKey = process.env.RECAPTCHA_SITE_KEY;
+        }
+        if (process.env.RECAPTCHA_SECRET_KEY) {
+            this.secrets.recaptcha.secretKey = process.env.RECAPTCHA_SECRET_KEY;
         }
         if (process.env.SESSION_SECRET) {
             this.secrets.session = process.env.SESSION_SECRET;

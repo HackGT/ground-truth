@@ -90,7 +90,8 @@ function setUpStep(step) {
                             ...commonFetchSettings,
                             body: serializeQueryString({
                                 email: email.value.trim(),
-                                password: passwordLogin.value
+                                password: passwordLogin.value,
+                                "g-recaptcha-response": grecaptcha.getResponse()
                             })
                         });
                         window.location.reload();

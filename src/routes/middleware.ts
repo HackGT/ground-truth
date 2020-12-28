@@ -1,5 +1,6 @@
 import express from "express";
 import { IRateLimiterMongoOptions, RateLimiterMongo } from "rate-limiter-flexible";
+import fetch from "node-fetch";
 
 import { IUser, User } from "../schema";
 import { config, IConfig, mongoose } from "../common";
@@ -121,4 +122,37 @@ export const rateLimit = {
     "oauth-authorize": createRateLimit({ points: 200, duration: 60 * 30, keyPrefix: "oauth-authorize" }),               // 200 per 30 min
     "oauth-token": createRateLimit({ points: 2000, duration: 60 * 5, keyPrefix: "oauth-token" }),                       // 2000 per 5 min
     "auth-general": createRateLimit({ points: 10000, duration: 60 * 1, keyPrefix: "auth-general" }),                    // 10000 per 1 min
+}
+
+
+export const verifyRecaptcha = (redirectIfFailUrl: string = ""): express.RequestHandler => {
+    return async (request, response, next) => {
+        try {
+            const opt = {
+                secret: config.secrets.recaptcha.secretKey,
+                response: request.body["g-recaptcha-response"] || "",
+                remoteip: request.ip
+            }
+
+            const res = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${opt.secret}&response=${opt.response}&remoteip=${opt.remoteip}`, {
+                method: "POST"
+            });
+
+            const json = await res.json();
+
+            if (json.success) {
+                next();
+            } else {
+                request.flash("error", "Please complete the recaptcha validation.");
+
+                if (redirectIfFailUrl === "") {
+                    response.end(); // Used for login endpoint
+                } else {
+                    response.redirect(redirectIfFailUrl.replace(":code", request.params.code)); // Used for forgot password reset endpoint
+                }
+            }
+        } catch (err) {
+            next(err);
+        }
+    }
 }
