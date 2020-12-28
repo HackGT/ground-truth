@@ -9,7 +9,6 @@ env:
   EMAIL_FROM: "HackGT Team <hello@hackgt.com>"
   SESSION_SECRET: hack.gt
   PRODUCTION: true
-  SENTRY_DSN: https://add6279aad5c4128aa8cc34e27bbee69@o429043.ingest.sentry.io/5570140
 secrets:
   - ADMIN_KEY_SECRET
   - SESSION_SECRET
