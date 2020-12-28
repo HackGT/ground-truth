@@ -1,5 +1,5 @@
 import passport from "passport";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { Request, Router } from "express";
 
 import { config, IConfig } from "../../common";
@@ -21,7 +21,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
 
     public static get defaultUserProperties() {
         return {
-            "uuid": uuid.v4(),
+            "uuid": uuidv4(),
             "verifiedEmail": false,
             "admin": false,
             "member": false,

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import express from "express";
-import uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import csrf from "csurf";
 
 import { createNew, IOAuthClient, OAuthClient, AccessToken } from "../../schema";
@@ -25,7 +25,7 @@ appsRouter.post("/", async (request, response) => {
         }
 
         await createNew<IOAuthClient>(OAuthClient, {
-            uuid: uuid.v4(),
+            uuid: uuidv4(),
             clientID: crypto.randomBytes(32).toString("hex"),
             clientSecret: crypto.randomBytes(64).toString("hex"),
             name,
