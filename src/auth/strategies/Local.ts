@@ -142,13 +142,13 @@ export class Local implements RegistrationStrategy {
     public use(authRoutes: Router) {
         passport.use(this.passportStrategy);
 
-        authRoutes.post("/signup", rateLimit["local-signup"], validateAndCacheHostName, passport.authenticate("local", { failureFlash: true }), (request, response) => {
+        authRoutes.post("/signup", rateLimit["local-signup"], validateAndCacheHostName, verifyRecaptcha(), passport.authenticate("local", { failureFlash: true }), (request, response) => {
             // This works because the client just reloads the page once the requests completes
             // which displays the flash message (if error) or redirects to the next page (if success)
             response.json({ success: true });
         });
 
-        authRoutes.post("/login", rateLimit["local-login-slow"], rateLimit["local-login"], verifyRecaptcha(), passport.authenticate("local", { failureFlash: true }), (request, response) => {
+        authRoutes.post("/login", rateLimit["local-login-slow"], rateLimit["local-login"], passport.authenticate("local", { failureFlash: true }), (request, response) => {
             // Same as comment above
             response.json({ success: true });
         });
