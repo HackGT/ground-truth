@@ -7,7 +7,6 @@ wants:
 env:
   GT_CAS: true
   EMAIL_FROM: "HackGT Team <hello@hackgt.com>"
-  SESSION_SECRET: hack.gt
   PRODUCTION: true
 secrets:
   - ADMIN_KEY_SECRET
