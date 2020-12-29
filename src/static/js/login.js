@@ -43,13 +43,20 @@ function serializeQueryString(data) {
     }).join("&");
 }
 
+function setError(error) {
+    errorBlock.textContent = error;
+    if (error != "") {
+        errorBlock.scrollIntoView({ behavior: "smooth" });
+    }
+}
+
 function setUpStep(step) {
     let back = document.querySelector(`#step${step} .button.back`);
     let next = document.querySelector(`#step${step} .button.next`);
 
     if (back && step > 1) {
         back.addEventListener("click", () => {
-            errorBlock.textContent = "";
+            setError("");
             carousel.classList.remove("step" + step);
             carousel.classList.add("step" + (step - 1));
         });
@@ -60,10 +67,9 @@ function setUpStep(step) {
                 next.disabled = true;
                 // Do input validation
                 if (step === 1) {
-                    let emailRegex = /\S+@\S+\.\S+/;
+                    const emailRegex = /\S+@\S+\.\S+/;
                     if (!emailRegex.test(email.value)) {
-                        errorBlock.textContent = "Please input a valid email";
-                        return;
+                        return setError("Please input a valid email");
                     }
 
                     if (!passwordLogin.value) {
@@ -103,8 +109,7 @@ function setUpStep(step) {
                     let preferredNameValue = preferredName.value.trim();
                     let lastNameValue = lastName.value.trim();
                     if (!firstNameValue || !lastNameValue) {
-                        errorBlock.textContent = "Please enter your first and last name. We use it to identify you online and at events!"
-                        return;
+                        return setError("Please enter your first and last name. We use it to identify you online and at events!");
                     }
                     await fetch(`/api/client/attach-session-data`, {
                         ...commonFetchSettings,
@@ -117,13 +122,17 @@ function setUpStep(step) {
                 }
                 if (step === 3) {
                     // User has submitted a password for a local account
+                    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // There is also backend validation
                     if (!password.value.trim()) {
-                        errorBlock.textContent = "Please enter a password or sign up using an external service";
-                        return;
+                        return setError("Please enter a password or sign up using an external service");
+                    } else if (!passwordRegex.test(password.value)) {
+                        return setError("Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number");
                     }
+
                     let firstNameValue = firstName.value.trim();
                     let preferredNameValue = preferredName.value.trim();
                     let lastNameValue = lastName.value.trim();
+
                     await fetch(`/auth/signup`, {
                         ...commonFetchSettings,
                         body: serializeQueryString({
@@ -138,7 +147,7 @@ function setUpStep(step) {
                 }
 
                 if (step === 1 || step === 2) {
-                    errorBlock.textContent = "";
+                    setError("");
                     carousel.classList.remove("step" + step);
                     carousel.classList.add("step" + (step + 1));
                 }
