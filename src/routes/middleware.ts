@@ -148,7 +148,7 @@ export const verifyRecaptcha = (redirectIfFailUrl: string = ""): express.Request
                 if (redirectIfFailUrl === "") {
                     response.end(); // Used for login endpoint
                 } else {
-                    response.redirect(redirectIfFailUrl.replace(":code", request.params.code)); // Used for forgot password reset endpoint
+                    response.redirect(redirectIfFailUrl.replace(":code", request.params.code)); // :code replacement used for forgot password reset endpoint
                 }
             }
         } catch (err) {

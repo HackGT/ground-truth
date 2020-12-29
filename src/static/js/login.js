@@ -96,8 +96,7 @@ function setUpStep(step) {
                             ...commonFetchSettings,
                             body: serializeQueryString({
                                 email: email.value.trim(),
-                                password: passwordLogin.value,
-                                "g-recaptcha-response": grecaptcha.getResponse()
+                                password: passwordLogin.value
                             })
                         });
                         window.location.reload();
@@ -127,6 +126,8 @@ function setUpStep(step) {
                         return setError("Please enter a password or sign up using an external service");
                     } else if (!passwordRegex.test(password.value)) {
                         return setError("Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number");
+                    } else if (grecaptcha.getResponse() == "") {
+                        return setError("Please complete the recaptcha validation")
                     }
 
                     let firstNameValue = firstName.value.trim();
@@ -140,7 +141,8 @@ function setUpStep(step) {
                             firstName: firstNameValue,
                             preferredName: preferredNameValue,
                             lastName: lastNameValue,
-                            password: password.value
+                            password: password.value,
+                            "g-recaptcha-response": grecaptcha.getResponse()
                         })
                     });
                     window.location.reload();
