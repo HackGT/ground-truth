@@ -21,6 +21,7 @@ const pbkdf2Async = async (password: string | Buffer, salt: string | Buffer, rou
     return util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
 };
 
+// There is also frontend validation that should be changed accordingly
 const passwordSchema = new passwordValidator();
 passwordSchema
     .is().min(8)        // Minimum length 8
