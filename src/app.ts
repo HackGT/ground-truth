@@ -9,6 +9,7 @@ import flash from "connect-flash";
 import * as Sentry from "@sentry/node";
 import * as Tracing from "@sentry/tracing";
 import helmet from "helmet";
+import favicon from "serve-favicon";
 
 import {
     // Constants
@@ -88,6 +89,7 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(express.urlencoded({ extended: false }));
+app.use(favicon(path.join(__dirname, "static", "favicon.ico")));
 app.use(cookieParser(undefined, COOKIE_OPTIONS as cookieParser.CookieParseOptions));
 app.use(morgan("hackgt"));
 app.use(flash());
