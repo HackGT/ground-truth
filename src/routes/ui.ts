@@ -143,7 +143,7 @@ uiRoutes.route("/admin").get(isAdmin, csrf(), async (request, response) => {
     response.send(AdminTemplate.render(templateData));
 });
 
-uiRoutes.route("*").all(authenticateWithRedirect, async (request, response) => {
+uiRoutes.route("*").all(async (request, response) => {
     let templateData = {
         title: "404 Not Found",
         errorTitle: "404 Error - Page Not Found",
