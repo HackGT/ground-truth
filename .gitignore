@@ -22,3 +22,6 @@ dist
 
 # Config file
 src/config/config\.json
+
+# Meta
+.DS_Store
