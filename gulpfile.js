@@ -45,6 +45,11 @@ gulp.task('copy:css', () => {
         .pipe(gulp.dest('dist/static/css'));
 });
 
+gulp.task('copy:favicon', () => {
+    return gulp.src('src/static/favicon.ico')
+        .pipe(gulp.dest('dist/static'));
+});
+
 gulp.task('copy:templates', () => {
     return gulp.src('src/templates/**')
         .pipe(gulp.dest('dist/templates'));
@@ -57,6 +62,7 @@ gulp.task('copy:emails', () => {
 
 gulp.task('copy', gulp.parallel(
     'copy:css',
+    'copy:favicon',
     'copy:templates',
     'copy:emails'
 ));
