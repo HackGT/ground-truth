@@ -37,12 +37,14 @@ Admins can enable or disable whichever login methods they desire.
 
 ## How to Run
 
-To setup, please configure the `config.json` file in `src/config`. Additionally, Ground Truth can use environment variables for setup for use in production. The names of these variables can be found in `src/common.ts`. Note, you only need to fill in the secrets for the services you will be using.
+To setup, copy the `default.json` file to `development.json` in the `config` folder and configure the variables in this file. Enable certain login methods with the `loginMethods` config variable.
+
+Additionally, Ground Truth can use environment variables for setup for use in production. The names of these variables can be found in `src/common.ts`. Note, you only need to fill in the secrets for the services you will be using.
 
 After filling in the config file or the environment variables, follow these steps:
 
 1. `npm install`
-2. `npm start`
+2. `npm run dev`
 
 ## How do I use it?
 

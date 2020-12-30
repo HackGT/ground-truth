@@ -19,7 +19,7 @@ if (!config.server.isProduction) {
     app.enable("trust proxy");
 }
 
-if (!config.sessionSecretSet) {
+if (!config.secrets.session) {
     console.warn("No session secret set; sessions won't carry over server restarts");
 }
 

@@ -1,6 +1,6 @@
 {
 	"secrets": {
-		"session": "<a random string>",
+		"session": "",
 		"recaptcha": {
 			"siteKey": "",
 			"secretKey": ""
@@ -23,22 +23,31 @@
             "url": "https://login.gatech.edu/cas",
             "emailDomain": "gatech.edu",
             "logoutLink": "https://login.gatech.edu/cas/logout"
-        }
+		},
+		"sentryDSN": ""
 	},
 	"email": {
 		"from": "HackGT Team <hello@hackgt.com>",
-		"host": "smtp.sendgrid.net",
-		"key": "<your API key>",
-		"port": 465,
-		"headerImage": "https://storage.googleapis.com/hackgt6-public/banner.pn"
+		"key": "<SendGrid API key>",
+		"headerImage": "https://storage.googleapis.com/hackgt6-public/banner.pn",
+		"twitterHandle": "TheHackGT",
+        "facebookHandle": "thehackgt",
+        "contactAddress": "hello@hack.gt"
 	},
 	"server": {
-		"isProduction": true,
+		"name": "HackGT",
+		"isProduction": false,
 		"port": 3000,
-		"cookieMaxAge": 15552000000,
-		"cookieSecureOnly": true,
+		"cookieMaxAge": 15552000000, 
+		"cookieSecureOnly": false,
 		"passwordResetExpiration": 3600000,
-		"mongoURL": "mongodb://localhost/ground-truth"
+		"defaultTimezone": "America/New_York",
+        "adminDomains": ["hack.gt"],
+        "admins": []
+	},
+	"database": {
+		"mongoURL": "mongodb://localhost/ground-truth",
+		"rateLimitCollection": "ratelimit"
 	},
 	"loginMethods": [
 		"local"

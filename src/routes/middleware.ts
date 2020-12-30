@@ -78,7 +78,7 @@ export function isAdmin(request: express.Request, response: express.Response, ne
 const createRateLimit = (options: Partial<IRateLimiterMongoOptions>, setHeaders = true): express.RequestHandler => {
     const rateLimiter = new RateLimiterMongo({
         storeClient: mongoose.connection,
-        tableName: config.server.rateLimitCollection,
+        tableName: config.database.rateLimitCollection,
         ...options
     });
 

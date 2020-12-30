@@ -21,7 +21,7 @@ dist
 *.tsbuildinfo
 
 # Config file
-src/config/config\.json
+src/config/development\.json
 
 # Meta
 .DS_Store
