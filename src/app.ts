@@ -7,7 +7,6 @@ import * as path from "path";
 import morgan from "morgan";
 import flash from "connect-flash";
 import * as Sentry from "@sentry/node";
-import * as Tracing from "@sentry/tracing";
 import helmet from "helmet";
 import favicon from "serve-favicon";
 
@@ -24,20 +23,12 @@ export let app = express();
 
 // Sentry setup
 if (config.secrets.sentryDSN) {
-    Sentry.init({
-        dsn: config.secrets.sentryDSN,
-        integrations: [
-            new Sentry.Integrations.Http({ tracing: true }), // Enable HTTP calls tracing
-            new Tracing.Integrations.Express({ app }) // Enable Express.js middleware tracing
-        ],
-        tracesSampleRate: 1.0,
-    });
+    Sentry.init({ dsn: config.secrets.sentryDSN });
 
     app.use(Sentry.Handlers.requestHandler({
         user: ["id", "uuid", "email"],
         ip: true
     }));
-    app.use(Sentry.Handlers.tracingHandler());
 }
 
 morgan.token("sessionid", (request: express.Request, response) => {

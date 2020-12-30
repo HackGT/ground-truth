@@ -22,7 +22,6 @@
   "dependencies": {
     "@sendgrid/mail": "^7.4.0",
     "@sentry/node": "^5.29.2",
-    "@sentry/tracing": "^5.29.2",
     "chalk": "^4.1.0",
     "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
