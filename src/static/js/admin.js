@@ -50,17 +50,15 @@ function serializeQueryString(data) {
 async function sendRequest(url, method, data) {
     let options = {
         method,
-        credentials: "include"
+        credentials: "include",
+        headers: {
+            "CSRF-Token": csrfToken
+        }
     };
+
     if (data) {
-        options = {
-            ...options,
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-                "CSRF-Token": csrfToken
-            },
-            body: serializeQueryString(data)
-        };
+        options.body = serializeQueryString(data);
+        options.header["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
     }
 
     let response = await fetch(url, options).then(response => response.json());
