@@ -58,7 +58,7 @@ async function sendRequest(url, method, data) {
 
     if (data) {
         options.body = serializeQueryString(data);
-        options.header["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
+        options.headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
     }
 
     let response = await fetch(url, options).then(response => response.json());
