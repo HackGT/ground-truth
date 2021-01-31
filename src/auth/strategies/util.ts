@@ -114,6 +114,7 @@ export async function checkAndSetAdmin(user: Model<IUser>) {
     if (!domain) return;
 
     if (config.server.adminDomains.includes(domain) || config.server.admins.includes(user.email)) {
+        user.member = true;
         user.admin = true;
         await user.save();
     }
