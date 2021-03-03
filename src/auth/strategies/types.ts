@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace, @typescript-eslint/no-empty-interface */
 import { Request, Response, Router } from "express";
 import passport from "passport";
 

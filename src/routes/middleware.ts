@@ -9,7 +9,7 @@ import { ErrorTemplate } from "../templates";
 export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
   let type: IConfig.Services | "unknown" = "unknown";
   if (email) {
-    let user = await User.findOne({ email: email.trim().toLowerCase() });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (user) {
       // Least important first
       if (user.local && user.local.hash) {
@@ -40,7 +40,7 @@ export async function authenticateWithRedirect(
   next: express.NextFunction
 ) {
   response.setHeader("Cache-Control", "private");
-  let user = request.user as IUser | undefined;
+  const user = request.user as IUser | undefined;
 
   if (!request.isAuthenticated() || !user || !user.verifiedEmail) {
     if (request.session) {
@@ -48,7 +48,7 @@ export async function authenticateWithRedirect(
     }
     response.redirect("/login");
   } else if (user && user.forceLogOut) {
-    let userModel = await User.findOne({ uuid: user.uuid });
+    const userModel = await User.findOne({ uuid: user.uuid });
     if (userModel) {
       userModel.forceLogOut = false;
       await userModel.save();
@@ -105,7 +105,7 @@ const createRateLimit = (
         next();
       })
       .catch(() => {
-        let templateData = {
+        const templateData = {
           title: "Too Many Requests",
           errorTitle: "429 - An Error Occurred",
           errorSubtitle: "Sorry, too many requests have been sent. Please try again later.",
@@ -155,37 +155,39 @@ export const rateLimit = {
   "auth-general": createRateLimit({ points: 10000, duration: 60 * 1, keyPrefix: "auth-general" }), // 10000 per 1 min
 };
 
-export const verifyRecaptcha = (redirectIfFailUrl: string = ""): express.RequestHandler => {
-  return async (request, response, next) => {
-    try {
-      const opt = {
-        secret: config.secrets.recaptcha.secretKey,
-        response: request.body["g-recaptcha-response"] || "",
-        remoteip: request.ip,
-      };
+export const verifyRecaptcha = (redirectIfFailUrl = ""): express.RequestHandler => async (
+  request,
+  response,
+  next
+) => {
+  try {
+    const opt = {
+      secret: config.secrets.recaptcha.secretKey,
+      response: request.body["g-recaptcha-response"] || "",
+      remoteip: request.ip,
+    };
 
-      const res = await fetch(
-        `https://www.google.com/recaptcha/api/siteverify?secret=${opt.secret}&response=${opt.response}&remoteip=${opt.remoteip}`,
-        {
-          method: "POST",
-        }
-      );
-
-      const json = await res.json();
-
-      if (json.success) {
-        next();
-      } else {
-        request.flash("error", "Please complete the recaptcha validation.");
-
-        if (redirectIfFailUrl === "") {
-          response.end(); // Used for login endpoint
-        } else {
-          response.redirect(redirectIfFailUrl.replace(":code", request.params.code)); // :code replacement used for forgot password reset endpoint
-        }
+    const res = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${opt.secret}&response=${opt.response}&remoteip=${opt.remoteip}`,
+      {
+        method: "POST",
       }
-    } catch (err) {
-      next(err);
+    );
+
+    const json = await res.json();
+
+    if (json.success) {
+      next();
+    } else {
+      request.flash("error", "Please complete the recaptcha validation.");
+
+      if (redirectIfFailUrl === "") {
+        response.end(); // Used for login endpoint
+      } else {
+        response.redirect(redirectIfFailUrl.replace(":code", request.params.code)); // :code replacement used for forgot password reset endpoint
+      }
     }
-  };
+  } catch (err) {
+    next(err);
+  }
 };

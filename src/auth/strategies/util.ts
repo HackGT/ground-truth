@@ -30,9 +30,9 @@ export async function ExternalServiceCallback(
     request.session.firstName &&
     request.session.lastName
   ) {
-    let signupEmail = request.session.email.trim().toLowerCase();
+    const signupEmail = request.session.email.trim().toLowerCase();
     // Only create / modify user account if email and name exist on the session (set by login page)
-    let existingUser = await User.findOne({ email: signupEmail });
+    const existingUser = await User.findOne({ email: signupEmail });
 
     if (
       !user &&
@@ -126,7 +126,7 @@ export async function ExternalServiceCallback(
 export async function checkAndSetAdmin(user: Model<IUser>) {
   if (!user.verifiedEmail) return;
 
-  let domain = user.email.split("@").pop();
+  const domain = user.email.split("@").pop();
   if (!domain) return;
 
   if (config.server.adminDomains.includes(domain) || config.server.admins.includes(user.email)) {
@@ -143,22 +143,21 @@ export function getExternalPort(request: Request): number {
     return request.protocol === "http" ? 80 : 443;
   }
 
-  let host = request.headers.host;
+  const { host } = request.headers;
   if (!host || Array.isArray(host)) {
     return defaultPort();
   }
 
   // IPv6 literal support
-  let offset = host[0] === "[" ? host.indexOf("]") + 1 : 0;
-  let index = host.indexOf(":", offset);
+  const offset = host[0] === "[" ? host.indexOf("]") + 1 : 0;
+  const index = host.indexOf(":", offset);
   if (index !== -1) {
     return parseInt(host.substring(index + 1), 10);
-  } else {
-    return defaultPort();
   }
+  return defaultPort();
 }
 
-let validatedHostNames: string[] = [];
+const validatedHostNames: string[] = [];
 export function validateAndCacheHostName(request: Request, response: Response, next: NextFunction) {
   // Basically checks to see if the server behind the hostname has the same session key by HMACing a random nonce
   if (validatedHostNames.find(hostname => hostname === request.hostname)) {
@@ -166,7 +165,7 @@ export function validateAndCacheHostName(request: Request, response: Response, n
     return;
   }
 
-  let nonce = crypto.randomBytes(64).toString("hex");
+  const nonce = crypto.randomBytes(64).toString("hex");
   function callback(message: http.IncomingMessage) {
     if (message.statusCode !== 200) {
       console.error(`Got non-OK status code when validating hostname: ${request.hostname}`);
@@ -177,7 +176,7 @@ export function validateAndCacheHostName(request: Request, response: Response, n
     let data = "";
     message.on("data", chunk => (data += chunk));
     message.on("end", () => {
-      let localHMAC = crypto
+      const localHMAC = crypto
         .createHmac("sha256", config.secrets.session)
         .update(nonce)
         .digest()
@@ -219,9 +218,8 @@ export function createLink(request: Request, link: string): string {
     (!request.secure && getExternalPort(request) === 80)
   ) {
     return `http${request.secure ? "s" : ""}://${request.hostname}/${link}`;
-  } else {
-    return `http${request.secure ? "s" : ""}://${request.hostname}:${getExternalPort(
-      request
-    )}/${link}`;
   }
+  return `http${request.secure ? "s" : ""}://${request.hostname}:${getExternalPort(
+    request
+  )}/${link}`;
 }

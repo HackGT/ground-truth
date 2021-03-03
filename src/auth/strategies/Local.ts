@@ -21,15 +21,14 @@ import {
   renderEmailText,
 } from "../../email";
 
-export const PBKDF2_ROUNDS: number = 300000;
+export const PBKDF2_ROUNDS = 300000;
 
 const pbkdf2Async = async (
   password: string | Buffer,
   salt: string | Buffer,
   rounds: number
-): Promise<Buffer> => {
-  return util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
-};
+): Promise<Buffer> =>
+  util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
 
 // There is also frontend validation that should be changed accordingly
 const passwordSchema = new passwordValidator();
@@ -53,7 +52,7 @@ export class Local implements RegistrationStrategy {
   public readonly name = "local";
 
   constructor() {
-    let options: LocalStrategyOptions = {
+    const options: LocalStrategyOptions = {
       usernameField: "email",
       passwordField: "password",
       passReqToCallback: true,
@@ -83,19 +82,22 @@ export class Local implements RegistrationStrategy {
       }
 
       const firstName: string = request.body.firstName || "";
-      const preferredName: string | undefined = request.body.preferredName;
+      const { preferredName } = request.body;
       const lastName: string = request.body.lastName || "";
 
       if (!email) {
         done(null, false, { message: "Missing email" });
         return;
-      } else if (!password) {
+      }
+      if (!password) {
         done(null, false, { message: "Missing password" });
         return;
-      } else if (!firstName || !lastName) {
+      }
+      if (!firstName || !lastName) {
         done(null, false, { message: "Missing first or last name" });
         return;
-      } else if (!passwordSchema.validate(password)) {
+      }
+      if (!passwordSchema.validate(password)) {
         done(null, false, {
           message:
             "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number",
@@ -103,8 +105,8 @@ export class Local implements RegistrationStrategy {
         return;
       }
 
-      let salt = crypto.randomBytes(32);
-      let hash = await pbkdf2Async(password, salt, PBKDF2_ROUNDS);
+      const salt = crypto.randomBytes(32);
+      const hash = await pbkdf2Async(password, salt, PBKDF2_ROUNDS);
       user = createNew<IUser>(User, {
         ...OAuthStrategy.defaultUserProperties,
         email,
@@ -146,7 +148,7 @@ export class Local implements RegistrationStrategy {
       done(null, user);
     } else {
       // Log the user in
-      let hash = await pbkdf2Async(
+      const hash = await pbkdf2Async(
         password,
         Buffer.from(user.local.salt || "", "hex"),
         PBKDF2_ROUNDS
@@ -209,7 +211,7 @@ export class Local implements RegistrationStrategy {
       validateAndCacheHostName,
       verifyRecaptcha("/login/forgot"),
       async (request, response) => {
-        let email: string | undefined = request.body.email;
+        let { email } = request.body;
         if (!email || !email.toString().trim()) {
           request.flash("error", "Invalid email");
           response.redirect("/login/forgot");
@@ -217,7 +219,7 @@ export class Local implements RegistrationStrategy {
         }
         email = email.toString().trim().toLowerCase();
 
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) {
           request.flash("error", "No account matching the email that you submitted was found");
           response.redirect("/login/forgot");
@@ -244,8 +246,8 @@ export class Local implements RegistrationStrategy {
         user.local.resetCode = crypto.randomBytes(32).toString("hex");
 
         // Send reset email (hostname validated by previous middleware)
-        let link = createLink(request, `/login/forgot/${user.local.resetCode}`);
-        let markdown = `Hi {{name}},
+        const link = createLink(request, `/login/forgot/${user.local.resetCode}`);
+        const markdown = `Hi {{name}},
 
 You (or someone who knows your email address) recently asked to reset the password for this account: {{email}}.
 
@@ -291,14 +293,14 @@ The ${config.server.name} Team.`;
       validateAndCacheHostName,
       verifyRecaptcha("/login/forgot/:code"),
       async (request, response) => {
-        let user = await User.findOne({ "local.resetCode": request.params.code });
+        const user = await User.findOne({ "local.resetCode": request.params.code });
         if (!user) {
           request.flash("error", "Invalid password reset code");
           response.redirect("/login");
           return;
         }
 
-        let expirationDuration = moment.duration(
+        const expirationDuration = moment.duration(
           config.server.passwordResetExpiration,
           "milliseconds"
         );
@@ -313,18 +315,20 @@ The ${config.server.name} Team.`;
           return;
         }
 
-        let password1: string | undefined = request.body.password1;
-        let password2: string | undefined = request.body.password2;
+        const { password1 } = request.body;
+        const { password2 } = request.body;
 
         if (!password1 || !password2) {
           request.flash("error", "Missing new password or confirm password");
           response.redirect(`/login/forgot/${request.params.code}`);
           return;
-        } else if (password1 !== password2) {
+        }
+        if (password1 !== password2) {
           request.flash("error", "Passwords must match");
           response.redirect(`/login/forgot/${request.params.code}`);
           return;
-        } else if (!passwordSchema.validate(password1)) {
+        }
+        if (!passwordSchema.validate(password1)) {
           request.flash(
             "error",
             "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number"
@@ -333,8 +337,8 @@ The ${config.server.name} Team.`;
           return;
         }
 
-        let salt = crypto.randomBytes(32);
-        let hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
+        const salt = crypto.randomBytes(32);
+        const hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
 
         try {
           user.local!.salt = salt.toString("hex");
@@ -359,7 +363,7 @@ The ${config.server.name} Team.`;
       verifyRecaptcha("/login/changepassword"),
       authenticateWithRedirect,
       async (request, response) => {
-        let user = await User.findOne({ uuid: request.user!.uuid });
+        const user = await User.findOne({ uuid: request.user!.uuid });
         if (!user) {
           request.flash("error", "User not logged in");
           response.redirect("/login");
@@ -370,8 +374,8 @@ The ${config.server.name} Team.`;
           return;
         }
 
-        let oldPassword: string = request.body.oldpassword || "";
-        let currentHash = await pbkdf2Async(
+        const oldPassword: string = request.body.oldpassword || "";
+        const currentHash = await pbkdf2Async(
           oldPassword,
           Buffer.from(user.local.salt || "", "hex"),
           PBKDF2_ROUNDS
@@ -382,18 +386,20 @@ The ${config.server.name} Team.`;
           return;
         }
 
-        let password1: string | undefined = request.body.password1;
-        let password2: string | undefined = request.body.password2;
+        const { password1 } = request.body;
+        const { password2 } = request.body;
 
         if (!password1 || !password2) {
           request.flash("error", "Missing new password or confirm password");
           response.redirect(`/login/changepassword`);
           return;
-        } else if (password1 !== password2) {
+        }
+        if (password1 !== password2) {
           request.flash("error", "New passwords must match");
           response.redirect(`/login/changepassword`);
           return;
-        } else if (!passwordSchema.validate(password1)) {
+        }
+        if (!passwordSchema.validate(password1)) {
           request.flash(
             "error",
             "New password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number"
@@ -402,8 +408,8 @@ The ${config.server.name} Team.`;
           return;
         }
 
-        let salt = crypto.randomBytes(32);
-        let hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
+        const salt = crypto.randomBytes(32);
+        const hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
 
         try {
           user.local!.salt = salt.toString("hex");

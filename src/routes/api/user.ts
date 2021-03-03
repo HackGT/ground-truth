@@ -5,7 +5,7 @@ import { IUser, User, AccessToken } from "../../schema";
 import { formatName } from "../../email";
 import { rateLimit } from "../middleware";
 
-export let userRouter = express.Router();
+export const userRouter = express.Router();
 
 userRouter.use(rateLimit["api-user"]);
 
@@ -13,7 +13,7 @@ userRouter.get(
   "/",
   passport.authenticate("bearer", { session: false }),
   async (request, response) => {
-    let user = request.user as IUser;
+    const user = request.user as IUser;
     response.json({
       uuid: user.uuid,
       name: formatName(user),
@@ -30,13 +30,13 @@ userRouter.post(
   "/logout",
   passport.authenticate("bearer", { session: false }),
   async (request, response) => {
-    let user = request.user as IUser;
-    let existingTokens = await AccessToken.find({ uuid: user.uuid });
-    for (let token of existingTokens) {
+    const user = request.user as IUser;
+    const existingTokens = await AccessToken.find({ uuid: user.uuid });
+    for (const token of existingTokens) {
       await token.remove();
     }
 
-    let userDB = await User.findOne({ uuid: user.uuid });
+    const userDB = await User.findOne({ uuid: user.uuid });
     if (userDB) {
       userDB.forceLogOut = true;
       await userDB.save();

@@ -10,35 +10,35 @@ import { validateAndCacheHostName } from "../auth/strategies/util";
 import { sendVerificationEmail, resendVerificationEmailLink } from "../email";
 import { rateLimit } from "./middleware";
 
-export let authRouter = express.Router();
+export const authRouter = express.Router();
 
 authRouter.use(rateLimit["auth-general"]);
 authRouter.use(csrf());
 
-let authenticationMethods: RegistrationStrategy[] = [];
+const authenticationMethods: RegistrationStrategy[] = [];
 console.info(`Using authentication methods: ${config.loginMethods.join(", ")}`);
 
-for (let methodName of config.loginMethods) {
+for (const methodName of config.loginMethods) {
   if (!strategies[methodName]) {
     console.error(
       `Authentication method "${methodName}" is not available. Did you add it to the exported list of strategies?`
     );
     continue;
   }
-  let method = new strategies[methodName]();
+  const method = new strategies[methodName]();
   authenticationMethods.push(method);
   method.use(authRouter);
 }
 
 authRouter.get("/validatehost/:nonce", (request, response) => {
-  let nonce: string = request.params.nonce || "";
+  const nonce: string = request.params.nonce || "";
   response.send(
     crypto.createHmac("sha256", config.secrets.session).update(nonce).digest().toString("hex")
   );
 });
 
 authRouter.get("/verify/:code", rateLimit["verify-code"], async (request, response) => {
-  let user = await User.findOne({ emailVerificationCode: request.params.code });
+  const user = await User.findOne({ emailVerificationCode: request.params.code });
   if (!user) {
     request.flash("error", "Invalid email verification code");
   } else {

@@ -1,13 +1,13 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
 // Navigation tab handlers
-let navigationTabs = document.getElementById("admin-navigation").getElementsByTagName("li");
+const navigationTabs = document.getElementById("admin-navigation").getElementsByTagName("li");
 
 for (let index = 0; index < navigationTabs.length; index++) {
-  let currentTab = navigationTabs[index];
+  const currentTab = navigationTabs[index];
 
   currentTab.addEventListener("click", async e => {
-    let tabContents = document.getElementsByClassName("tab-content");
+    const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
       tabContents[i].style.display = "none";
     }
@@ -22,12 +22,12 @@ for (let index = 0; index < navigationTabs.length; index++) {
 }
 
 // If there is a current tab in local storage, set that tab otherwise the first one
-let activeTabName = localStorage.getItem("activeTabId");
+const activeTabName = localStorage.getItem("activeTabId");
 localStorage.removeItem("activeTabId");
 document.getElementById(activeTabName || "admin-tab-1").click();
 
 function setUpHandlers(classname, handler) {
-  let buttons = document.getElementsByClassName(classname);
+  const buttons = document.getElementsByClassName(classname);
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener("click", async e => {
       buttons[i].disabled = true;
@@ -43,14 +43,12 @@ function setUpHandlers(classname, handler) {
 
 function serializeQueryString(data) {
   return Object.keys(data)
-    .map(key => {
-      return encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
-    })
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
     .join("&");
 }
 
 async function sendRequest(url, method, data) {
-  let options = {
+  const options = {
     method,
     credentials: "include",
     headers: {
@@ -63,12 +61,12 @@ async function sendRequest(url, method, data) {
     options.headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
   }
 
-  let response = await fetch(url, options).then(response => response.json());
+  const response = await fetch(url, options).then(response => response.json());
   if (!response.success) {
     alert(response.error);
   } else {
     // Remember current tab on refresh
-    let activeTab = document.getElementById("admin-navigation").querySelector("li.is-active");
+    const activeTab = document.getElementById("admin-navigation").querySelector("li.is-active");
     localStorage.setItem("activeTabId", activeTab.id);
 
     window.location.reload();
@@ -77,13 +75,13 @@ async function sendRequest(url, method, data) {
 
 // APPLICATIONS TAB
 setUpHandlers("rename", async (id, button) => {
-  let name = prompt("New name:", button.dataset.name);
+  const name = prompt("New name:", button.dataset.name);
   if (!name) return;
 
   await sendRequest(`/api/apps/${id}/rename`, "PUT", { name: name.trim() });
 });
 setUpHandlers("edit-redirects", async (id, button) => {
-  let uris = prompt("Redirect URIs (comma separated):", button.dataset.uris);
+  const uris = prompt("Redirect URIs (comma separated):", button.dataset.uris);
   if (!uris) return;
 
   await sendRequest(`/api/apps/${id}/redirects`, "PUT", { redirectURIs: uris.trim() });
@@ -117,16 +115,16 @@ for (let i = 0; i < secretArrows.length; i++) {
   });
 }
 
-let addApplicationButton = document.getElementById("add-application");
+const addApplicationButton = document.getElementById("add-application");
 addApplicationButton.addEventListener("click", async () => {
   try {
     addApplicationButton.disabled = true;
-    let nameField = document.getElementById("name");
-    let redirectURIsField = document.getElementById("redirect-uris");
-    let clientType = document.querySelector(`input[name="client-type"]:checked`).value;
+    const nameField = document.getElementById("name");
+    const redirectURIsField = document.getElementById("redirect-uris");
+    const clientType = document.querySelector(`input[name="client-type"]:checked`).value;
 
-    let name = nameField.value.trim();
-    let redirectURIs = redirectURIsField.value.trim();
+    const name = nameField.value.trim();
+    const redirectURIs = redirectURIsField.value.trim();
     if (!name) {
       alert("Application name cannot be blank");
       return;
@@ -149,17 +147,17 @@ setUpHandlers("delete-scope", async (id, button) => {
   await sendRequest(`/api/scopes/${id}`, "DELETE");
 });
 
-let addScopeButton = document.getElementById("add-scope");
+const addScopeButton = document.getElementById("add-scope");
 addScopeButton.addEventListener("click", async () => {
   try {
     addScopeButton.disabled = true;
 
-    let name = document.getElementById("scope-name");
-    let question = document.getElementById("scope-question");
-    let type = document.getElementById("scope-type");
-    let icon = document.getElementById("scope-icon");
-    let validatorCode = document.getElementById("scope-validator");
-    let errorMessage = document.getElementById("scope-error-message");
+    const name = document.getElementById("scope-name");
+    const question = document.getElementById("scope-question");
+    const type = document.getElementById("scope-type");
+    const icon = document.getElementById("scope-icon");
+    const validatorCode = document.getElementById("scope-validator");
+    const errorMessage = document.getElementById("scope-error-message");
 
     await sendRequest("/api/scopes", "POST", {
       name: name.value,
@@ -175,13 +173,13 @@ addScopeButton.addEventListener("click", async () => {
 });
 
 // USERS TAB
-let addMemberButton = document.getElementById("member-add");
+const addMemberButton = document.getElementById("member-add");
 addMemberButton.addEventListener("click", async () => {
-  let emailField = document.getElementById("member-email");
+  const emailField = document.getElementById("member-email");
 
   try {
     addMemberButton.disabled = true;
-    let email = emailField.value.trim();
+    const email = emailField.value.trim();
     if (!email) return;
 
     await sendRequest(`/api/members`, "POST", { email, member: true });

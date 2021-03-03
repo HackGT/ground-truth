@@ -5,11 +5,11 @@ import marked from "marked";
 import sendgrid from "@sendgrid/mail";
 import { Request } from "express";
 
-const Email = require("email-templates");
-
 import { config } from "./common";
 import { IUser, Model } from "./schema";
 import { createLink } from "./auth/strategies/util";
+
+const Email = require("email-templates");
 
 sendgrid.setApiKey(config.email.key);
 
@@ -48,8 +48,8 @@ export function formatName(user: IUser): string {
   return `${user.name.preferred || user.name.first} ${user.name.last}`;
 }
 
-let renderer = new marked.Renderer();
-let singleLineRenderer = new marked.Renderer();
+const renderer = new marked.Renderer();
+const singleLineRenderer = new marked.Renderer();
 singleLineRenderer.link = (href, title, text) =>
   `<a target=\"_blank\" href=\"${href}\" title=\"${title || ""}\">${text}</a>`;
 singleLineRenderer.paragraph = text => text;
@@ -57,9 +57,9 @@ singleLineRenderer.paragraph = text => text;
 export async function renderMarkdown(
   markdown: string,
   options?: marked.MarkedOptions,
-  singleLine: boolean = false
+  singleLine = false
 ): Promise<string> {
-  let r = singleLine ? singleLineRenderer : renderer;
+  const r = singleLine ? singleLineRenderer : renderer;
   return new Promise<string>((resolve, reject) => {
     marked(
       markdown,
@@ -87,7 +87,7 @@ async function templateMarkdown(markdown: string, user: IUser): Promise<string> 
 export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
   markdown = await templateMarkdown(markdown, user);
 
-  let renderedMarkdown = await renderMarkdown(markdown);
+  const renderedMarkdown = await renderMarkdown(markdown);
   return email.render("email-template/html", {
     emailHeaderImage: config.email.headerImage,
     twitterHandle: config.email.twitterHandle,
@@ -99,8 +99,8 @@ export async function renderEmailHTML(markdown: string, user: IUser): Promise<st
 }
 
 export async function renderEmailText(markdown: string, user: IUser): Promise<string> {
-  let templatedMarkdown = await templateMarkdown(markdown, user);
-  let renderedHtml = await renderMarkdown(templatedMarkdown);
+  const templatedMarkdown = await templateMarkdown(markdown, user);
+  const renderedHtml = await renderMarkdown(templatedMarkdown);
   return htmlToText.fromString(renderedHtml);
 }
 
@@ -115,8 +115,8 @@ export async function sendVerificationEmail(request: Request, user: Model<IUser>
   user.emailVerificationCode = crypto.randomBytes(32).toString("hex");
   await user.save();
 
-  let link = createLink(request, `/auth/verify/${user.emailVerificationCode}`);
-  let markdown = `Hi {{name}},
+  const link = createLink(request, `/auth/verify/${user.emailVerificationCode}`);
+  const markdown = `Hi {{name}},
 
 Thanks for creating an account with ${config.server.name}! To verify your email, please [click here](${link}).
 

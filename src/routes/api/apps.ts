@@ -6,7 +6,7 @@ import csrf from "csurf";
 import { createNew, IOAuthClient, OAuthClient, AccessToken } from "../../schema";
 import { isAdmin, rateLimit } from "../middleware";
 
-export let appsRouter = express.Router();
+export const appsRouter = express.Router();
 
 appsRouter.use(rateLimit["api-admin"]);
 appsRouter.use(isAdmin);
@@ -14,9 +14,9 @@ appsRouter.use(csrf());
 
 appsRouter.post("/", async (request, response) => {
   try {
-    let name: string = (request.body.name || "").trim();
-    let rawRedirectURIs: string = (request.body.redirectURIs || "").trim();
-    let redirectURIs: string[] = rawRedirectURIs.split(/, ?/);
+    const name: string = (request.body.name || "").trim();
+    const rawRedirectURIs: string = (request.body.redirectURIs || "").trim();
+    const redirectURIs: string[] = rawRedirectURIs.split(/, ?/);
     if (!name || !rawRedirectURIs) {
       response.status(400).json({
         error: "Missing name or redirect URI(s)",
@@ -45,7 +45,7 @@ appsRouter.post("/", async (request, response) => {
 
 appsRouter.put("/:id/rename", async (request, response) => {
   try {
-    let app = await OAuthClient.findById(request.params.id);
+    const app = await OAuthClient.findById(request.params.id);
     if (!app) {
       response.status(400).json({
         error: "Invalid app ID",
@@ -53,7 +53,7 @@ appsRouter.put("/:id/rename", async (request, response) => {
       return;
     }
 
-    let name: string = (request.body.name || "").trim();
+    const name: string = (request.body.name || "").trim();
     if (!name) {
       response.status(400).json({
         error: "Invalid name",
@@ -76,7 +76,7 @@ appsRouter.put("/:id/rename", async (request, response) => {
 
 appsRouter.put("/:id/redirects", async (request, response) => {
   try {
-    let app = await OAuthClient.findById(request.params.id);
+    const app = await OAuthClient.findById(request.params.id);
     if (!app) {
       response.status(400).json({
         error: "Invalid app ID",
@@ -84,7 +84,7 @@ appsRouter.put("/:id/redirects", async (request, response) => {
       return;
     }
 
-    let URIs = ((request.body.redirectURIs as string) || "").trim().split(/, ?/);
+    const URIs = ((request.body.redirectURIs as string) || "").trim().split(/, ?/);
 
     app.redirectURIs = URIs;
     await app.save();
@@ -101,7 +101,7 @@ appsRouter.put("/:id/redirects", async (request, response) => {
 
 appsRouter.put("/:id/regenerate", async (request, response) => {
   try {
-    let app = await OAuthClient.findById(request.params.id);
+    const app = await OAuthClient.findById(request.params.id);
     if (!app) {
       response.status(400).json({
         error: "Invalid app ID",
@@ -109,7 +109,7 @@ appsRouter.put("/:id/regenerate", async (request, response) => {
       return;
     }
 
-    let secret = crypto.randomBytes(64).toString("hex");
+    const secret = crypto.randomBytes(64).toString("hex");
     app.clientSecret = secret;
 
     await app.save();
@@ -126,7 +126,7 @@ appsRouter.put("/:id/regenerate", async (request, response) => {
 
 appsRouter.delete("/:id", async (request, response) => {
   try {
-    let app = await OAuthClient.findById(request.params.id);
+    const app = await OAuthClient.findById(request.params.id);
     if (!app) {
       response.status(400).json({
         error: "Invalid app ID",

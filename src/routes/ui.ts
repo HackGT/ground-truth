@@ -14,13 +14,13 @@ import {
   ResetPasswordTemplate,
 } from "../templates";
 
-export let uiRoutes = express.Router();
+export const uiRoutes = express.Router();
 
-uiRoutes.use(rateLimit["ui"]);
+uiRoutes.use(rateLimit.ui);
 
 uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
   if (request.session) {
-    let url = request.session.returnTo;
+    const url = request.session.returnTo;
     if (url && url !== "/") {
       request.session.returnTo = undefined;
       response.redirect(url);
@@ -28,7 +28,7 @@ uiRoutes.route("/").get(authenticateWithRedirect, async (request, response) => {
     }
   }
 
-  let templateData = {
+  const templateData = {
     title: "Home",
 
     // @ts-ignore
@@ -45,7 +45,7 @@ uiRoutes.route("/login").get(csrf(), async (request, response) => {
     return;
   }
 
-  let templateData = {
+  const templateData = {
     title: "Log in",
     includeJS: "login",
 
@@ -64,7 +64,7 @@ uiRoutes.route("/login").get(csrf(), async (request, response) => {
 });
 
 uiRoutes.route("/login/forgot").get(csrf(), (request, response) => {
-  let templateData = {
+  const templateData = {
     title: "Forgot Password",
 
     error: request.flash("error"),
@@ -78,13 +78,14 @@ uiRoutes.route("/login/forgot").get(csrf(), (request, response) => {
 });
 
 uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
-  let user = await User.findOne({ "local.resetCode": request.params.code });
+  const user = await User.findOne({ "local.resetCode": request.params.code });
 
   if (!user) {
     request.flash("error", "Invalid password reset code");
     response.redirect("/login");
     return;
-  } else if (
+  }
+  if (
     !user.local ||
     !user.local.resetCode ||
     Date.now() - user.local.resetRequestedTime!.valueOf() > config.server.passwordResetExpiration
@@ -98,7 +99,7 @@ uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
     return;
   }
 
-  let templateData = {
+  const templateData = {
     title: "Reset Password",
 
     error: request.flash("error"),
@@ -121,7 +122,7 @@ uiRoutes
       return;
     }
 
-    let templateData = {
+    const templateData = {
       title: "Change Password",
 
       error: request.flash("error"),
@@ -135,7 +136,7 @@ uiRoutes
   });
 
 uiRoutes.route("/admin").get(isAdmin, csrf(), async (request, response) => {
-  let templateData = {
+  const templateData = {
     title: "Admin",
     includeJS: "admin",
 
@@ -163,7 +164,7 @@ uiRoutes.route("/admin").get(isAdmin, csrf(), async (request, response) => {
 });
 
 uiRoutes.route("*").all(async (request, response) => {
-  let templateData = {
+  const templateData = {
     title: "404 Not Found",
     errorTitle: "404 Error - Page Not Found",
     errorSubtitle: "Sorry, we couldn't find what you were looking for.",

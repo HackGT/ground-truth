@@ -1,7 +1,6 @@
 import * as crypto from "crypto";
 import * as oauth2orize from "oauth2orize";
-const oauth2orize_pkce = require("oauth2orize-pkce");
-import moment = require("moment");
+import moment from "moment";
 
 import {
   createNew,
@@ -14,6 +13,9 @@ import {
   OAuthClient,
 } from "../schema";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires, camelcase
+const oauth2orize_pkce = require("oauth2orize-pkce");
+
 export const server = oauth2orize.createServer();
 
 server.serializeClient((client: IOAuthClient, done) => {
@@ -22,7 +24,7 @@ server.serializeClient((client: IOAuthClient, done) => {
 
 server.deserializeClient(async (uuid, done) => {
   try {
-    let client = await OAuthClient.findOne({ uuid });
+    const client = await OAuthClient.findOne({ uuid });
     done(null, client || false);
   } catch (err) {
     done(err);
@@ -93,7 +95,7 @@ server.exchange(
     done: ExchangeDoneFunction
   ) => {
     try {
-      let authCode = await AuthorizationCode.findOne({ code });
+      const authCode = await AuthorizationCode.findOne({ code });
 
       if (!authCode) {
         console.warn(`Could not find auth code to exchange for token: ${code}`);

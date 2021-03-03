@@ -7,6 +7,7 @@ export class GitHub extends OAuthStrategy {
   constructor() {
     super("github", GitHubStrategy as any);
   }
+
   public use(authRoutes: Router) {
     super.use(authRoutes, ["user:email"]);
   }

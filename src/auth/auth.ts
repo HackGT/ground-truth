@@ -6,12 +6,10 @@ import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { Strategy as ClientPasswordStrategy } from "passport-oauth2-client-password";
 
 import { config, mongoose, COOKIE_OPTIONS } from "../common";
-import { IUser, User, AccessToken, IOAuthClient, OAuthClient } from "../schema";
+import { User, AccessToken, IOAuthClient, OAuthClient } from "../schema";
+import { app } from "../app";
 
 const MongoStore = connectMongo(session);
-
-// Passport authentication
-import { app } from "../app";
 
 if (!config.server.isProduction) {
   console.warn("OAuth callback(s) running in development mode");
@@ -37,12 +35,12 @@ app.use(
   })
 );
 
-passport.serializeUser<IUser, string>((user, done) => {
-  done(null, user._id.toString());
+passport.serializeUser<string>((user, done) => {
+  done(null, user._id.toString()); // eslint-disable-line no-underscore-dangle
 });
-passport.deserializeUser<IUser, string>((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user!);
+passport.deserializeUser<string>((id, done) => {
+  User.findById(id, (err: any, user: any) => {
+    done(err, user);
   });
 });
 
@@ -78,14 +76,13 @@ async function verifyClient(
   done: (err: Error | null, client?: IOAuthClient | false) => void
 ) {
   try {
-    let client = await OAuthClient.findOne({ clientID });
+    const client = await OAuthClient.findOne({ clientID });
 
     // Private apps must have a matching client secret
     // Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
     if (!client || (!client.public && client.clientSecret !== clientSecret)) {
       console.warn(
-        `Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${
-          client ? !!client.public : "Not found"
+        `Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"
         })`
       );
       done(null, false);
@@ -111,14 +108,14 @@ passport.use(new ClientPasswordStrategy(verifyClient));
 passport.use(
   new BearerStrategy(async (rawToken, done) => {
     try {
-      let token = await AccessToken.findOne({ token: rawToken });
+      const token = await AccessToken.findOne({ token: rawToken });
       if (!token) {
         console.warn(`Invalid token: ${rawToken}`);
         done(null, false);
         return;
       }
 
-      let user = await User.findOne({ uuid: token.uuid });
+      const user = await User.findOne({ uuid: token.uuid });
       if (!user) {
         console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
         done(null, false);

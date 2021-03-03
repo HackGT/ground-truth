@@ -4,7 +4,7 @@ import csrf from "csurf";
 import { User } from "../../schema";
 import { isAdmin, rateLimit } from "../middleware";
 
-export let membersRouter = express.Router();
+export const membersRouter = express.Router();
 
 membersRouter.use(rateLimit["api-admin"]);
 membersRouter.use(isAdmin);

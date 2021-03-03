@@ -9,10 +9,10 @@ interface RootDocument {
   _id: mongoose.Types.ObjectId;
 }
 export function createNew<T extends RootDocument>(
-  model: mongoose.Model<T & mongoose.Document, {}>,
+  Model: mongoose.Model<T & mongoose.Document>,
   doc: Omit<T, "_id">
 ) {
-  return new model(doc);
+  return new Model(doc);
 }
 export type Model<T extends RootDocument> = T & mongoose.Document;
 

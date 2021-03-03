@@ -61,7 +61,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
       );
     }
 
-    let options: OAuthStrategyOptions = {
+    const options: OAuthStrategyOptions = {
       clientID: secrets.id,
       clientSecret: secrets.secret,
       profileFields,
@@ -77,8 +77,8 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
     profile: Profile,
     done: PassportDone
   ) {
-    let serviceName = this.name as IConfig.OAuthServices;
-    let serviceEmail: string | undefined = undefined;
+    const serviceName = this.name as IConfig.OAuthServices;
+    let serviceEmail: string | undefined;
 
     if (profile.emails && profile.emails.length > 0) {
       serviceEmail = profile.emails[0].value.trim();
@@ -93,7 +93,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
     const callbackHref = `auth/${this.name}/callback`;
 
     authRoutes.get(`/${this.name}`, validateAndCacheHostName, (request, response, next) => {
-      let callbackURL = `${request.protocol}://${request.hostname}:${getExternalPort(
+      const callbackURL = `${request.protocol}://${request.hostname}:${getExternalPort(
         request
       )}/${callbackHref}`;
 
@@ -108,7 +108,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
       `/${this.name}/callback`,
       validateAndCacheHostName,
       (request, response, next) => {
-        let callbackURL = `${request.protocol}://${request.hostname}:${getExternalPort(
+        const callbackURL = `${request.protocol}://${request.hostname}:${getExternalPort(
           request
         )}/${callbackHref}`;
 

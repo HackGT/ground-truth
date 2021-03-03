@@ -7,6 +7,7 @@ export class Google extends OAuthStrategy {
   constructor() {
     super("google", GoogleStrategy as any);
   }
+
   public use(authRoutes: Router) {
     super.use(authRoutes, ["email", "profile"]);
   }

@@ -17,7 +17,7 @@ const passwordLogin = getInput("password-login");
 function setUpEnterHandler(input, nextID) {
   input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
-      let next = document.querySelector(`#step${nextID} .button.next`);
+      const next = document.querySelector(`#step${nextID} .button.next`);
       next.click();
     }
   });
@@ -39,9 +39,7 @@ const commonFetchSettings = {
 
 function serializeQueryString(data) {
   return Object.keys(data)
-    .map(key => {
-      return encodeURIComponent(key) + "=" + encodeURIComponent(data[key]);
-    })
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
     .join("&");
 }
 
@@ -53,14 +51,14 @@ function setError(error) {
 }
 
 function setUpStep(step) {
-  let back = document.querySelector(`#step${step} .button.back`);
-  let next = document.querySelector(`#step${step} .button.next`);
+  const back = document.querySelector(`#step${step} .button.back`);
+  const next = document.querySelector(`#step${step} .button.next`);
 
   if (back && step > 1) {
     back.addEventListener("click", () => {
       setError("");
-      carousel.classList.remove("step" + step);
-      carousel.classList.add("step" + (step - 1));
+      carousel.classList.remove(`step${step}`);
+      carousel.classList.add(`step${step - 1}`);
     });
   }
   if (next) {
@@ -75,7 +73,7 @@ function setUpStep(step) {
           }
 
           if (!passwordLogin.value) {
-            let { type } = await fetch(
+            const { type } = await fetch(
               `/api/client/login-type?email=${encodeURIComponent(email.value.trim())}`
             ).then(response => response.json());
             if (["gatech", "google", "github", "facebook"].includes(type)) {
@@ -83,7 +81,7 @@ function setUpStep(step) {
               return;
             }
             if (type === "local") {
-              let passwordContainer = document.getElementById("hidden-password");
+              const passwordContainer = document.getElementById("hidden-password");
               passwordContainer.classList.remove("hidden");
               passwordContainer.classList.add("shown");
               passwordLogin.disabled = false;
@@ -107,9 +105,9 @@ function setUpStep(step) {
           }
         }
         if (step === 2) {
-          let firstNameValue = firstName.value.trim();
-          let preferredNameValue = preferredName.value.trim();
-          let lastNameValue = lastName.value.trim();
+          const firstNameValue = firstName.value.trim();
+          const preferredNameValue = preferredName.value.trim();
+          const lastNameValue = lastName.value.trim();
           if (!firstNameValue || !lastNameValue) {
             return setError(
               "Please enter your first and last name. We use it to identify you online and at events!"
@@ -129,17 +127,19 @@ function setUpStep(step) {
           const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // There is also backend validation
           if (!password.value.trim()) {
             return setError("Please enter a password or sign up using an external service");
-          } else if (!passwordRegex.test(password.value)) {
+          }
+          if (!passwordRegex.test(password.value)) {
             return setError(
               "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number"
             );
-          } else if (grecaptcha.getResponse() == "") {
+          }
+          if (grecaptcha.getResponse() == "") {
             return setError("Please complete the recaptcha validation");
           }
 
-          let firstNameValue = firstName.value.trim();
-          let preferredNameValue = preferredName.value.trim();
-          let lastNameValue = lastName.value.trim();
+          const firstNameValue = firstName.value.trim();
+          const preferredNameValue = preferredName.value.trim();
+          const lastNameValue = lastName.value.trim();
 
           await fetch(`/auth/signup`, {
             ...commonFetchSettings,
@@ -157,8 +157,8 @@ function setUpStep(step) {
 
         if (step === 1 || step === 2) {
           setError("");
-          carousel.classList.remove("step" + step);
-          carousel.classList.add("step" + (step + 1));
+          carousel.classList.remove(`step${step}`);
+          carousel.classList.add(`step${step + 1}`);
         }
       } finally {
         next.disabled = false;

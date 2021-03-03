@@ -1,7 +1,7 @@
-// Needed so that common.ts <-> schema.ts cyclical dependencies don't cause problems
-/* tslint:disable:no-duplicate-imports */
+/* eslint-disable @typescript-eslint/no-namespace */
 import * as fs from "fs";
 import * as path from "path";
+import mongoose from "mongoose";
 
 //
 // Config
@@ -100,22 +100,22 @@ class Config implements IConfig.Main {
     }
 
     if (config.secrets) {
-      for (let key of Object.keys(config.secrets) as (keyof IConfig.Secrets)[]) {
+      for (const key of Object.keys(config.secrets) as (keyof IConfig.Secrets)[]) {
         (this.secrets as any)[key] = config.secrets[key];
       }
     }
     if (config.email) {
-      for (let key of Object.keys(config.email) as (keyof IConfig.Email)[]) {
+      for (const key of Object.keys(config.email) as (keyof IConfig.Email)[]) {
         this.email[key] = config.email[key];
       }
     }
     if (config.server) {
-      for (let key of Object.keys(config.server) as (keyof IConfig.Server)[]) {
+      for (const key of Object.keys(config.server) as (keyof IConfig.Server)[]) {
         (this.server as any)[key] = config.server[key];
       }
     }
     if (config.database) {
-      for (let key of Object.keys(config.database) as (keyof IConfig.Database)[]) {
+      for (const key of Object.keys(config.database) as (keyof IConfig.Database)[]) {
         (this.database as any)[key] = config.database[key];
       }
     }
@@ -189,13 +189,13 @@ class Config implements IConfig.Main {
       this.server.isProduction = true;
     }
     if (process.env.PORT) {
-      let port = parseInt(process.env.PORT, 10);
+      const port = parseInt(process.env.PORT, 10);
       if (!isNaN(port) && port > 0) {
         this.server.port = port;
       }
     }
     if (process.env.COOKIE_MAX_AGE) {
-      let maxAge = parseInt(process.env.COOKIE_MAX_AGE, 10);
+      const maxAge = parseInt(process.env.COOKIE_MAX_AGE, 10);
       if (!isNaN(maxAge) && maxAge > 0) {
         this.server.cookieMaxAge = maxAge;
       }
@@ -204,7 +204,7 @@ class Config implements IConfig.Main {
       this.server.cookieSecureOnly = true;
     }
     if (process.env.PASSWORD_RESET_EXPIRATION) {
-      let expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION, 10);
+      const expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION, 10);
       if (!isNaN(expirationTime) && expirationTime > 0) {
         this.server.passwordResetExpiration = expirationTime;
       }
@@ -228,7 +228,7 @@ class Config implements IConfig.Main {
   }
 }
 
-export let config = new Config();
+export const config = new Config();
 
 //
 // Constants
@@ -238,6 +238,7 @@ export const VERSION_NUMBER = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf8")
 ).version;
 export const VERSION_HASH = fs.existsSync(".git") ? require("git-rev-sync").short() : "";
+
 export const COOKIE_OPTIONS = {
   path: "/",
   maxAge: config.server.cookieMaxAge,
@@ -248,7 +249,6 @@ export const COOKIE_OPTIONS = {
 //
 // Database connection
 //
-import mongoose from "mongoose";
 mongoose
   .connect(config.database.mongoURL, {
     useNewUrlParser: true,

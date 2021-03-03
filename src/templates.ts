@@ -43,20 +43,16 @@ Handlebars.registerHelper("attr", (name: string, value: string): string => {
   if (value) {
     value = value.replace(/"/g, "&quot;");
     return `${name}="${value}"`;
-  } else {
-    return "";
   }
+  return "";
 });
 
-Handlebars.registerHelper("join", <T>(arr: T[]): string => {
-  return arr.join(", ");
-});
+Handlebars.registerHelper("join", <T>(arr: T[]): string => arr.join(", "));
 
 Handlebars.registerHelper(
   "formatName",
-  (name: { first: string; preferred: string; last: string }): string => {
-    return formatName({ name } as IUser);
-  }
+  (name: { first: string; preferred: string; last: string }): string =>
+    formatName({ name } as IUser)
 );
 
 if (config.server.isProduction) {
@@ -74,7 +70,7 @@ export class Template<T extends TemplateContent> {
   }
 
   private loadTemplate(): void {
-    let data = fs.readFileSync(path.resolve(__dirname, "templates", this.file), "utf8");
+    const data = fs.readFileSync(path.resolve(__dirname, "templates", this.file), "utf8");
     this.template = Handlebars.compile(data);
   }
 

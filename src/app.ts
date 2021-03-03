@@ -1,3 +1,4 @@
+/* eslint-disable import/first, import/order, import/no-extraneous-dependencies */
 import express from "express";
 import compression from "compression";
 import cookieParser from "cookie-parser";
@@ -10,19 +11,11 @@ import * as Sentry from "@sentry/node";
 import helmet from "helmet";
 import favicon from "serve-favicon";
 
-import {
-  // Constants
-  PORT,
-  VERSION_NUMBER,
-  VERSION_HASH,
-  COOKIE_OPTIONS,
-  // Configuration
-  config,
-} from "./common";
+import { PORT, VERSION_NUMBER, VERSION_HASH, COOKIE_OPTIONS, config } from "./common";
 import { ErrorTemplate } from "./templates";
 
 // Set up Express and its middleware
-export let app = express();
+export const app = express();
 
 // Sentry setup
 if (config.secrets.sentryDSN) {
@@ -36,13 +29,13 @@ if (config.secrets.sentryDSN) {
   );
 }
 
-morgan.token("sessionid", (request: express.Request, response) => {
+morgan.token("sessionid", (request: express.Request) => {
   const FAILURE_MESSAGE = "Unknown session";
-  if (!request.cookies["groundtruthid"]) {
+  if (!request.cookies.groundtruthid) {
     return FAILURE_MESSAGE;
   }
-  let rawID: string = request.cookies["groundtruthid"].slice(2);
-  let id = cookieSignature.unsign(rawID, config.secrets.session);
+  const rawID: string = request.cookies.groundtruthid.slice(2);
+  const id = cookieSignature.unsign(rawID, config.secrets.session);
   if (typeof id === "string") {
     return id;
   }
@@ -107,9 +100,11 @@ import "./auth/auth";
 
 // Auth needs to be the first route configured or else requests handled before it will always be unauthenticated
 import { authRouter } from "./routes/auth";
+
 app.use("/auth", authRouter);
 
 import { OAuthRouter } from "./routes/oauth";
+
 app.use("/oauth", OAuthRouter);
 
 import { appsRouter } from "./routes/api/apps";
@@ -137,6 +132,7 @@ app.route("/version").get((request, response) => {
 });
 
 import { uiRoutes } from "./routes/ui";
+
 app.use("/", uiRoutes);
 
 // The sentry error handler must be before any other error middleware and after all controllers
@@ -150,20 +146,20 @@ app.use(
     error: any,
     request: express.Request,
     response: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction // eslint-disable-line @typescript-eslint/no-unused-vars
   ) => {
     // Error code by csurf when CSRF token validation fails
-    if (error.code == "EBADCSRFTOKEN") {
+    if (error.code === "EBADCSRFTOKEN") {
       response.status(403).json({ error: "User is not authorized" });
       return;
     }
 
     console.error(error.stack);
-    let templateData = {
+    const templateData = {
       title: "Server Error",
       errorTitle: "An Error Occurred",
       errorSubtitle: "Sorry, something went wrong. Please try again later.",
-      errorMessage: "Error Message: " + error.message,
+      errorMessage: `Error Message: ${error.message}`,
       button: true,
     };
 

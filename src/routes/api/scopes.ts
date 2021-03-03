@@ -4,7 +4,7 @@ import csrf from "csurf";
 import { createNew, Scope, IScope } from "../../schema";
 import { isAdmin, rateLimit } from "../middleware";
 
-export let scopesRouter = express.Router();
+export const scopesRouter = express.Router();
 
 scopesRouter.use(rateLimit["api-admin"]);
 scopesRouter.use(isAdmin);
@@ -16,12 +16,12 @@ scopesRouter.post("/", async (request, response) => {
       return (request.body[name] || "").trim();
     }
 
-    let name = getParam("name").toLowerCase().replace(/ /g, "-").replace(/,/, "");
-    let question = getParam("question");
-    let type = getParam("type");
-    let validatorCode: string | undefined = request.body.validatorCode;
-    let errorMessage: string | undefined = request.body.errorMessage;
-    let icon: string | undefined = getParam("icon") || undefined;
+    const name = getParam("name").toLowerCase().replace(/ /g, "-").replace(/,/, "");
+    const question = getParam("question");
+    const type = getParam("type");
+    const { validatorCode } = request.body;
+    const { errorMessage } = request.body;
+    const icon: string | undefined = getParam("icon") || undefined;
 
     if (!name || !question || !type) {
       response.status(400).json({
@@ -62,7 +62,7 @@ scopesRouter.post("/", async (request, response) => {
 
 scopesRouter.delete("/:id", async (request, response) => {
   try {
-    let scope = await Scope.findById(request.params.id);
+    const scope = await Scope.findById(request.params.id);
     if (!scope) {
       response.status(400).json({
         error: "Invalid scope ID",

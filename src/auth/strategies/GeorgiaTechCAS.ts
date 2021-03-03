@@ -30,7 +30,7 @@ export class GeorgiaTechCAS implements RegistrationStrategy {
   public readonly name = "gatech";
 
   constructor() {
-    let options: CASStrategyOptions = {
+    const options: CASStrategyOptions = {
       casURL: config.secrets.gatech.url,
       passReqToCallback: true,
     };
@@ -59,7 +59,7 @@ export class GeorgiaTechCAS implements RegistrationStrategy {
       return;
     }
 
-    let serviceEmail = `${username}@${config.secrets.gatech.emailDomain}`;
+    const serviceEmail = `${username}@${config.secrets.gatech.emailDomain}`;
 
     ExternalServiceCallback(request, this.name, username, username, serviceEmail, done);
   }
