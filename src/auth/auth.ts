@@ -14,49 +14,51 @@ const MongoStore = connectMongo(session);
 import { app } from "../app";
 
 if (!config.server.isProduction) {
-    console.warn("OAuth callback(s) running in development mode");
+  console.warn("OAuth callback(s) running in development mode");
 } else {
-    app.enable("trust proxy");
+  app.enable("trust proxy");
 }
 
 if (!config.secrets.session) {
-    console.warn("No session secret set; sessions won't carry over server restarts");
+  console.warn("No session secret set; sessions won't carry over server restarts");
 }
 
-app.use(session({
+app.use(
+  session({
     name: "groundtruthid",
     secret: config.secrets.session,
     cookie: COOKIE_OPTIONS,
     resave: false,
     store: new MongoStore({
-        mongooseConnection: mongoose.connection,
-        touchAfter: 24 * 60 * 60 // Check for TTL every 24 hours at minimum
+      mongooseConnection: mongoose.connection,
+      touchAfter: 24 * 60 * 60, // Check for TTL every 24 hours at minimum
     }),
-    saveUninitialized: false
-}));
+    saveUninitialized: false,
+  })
+);
 
 passport.serializeUser<IUser, string>((user, done) => {
-    done(null, user._id.toString());
+  done(null, user._id.toString());
 });
 passport.deserializeUser<IUser, string>((id, done) => {
-    User.findById(id, (err, user) => {
-        done(err, user!);
-    });
+  User.findById(id, (err, user) => {
+    done(err, user!);
+  });
 });
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.all("/logout", (request, response) => {
-    request.logout();
+  request.logout();
 
-    if (request.session) {
-        request.session.destroy(() => {
-            response.redirect("/login");
-        });
-    } else {
-        response.redirect("/login");
-    }
+  if (request.session) {
+    request.session.destroy(() => {
+      response.redirect("/login");
+    });
+  } else {
+    response.redirect("/login");
+  }
 });
 
 /**
@@ -70,22 +72,30 @@ app.all("/logout", (request, response) => {
  * to the `Authorization` header). While this approach is not recommended by
  * the specification, in practice it is quite common.
  */
-async function verifyClient(clientID: string, clientSecret: string, done: (err: Error | null, client?: IOAuthClient | false) => void) {
-    try {
-        let client = await OAuthClient.findOne({ clientID });
+async function verifyClient(
+  clientID: string,
+  clientSecret: string,
+  done: (err: Error | null, client?: IOAuthClient | false) => void
+) {
+  try {
+    let client = await OAuthClient.findOne({ clientID });
 
-        // Private apps must have a matching client secret
-        // Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
-        if (!client || (!client.public && client.clientSecret !== clientSecret)) {
-            console.warn(`Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"})`);
-            done(null, false);
-            return;
-        }
-
-        done(null, client);
-    } catch (err) {
-        done(err);
+    // Private apps must have a matching client secret
+    // Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
+    if (!client || (!client.public && client.clientSecret !== clientSecret)) {
+      console.warn(
+        `Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${
+          client ? !!client.public : "Not found"
+        })`
+      );
+      done(null, false);
+      return;
     }
+
+    done(null, client);
+  } catch (err) {
+    done(err);
+  }
 }
 passport.use(new BasicStrategy(verifyClient));
 passport.use(new ClientPasswordStrategy(verifyClient));
@@ -98,24 +108,26 @@ passport.use(new ClientPasswordStrategy(verifyClient));
  * application, which is issued an access token to make requests on behalf of
  * the authorizing user.
  */
-passport.use(new BearerStrategy(async (rawToken, done) => {
+passport.use(
+  new BearerStrategy(async (rawToken, done) => {
     try {
-        let token = await AccessToken.findOne({ token: rawToken });
-        if (!token) {
-            console.warn(`Invalid token: ${rawToken}`);
-            done(null, false);
-            return;
-        }
+      let token = await AccessToken.findOne({ token: rawToken });
+      if (!token) {
+        console.warn(`Invalid token: ${rawToken}`);
+        done(null, false);
+        return;
+      }
 
-        let user = await User.findOne({ uuid: token.uuid });
-        if (!user) {
-            console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
-            done(null, false);
-            return;
-        }
+      let user = await User.findOne({ uuid: token.uuid });
+      if (!user) {
+        console.warn(`Valid token mapped to non-existent user: ${token.uuid} (token: ${rawToken})`);
+        done(null, false);
+        return;
+      }
 
-        done(null, user, { scope: token.scopes, message: "" });
+      done(null, user, { scope: token.scopes, message: "" });
     } catch (err) {
-        done(err);
+      done(err);
     }
-}));
+  })
+);
