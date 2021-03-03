@@ -43,8 +43,8 @@ Additionally, Ground Truth can use environment variables for setup for use in pr
 
 After filling in the config file or the environment variables, follow these steps:
 
-1. `npm install`
-2. `npm run dev`
+1. `yarn install`
+2. `yarn dev`
 
 ## How do I use it?
 
@@ -115,7 +115,7 @@ After authorization, use the `/api/user` endpoint via GET to access user data. A
 ## OAuth API Reference
 
 ### GET `/oauth/authorize`
-Endpoint to start OAuth flow 
+Endpoint to start OAuth flow
 | Parameter | Description |
 |---|---|
 | `response_type` | Tells the authorization server which grant to execute |
