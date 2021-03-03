@@ -70,6 +70,7 @@ OAuthRouter.get(
 
     const scopes: IScopeWithValue[] = [];
     for (const scopeName of requestScopes) {
+      // eslint-disable-next-line no-await-in-loop
       const scope = await Scope.findOne({ name: scopeName });
       if (scope) {
         const userScope: string | undefined = (user.scopes || {})[scopeName];
@@ -141,10 +142,11 @@ OAuthRouter.post(
     for (const scope of scopes) {
       const scopeValue = request.body[`scope-${scope}`];
       if (scopeValue) {
+        // eslint-disable-next-line no-await-in-loop
         const scopeDetails = await Scope.findOne({ name: scope });
         if (!scopeDetails) {
           request.flash("error", `Scope "${scope}" is not specified in DB`);
-          response.redirect(request.session.authorizeURL!);
+          response.redirect(request.session.authorizeURL || "/login");
           return;
         }
         if (scopeDetails.validator && scopeDetails.validator.code) {
@@ -164,12 +166,12 @@ OAuthRouter.post(
                 "error",
                 `Error validating "${scope}": ${scopeDetails.validator.errorMessage}`
               );
-              response.redirect(request.session.authorizeURL!);
+              response.redirect(request.session.authorizeURL || "/login");
               return;
             }
           } catch {
             request.flash("error", `An error occurred while validating scope "${scope}"`);
-            response.redirect(request.session.authorizeURL!);
+            response.redirect(request.session.authorizeURL || "/login");
             return;
           }
         }
@@ -179,7 +181,7 @@ OAuthRouter.post(
         user.scopes[scope] = scopeValue;
       } else {
         request.flash("error", "All data fields must be filled out");
-        response.redirect(request.session.authorizeURL!);
+        response.redirect(request.session.authorizeURL || "/login");
         return;
       }
     }

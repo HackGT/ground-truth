@@ -13,7 +13,7 @@ import {
   OAuthClient,
 } from "../schema";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, camelcase
+// eslint-disable-next-line camelcase, @typescript-eslint/no-var-requires
 const oauth2orize_pkce = require("oauth2orize-pkce");
 
 export const server = oauth2orize.createServer();
@@ -144,7 +144,7 @@ server.exchange(
             .update(codeVerifier)
             .digest()
             .toString("base64")
-            .replace(/\=/g, "")
+            .replace(/=/g, "")
             .replace(/\+/g, "-")
             .replace(/\//g, "_");
         }

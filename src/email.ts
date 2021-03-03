@@ -1,4 +1,4 @@
-import * as htmlToText from "html-to-text";
+import { htmlToText } from "html-to-text";
 import * as path from "path";
 import * as crypto from "crypto";
 import marked from "marked";
@@ -9,6 +9,7 @@ import { config } from "./common";
 import { IUser, Model } from "./schema";
 import { createLink } from "./auth/strategies/util";
 
+// eslint-disable-next-line camelcase, @typescript-eslint/no-var-requires
 const Email = require("email-templates");
 
 sendgrid.setApiKey(config.email.key);
@@ -51,7 +52,7 @@ export function formatName(user: IUser): string {
 const renderer = new marked.Renderer();
 const singleLineRenderer = new marked.Renderer();
 singleLineRenderer.link = (href, title, text) =>
-  `<a target=\"_blank\" href=\"${href}\" title=\"${title || ""}\">${text}</a>`;
+  `<a target="_blank" href="${href}" title="${title || ""}">${text}</a>`;
 singleLineRenderer.paragraph = text => text;
 
 export async function renderMarkdown(
@@ -76,18 +77,18 @@ export async function renderMarkdown(
 }
 
 async function templateMarkdown(markdown: string, user: IUser): Promise<string> {
-  markdown = markdown.replace(/{{email}}/g, sanitize(user.email));
-  markdown = markdown.replace(/{{name}}/g, sanitize(formatName(user)));
-  markdown = markdown.replace(/{{firstName}}/g, sanitize(user.name.first));
-  markdown = markdown.replace(/{{preferredName}}/g, sanitize(user.name.preferred));
-  markdown = markdown.replace(/{{lastName}}/g, sanitize(user.name.last));
-  return markdown;
+  return markdown
+    .replace(/{{email}}/g, sanitize(user.email))
+    .replace(/{{name}}/g, sanitize(formatName(user)))
+    .replace(/{{firstName}}/g, sanitize(user.name.first))
+    .replace(/{{preferredName}}/g, sanitize(user.name.preferred))
+    .replace(/{{lastName}}/g, sanitize(user.name.last));
 }
 
 export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
-  markdown = await templateMarkdown(markdown, user);
+  const templatedMarkdown = await templateMarkdown(markdown, user);
+  const renderedMarkdown = await renderMarkdown(templatedMarkdown);
 
-  const renderedMarkdown = await renderMarkdown(markdown);
   return email.render("email-template/html", {
     emailHeaderImage: config.email.headerImage,
     twitterHandle: config.email.twitterHandle,
@@ -101,7 +102,7 @@ export async function renderEmailHTML(markdown: string, user: IUser): Promise<st
 export async function renderEmailText(markdown: string, user: IUser): Promise<string> {
   const templatedMarkdown = await templateMarkdown(markdown, user);
   const renderedHtml = await renderMarkdown(templatedMarkdown);
-  return htmlToText.fromString(renderedHtml);
+  return htmlToText(renderedHtml);
 }
 
 export function resendVerificationEmailLink(request: Request, uuid: string): string {
@@ -111,10 +112,12 @@ export function resendVerificationEmailLink(request: Request, uuid: string): str
 
 export async function sendVerificationEmail(request: Request, user: Model<IUser>) {
   if (user.verifiedEmail) return;
-  // Send verification email (hostname validated by previous middleware)
+
+  // eslint-disable-next-line no-param-reassign
   user.emailVerificationCode = crypto.randomBytes(32).toString("hex");
   await user.save();
 
+  // Send verification email (hostname validated by previous middleware)
   const link = createLink(request, `/auth/verify/${user.emailVerificationCode}`);
   const markdown = `Hi {{name}},
 

@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import * as util from "util";
 import * as crypto from "crypto";
 import * as path from "path";
@@ -5,7 +6,7 @@ import moment from "moment";
 import passport from "passport";
 import { Request, Router } from "express";
 import { Strategy as LocalStrategy } from "passport-local";
-import passwordValidator from "password-validator";
+import PasswordValidator from "password-validator";
 
 import { config } from "../../common";
 import { authenticateWithRedirect, rateLimit, verifyRecaptcha } from "../../routes/middleware";
@@ -31,7 +32,7 @@ const pbkdf2Async = async (
   util.promisify(crypto.pbkdf2).call(null, password, salt, rounds, 128, "sha256");
 
 // There is also frontend validation that should be changed accordingly
-const passwordSchema = new passwordValidator();
+const passwordSchema = new PasswordValidator();
 passwordSchema
   .is()
   .min(8) // Minimum length 8
@@ -66,8 +67,8 @@ export class Local implements RegistrationStrategy {
     password: string,
     done: PassportDone
   ) {
-    email = email.trim().toLowerCase();
-    let user = await User.findOne({ email });
+    const trimmedEmail = email.trim().toLowerCase();
+    let user = await User.findOne({ email: trimmedEmail });
 
     if (user && request.path.match(/\/signup$/i)) {
       done(null, false, { message: "That email address is already in use" });
@@ -85,7 +86,7 @@ export class Local implements RegistrationStrategy {
       const { preferredName } = request.body;
       const lastName: string = request.body.lastName || "";
 
-      if (!email) {
+      if (!trimmedEmail) {
         done(null, false, { message: "Missing email" });
         return;
       }
@@ -109,7 +110,7 @@ export class Local implements RegistrationStrategy {
       const hash = await pbkdf2Async(password, salt, PBKDF2_ROUNDS);
       user = createNew<IUser>(User, {
         ...OAuthStrategy.defaultUserProperties,
-        email,
+        email: trimmedEmail,
         name: {
           first: firstName,
           preferred: preferredName,
@@ -294,7 +295,7 @@ The ${config.server.name} Team.`;
       verifyRecaptcha("/login/forgot/:code"),
       async (request, response) => {
         const user = await User.findOne({ "local.resetCode": request.params.code });
-        if (!user) {
+        if (!user || !user.local) {
           request.flash("error", "Invalid password reset code");
           response.redirect("/login");
           return;
@@ -305,11 +306,11 @@ The ${config.server.name} Team.`;
           "milliseconds"
         );
         if (
-          !user.local!.resetCode ||
-          moment().isAfter(moment(user.local!.resetRequestedTime).add(expirationDuration))
+          !user.local.resetCode ||
+          moment().isAfter(moment(user.local.resetRequestedTime).add(expirationDuration))
         ) {
           request.flash("error", "Your password reset link has expired. Please request a new one.");
-          user.local!.resetCode = undefined;
+          user.local.resetCode = undefined;
           await user.save();
           response.redirect("/login");
           return;
@@ -341,9 +342,9 @@ The ${config.server.name} Team.`;
         const hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
 
         try {
-          user.local!.salt = salt.toString("hex");
-          user.local!.hash = hash.toString("hex");
-          user.local!.resetCode = undefined;
+          user.local.salt = salt.toString("hex");
+          user.local.hash = hash.toString("hex");
+          user.local.resetCode = undefined;
           await user.save();
 
           request.flash("success", "Password reset successfully. You can now log in.");
@@ -363,7 +364,7 @@ The ${config.server.name} Team.`;
       verifyRecaptcha("/login/changepassword"),
       authenticateWithRedirect,
       async (request, response) => {
-        const user = await User.findOne({ uuid: request.user!.uuid });
+        const user = await User.findOne({ uuid: request.user?.uuid });
         if (!user) {
           request.flash("error", "User not logged in");
           response.redirect("/login");
@@ -412,9 +413,9 @@ The ${config.server.name} Team.`;
         const hash = await pbkdf2Async(password1, salt, PBKDF2_ROUNDS);
 
         try {
-          user.local!.salt = salt.toString("hex");
-          user.local!.hash = hash.toString("hex");
-          user.local!.resetCode = undefined;
+          user.local.salt = salt.toString("hex");
+          user.local.hash = hash.toString("hex");
+          user.local.resetCode = undefined;
           await user.save();
 
           response.redirect("/");

@@ -88,7 +88,8 @@ uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
   if (
     !user.local ||
     !user.local.resetCode ||
-    Date.now() - user.local.resetRequestedTime!.valueOf() > config.server.passwordResetExpiration
+    !user.local.resetRequestedTime ||
+    Date.now() - user.local.resetRequestedTime.valueOf() > config.server.passwordResetExpiration
   ) {
     request.flash("error", "Your password reset link has expired. Please request a new one.");
     if (user.local) {
@@ -104,7 +105,7 @@ uiRoutes.route("/login/forgot/:code").get(csrf(), async (request, response) => {
 
     error: request.flash("error"),
     success: request.flash("success"),
-    resetCode: user.local!.resetCode!,
+    resetCode: user.local.resetCode,
 
     csrfToken: request.csrfToken(),
     recaptchaSiteKey: config.secrets.recaptcha.siteKey,
@@ -144,6 +145,7 @@ uiRoutes.route("/admin").get(isAdmin, csrf(), async (request, response) => {
 
     apps: await Promise.all(
       (await OAuthClient.find().lean()).map(async (client: any) => {
+        // eslint-disable-next-line no-param-reassign
         client.tokens = await AccessToken.countDocuments({ clientID: client.clientID });
         return client;
       })

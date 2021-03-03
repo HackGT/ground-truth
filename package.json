@@ -8,7 +8,7 @@
     "start": "node dist/app.js",
     "debug": "node --nolazy --inspect-brk=9229 src/app.js",
     "dev": "nodemon --watch 'src/**/*' -e ts,js,hbs,css --exec 'ts-node' src/app.ts",
-    "lint": "eslint ./ --fix; prettier ./ --write"
+    "lint": "eslint ./src --fix; prettier ./src --write"
   },
   "repository": {
     "type": "git",
@@ -67,9 +67,9 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
-    "@hex-labs/eslint-config": "^1.0.0",
-    "@hex-labs/prettier-config": "^1.0.0",
-    "@hex-labs/tsconfig": "^1.0.0",
+    "@hex-labs/eslint-config": "^1.1.0",
+    "@hex-labs/prettier-config": "^1.1.0",
+    "@hex-labs/tsconfig": "^1.1.0",
     "@types/compression": "1.7.0",
     "@types/connect-flash": "0.0.36",
     "@types/connect-mongo": "3.1.2",

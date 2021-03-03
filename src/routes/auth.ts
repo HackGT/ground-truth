@@ -23,11 +23,11 @@ for (const methodName of config.loginMethods) {
     console.error(
       `Authentication method "${methodName}" is not available. Did you add it to the exported list of strategies?`
     );
-    continue;
+  } else {
+    const method = new strategies[methodName]();
+    authenticationMethods.push(method);
+    method.use(authRouter);
   }
-  const method = new strategies[methodName]();
-  authenticationMethods.push(method);
-  method.use(authRouter);
 }
 
 authRouter.get("/validatehost/:nonce", (request, response) => {

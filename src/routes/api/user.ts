@@ -31,10 +31,8 @@ userRouter.post(
   passport.authenticate("bearer", { session: false }),
   async (request, response) => {
     const user = request.user as IUser;
-    const existingTokens = await AccessToken.find({ uuid: user.uuid });
-    for (const token of existingTokens) {
-      await token.remove();
-    }
+
+    AccessToken.deleteMany({ uuid: user.uuid });
 
     const userDB = await User.findOne({ uuid: user.uuid });
     if (userDB) {

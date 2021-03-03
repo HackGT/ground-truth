@@ -9,6 +9,20 @@ import { sendVerificationEmail, resendVerificationEmailLink } from "../../email"
 import { OAuthStrategy } from "./OAuthStrategy";
 import { PassportDone } from "./types";
 
+/* eslint-disable no-param-reassign */
+export async function checkAndSetAdmin(user: Model<IUser>) {
+  if (!user.verifiedEmail) return;
+
+  const domain = user.email.split("@").pop();
+  if (!domain) return;
+
+  if (config.server.adminDomains.includes(domain) || config.server.admins.includes(user.email)) {
+    user.member = true;
+    user.admin = true;
+    await user.save();
+  }
+}
+
 export async function ExternalServiceCallback(
   request: Request,
   serviceName: IConfig.OAuthServices | IConfig.CASServices,
@@ -123,19 +137,6 @@ export async function ExternalServiceCallback(
   done(null, user);
 }
 
-export async function checkAndSetAdmin(user: Model<IUser>) {
-  if (!user.verifiedEmail) return;
-
-  const domain = user.email.split("@").pop();
-  if (!domain) return;
-
-  if (config.server.adminDomains.includes(domain) || config.server.admins.includes(user.email)) {
-    user.member = true;
-    user.admin = true;
-    await user.save();
-  }
-}
-
 // Authentication helpers
 export function getExternalPort(request: Request): number {
   function defaultPort(): number {
@@ -152,7 +153,7 @@ export function getExternalPort(request: Request): number {
   const offset = host[0] === "[" ? host.indexOf("]") + 1 : 0;
   const index = host.indexOf(":", offset);
   if (index !== -1) {
-    return parseInt(host.substring(index + 1), 10);
+    return parseInt(host.substring(index + 1));
   }
   return defaultPort();
 }
@@ -174,7 +175,9 @@ export function validateAndCacheHostName(request: Request, response: Response, n
     }
     message.setEncoding("utf8");
     let data = "";
-    message.on("data", chunk => (data += chunk));
+    message.on("data", chunk => {
+      data += chunk;
+    });
     message.on("end", () => {
       const localHMAC = crypto
         .createHmac("sha256", config.secrets.session)
@@ -210,16 +213,15 @@ export function validateAndCacheHostName(request: Request, response: Response, n
 }
 
 export function createLink(request: Request, link: string): string {
-  if (link[0] === "/") {
-    link = link.substring(1);
-  }
+  const cleanedLink = link[0] === "/" ? link.substring(1) : link;
+
   if (
     (request.secure && getExternalPort(request) === 443) ||
     (!request.secure && getExternalPort(request) === 80)
   ) {
-    return `http${request.secure ? "s" : ""}://${request.hostname}/${link}`;
+    return `http${request.secure ? "s" : ""}://${request.hostname}/${cleanedLink}`;
   }
   return `http${request.secure ? "s" : ""}://${request.hostname}:${getExternalPort(
     request
-  )}/${link}`;
+  )}/${cleanedLink}`;
 }

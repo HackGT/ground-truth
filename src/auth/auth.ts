@@ -82,7 +82,8 @@ async function verifyClient(
     // Public apps will verify their code challenge in the exchange step (where auth codes are exchanged for tokens)
     if (!client || (!client.public && client.clientSecret !== clientSecret)) {
       console.warn(
-        `Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${client ? !!client.public : "Not found"
+        `Unauthorized client: ${clientID} (secret: ${clientSecret}, public: ${
+          client ? !!client.public : "Not found"
         })`
       );
       done(null, false);

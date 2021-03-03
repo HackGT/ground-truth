@@ -18,21 +18,24 @@ export interface TemplateContent {
 
 // tslint:disable-next-line:no-any
 // tslint:disable:no-invalid-this
-Handlebars.registerHelper("ifCond", function (this: any, v1: any, v2: any, options: any) {
+Handlebars.registerHelper("ifCond", function ifCond(this: any, v1: any, v2: any, options: any) {
   if (v1 === v2) {
     return options.fn(this);
   }
   return options.inverse(this);
 });
 
-Handlebars.registerHelper("ifNotCond", function (this: any, v1: any, v2: any, options: any) {
-  if (v1 === v2) {
-    return options.inverse(this);
+Handlebars.registerHelper(
+  "ifNotCond",
+  function ifNotCond(this: any, v1: any, v2: any, options: any) {
+    if (v1 === v2) {
+      return options.inverse(this);
+    }
+    return options.fn(this);
   }
-  return options.fn(this);
-});
+);
 
-Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], options: any) {
+Handlebars.registerHelper("ifIn", function ifIn<T>(this: any, elem: T, list: T[], options: any) {
   if (list.includes(elem)) {
     return options.fn(this);
   }
@@ -41,8 +44,7 @@ Handlebars.registerHelper("ifIn", function <T>(this: any, elem: T, list: T[], op
 
 Handlebars.registerHelper("attr", (name: string, value: string): string => {
   if (value) {
-    value = value.replace(/"/g, "&quot;");
-    return `${name}="${value}"`;
+    return `${name}="${value.replace(/"/g, "&quot;")}"`;
   }
   return "";
 });
@@ -88,7 +90,7 @@ export class Template<T extends TemplateContent> {
       includeJS: null,
       ...input,
     } as T;
-    return this.template!(renderData);
+    return this.template?.(renderData) || "";
   }
 }
 

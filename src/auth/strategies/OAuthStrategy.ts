@@ -48,6 +48,7 @@ export abstract class OAuthStrategy implements RegistrationStrategy {
     };
   }
 
+  /* eslint-disable new-cap */
   constructor(
     public readonly name: IConfig.OAuthServices,
     strategy: StrategyConstructor,

@@ -12,16 +12,12 @@ scopesRouter.use(csrf());
 
 scopesRouter.post("/", async (request, response) => {
   try {
-    function getParam(name: string): string {
-      return (request.body[name] || "").trim();
-    }
+    const getParam = (name: string): string => (request.body[name] || "").trim();
 
     const name = getParam("name").toLowerCase().replace(/ /g, "-").replace(/,/, "");
     const question = getParam("question");
     const type = getParam("type");
-    const { validatorCode } = request.body;
-    const { errorMessage } = request.body;
-    const icon: string | undefined = getParam("icon") || undefined;
+    const icon = getParam("icon") || undefined;
 
     if (!name || !question || !type) {
       response.status(400).json({
@@ -30,6 +26,9 @@ scopesRouter.post("/", async (request, response) => {
       return;
     }
 
+    const { validatorCode } = request.body;
+    const { errorMessage } = request.body;
+
     if ((validatorCode && !errorMessage) || (!validatorCode && errorMessage)) {
       response.status(400).json({
         error: "Validator code and corresponding error message cannot appear individually",
@@ -37,17 +36,19 @@ scopesRouter.post("/", async (request, response) => {
       return;
     }
 
+    const validator = validatorCode
+      ? {
+          code: validatorCode,
+          errorMessage: errorMessage || "",
+        }
+      : undefined;
+
     await createNew<IScope>(Scope, {
       name,
       question,
       type,
-      validator: validatorCode
-        ? {
-            code: validatorCode,
-            errorMessage: errorMessage!,
-          }
-        : undefined,
       icon,
+      validator,
     }).save();
     response.json({
       success: true,

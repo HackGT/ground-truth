@@ -858,10 +858,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.1.1.tgz#9daf5745156fd84b8e9889a2dc721f0c58e894aa"
   integrity sha512-CAEbWH7OIur6jEOzaai83jq3FmKmv4PmX1JYfs9IrYcGEVI/lyL1EXJGCj7eFVJ0bg5QR8LMxBlEtA+xKiLpFw==
 
-"@hex-labs/eslint-config@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@hex-labs/eslint-config/-/eslint-config-1.0.0.tgz#60551548f3658487558e471863d92fd57dab1bda"
-  integrity sha512-WLF1HLX2GkxbW+YUU+n1ziHB7RdG6l5oopV6yMsIkkw/BoTUKIeqCFe62kbYsEzosyeoQEvMYIt10jLLPdI0VQ==
+"@hex-labs/eslint-config@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@hex-labs/eslint-config/-/eslint-config-1.1.0.tgz#6d353cc622cab632da83eb9198190c3580b3b245"
+  integrity sha512-U6/TZ/LuAV/vqkjhyCv8skgFNUvT/AxlUX6ph/ep5gEgBDw98K/+oDkZwKgTyM+id+NY6HrGPUJbxKpejKldvA==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^4.9.0"
     "@typescript-eslint/parser" "^4.13.0"
@@ -869,15 +869,15 @@
     eslint-config-prettier "^7.1.0"
     eslint-plugin-import "^2.22.1"
 
-"@hex-labs/prettier-config@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@hex-labs/prettier-config/-/prettier-config-1.0.0.tgz#87b08b25a3c4f4bc07287996d15fa6b3baaa650f"
-  integrity sha512-smqJCLUjzNvEnzfOeDzSWb5NurJ63BisA+Wi2RYVhhcnPJmoaEXRqwx2+cb1fuMH5lX86B5Lvd+7FaHUxBROLg==
+"@hex-labs/prettier-config@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@hex-labs/prettier-config/-/prettier-config-1.1.0.tgz#31a9de06092b7584107bf30c417acf281dca99dd"
+  integrity sha512-aaXlcet9wmmOj976eJQvWRyl2PAIvg1AwOyJUrwMGcyKLRgkDkx6/SHrPeVmnHcxlzb86Tmg5Dif1kiosjwvqA==
 
-"@hex-labs/tsconfig@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@hex-labs/tsconfig/-/tsconfig-1.0.0.tgz#0722f0645ba86905817f7f34eed0f596ed689ecb"
-  integrity sha512-SbUbdrHxE/kA+j5rlH3SWjuqocsMDdzw39wnPYaDpazMveSu3YuT6WE3o2TvD3aygcBE8ZD/d50NaVms22p1cw==
+"@hex-labs/tsconfig@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@hex-labs/tsconfig/-/tsconfig-1.1.0.tgz#045be991bd552f9830986ee81008b17276654076"
+  integrity sha512-cmZNmnYlxNj2XzO1RXgVXQNmpFuzNx7TgTg+jlYBHcC8GzmUkxV+DUdQd5GBdbr8UXT1t8stJserQIWPaPfAsA==
 
 "@ladjs/i18n@^7.0.1":
   version "7.1.0"

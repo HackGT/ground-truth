@@ -1,3 +1,4 @@
+/* eslint-disable no-alert, no-restricted-globals */
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
 // Navigation tab handlers
@@ -6,7 +7,7 @@ const navigationTabs = document.getElementById("admin-navigation").getElementsBy
 for (let index = 0; index < navigationTabs.length; index++) {
   const currentTab = navigationTabs[index];
 
-  currentTab.addEventListener("click", async e => {
+  currentTab.addEventListener("click", async () => {
     const tabContents = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContents.length; i++) {
       tabContents[i].style.display = "none";
@@ -29,7 +30,7 @@ document.getElementById(activeTabName || "admin-tab-1").click();
 function setUpHandlers(classname, handler) {
   const buttons = document.getElementsByClassName(classname);
   for (let i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener("click", async e => {
+    buttons[i].addEventListener("click", async () => {
       buttons[i].disabled = true;
 
       try {
@@ -61,7 +62,7 @@ async function sendRequest(url, method, data) {
     options.headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
   }
 
-  const response = await fetch(url, options).then(response => response.json());
+  const response = await fetch(url, options).then(res => res.json());
   if (!response.success) {
     alert(response.error);
   } else {
@@ -86,7 +87,7 @@ setUpHandlers("edit-redirects", async (id, button) => {
 
   await sendRequest(`/api/apps/${id}/redirects`, "PUT", { redirectURIs: uris.trim() });
 });
-setUpHandlers("regenerate-secret", async (id, button) => {
+setUpHandlers("regenerate-secret", async id => {
   if (
     !confirm(
       "Are you sure you want to regenerate this app's client secret? This will require reconfiguring this application with the newly generated secret."
@@ -96,7 +97,7 @@ setUpHandlers("regenerate-secret", async (id, button) => {
 
   await sendRequest(`/api/apps/${id}/regenerate`, "PUT");
 });
-setUpHandlers("delete-app", async (id, button) => {
+setUpHandlers("delete-app", async id => {
   if (!confirm("Are you sure you want to delete this app?")) return;
 
   await sendRequest(`/api/apps/${id}`, "DELETE");
@@ -106,7 +107,7 @@ setUpHandlers("delete-app", async (id, button) => {
 const secretArrows = document.getElementsByClassName("secret-arrow");
 const secretSpans = document.getElementsByClassName("secret-container");
 for (let i = 0; i < secretArrows.length; i++) {
-  secretArrows[i].addEventListener("click", async e => {
+  secretArrows[i].addEventListener("click", async () => {
     secretSpans[i].classList.toggle("is-hidden");
 
     const arrowIcon = secretArrows[i].children[0];
@@ -141,7 +142,7 @@ addApplicationButton.addEventListener("click", async () => {
 });
 
 // SCOPES TAB
-setUpHandlers("delete-scope", async (id, button) => {
+setUpHandlers("delete-scope", async id => {
   if (!confirm("Are you sure you want to delete this scope?")) return;
 
   await sendRequest(`/api/scopes/${id}`, "DELETE");

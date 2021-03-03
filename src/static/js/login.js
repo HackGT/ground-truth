@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
 const carousel = document.querySelector(".carousel");
@@ -45,7 +46,7 @@ function serializeQueryString(data) {
 
 function setError(error) {
   errorBlock.textContent = error;
-  if (error != "") {
+  if (error !== "") {
     errorBlock.scrollIntoView({ behavior: "smooth" });
   }
 }
@@ -69,7 +70,8 @@ function setUpStep(step) {
         if (step === 1) {
           const emailRegex = /\S+@\S+\.\S+/;
           if (!emailRegex.test(email.value)) {
-            return setError("Please input a valid email");
+            setError("Please input a valid email");
+            return;
           }
 
           if (!passwordLogin.value) {
@@ -109,9 +111,10 @@ function setUpStep(step) {
           const preferredNameValue = preferredName.value.trim();
           const lastNameValue = lastName.value.trim();
           if (!firstNameValue || !lastNameValue) {
-            return setError(
+            setError(
               "Please enter your first and last name. We use it to identify you online and at events!"
             );
+            return;
           }
           await fetch(`/api/client/attach-session-data`, {
             ...commonFetchSettings,
@@ -126,15 +129,18 @@ function setUpStep(step) {
           // User has submitted a password for a local account
           const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // There is also backend validation
           if (!password.value.trim()) {
-            return setError("Please enter a password or sign up using an external service");
+            setError("Please enter a password or sign up using an external service");
+            return;
           }
           if (!passwordRegex.test(password.value)) {
-            return setError(
+            setError(
               "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number"
             );
+            return;
           }
-          if (grecaptcha.getResponse() == "") {
-            return setError("Please complete the recaptcha validation");
+          if (grecaptcha.getResponse() === "") {
+            setError("Please complete the recaptcha validation");
+            return;
           }
 
           const firstNameValue = firstName.value.trim();

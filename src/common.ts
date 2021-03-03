@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-namespace, no-restricted-syntax */
 import * as fs from "fs";
 import * as path from "path";
 import mongoose from "mongoose";
+
+// eslint-disable-next-line camelcase, @typescript-eslint/no-var-requires
+const git_rev_sync = require("git-rev-sync");
 
 //
 // Config
@@ -189,14 +192,14 @@ class Config implements IConfig.Main {
       this.server.isProduction = true;
     }
     if (process.env.PORT) {
-      const port = parseInt(process.env.PORT, 10);
-      if (!isNaN(port) && port > 0) {
+      const port = parseInt(process.env.PORT);
+      if (!Number.isNaN(port) && port > 0) {
         this.server.port = port;
       }
     }
     if (process.env.COOKIE_MAX_AGE) {
-      const maxAge = parseInt(process.env.COOKIE_MAX_AGE, 10);
-      if (!isNaN(maxAge) && maxAge > 0) {
+      const maxAge = parseInt(process.env.COOKIE_MAX_AGE);
+      if (!Number.isNaN(maxAge) && maxAge > 0) {
         this.server.cookieMaxAge = maxAge;
       }
     }
@@ -204,8 +207,8 @@ class Config implements IConfig.Main {
       this.server.cookieSecureOnly = true;
     }
     if (process.env.PASSWORD_RESET_EXPIRATION) {
-      const expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION, 10);
-      if (!isNaN(expirationTime) && expirationTime > 0) {
+      const expirationTime = parseInt(process.env.PASSWORD_RESET_EXPIRATION);
+      if (!Number.isNaN(expirationTime) && expirationTime > 0) {
         this.server.passwordResetExpiration = expirationTime;
       }
     }
@@ -237,7 +240,7 @@ export const PORT = config.server.port;
 export const VERSION_NUMBER = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf8")
 ).version;
-export const VERSION_HASH = fs.existsSync(".git") ? require("git-rev-sync").short() : "";
+export const VERSION_HASH = fs.existsSync(".git") ? git_rev_sync.short() : "";
 
 export const COOKIE_OPTIONS = {
   path: "/",
