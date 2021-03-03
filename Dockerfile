@@ -1,4 +1,4 @@
-FROM node:11-alpine
+FROM node:12-alpine
 
 # Deis wants bash
 RUN apk update && apk add bash
@@ -18,7 +18,7 @@ ENV NODE_ENV="production"
 
 RUN yarn build
 
-FROM node:11-alpine
+FROM node:12-alpine
 WORKDIR /usr/src/groundtruth
 COPY --from=0 /usr/src/groundtruth .
 EXPOSE 3000
