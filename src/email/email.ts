@@ -5,9 +5,10 @@ import marked from "marked";
 import sendgrid from "@sendgrid/mail";
 import { Request } from "express";
 
-import { config } from "./common";
-import { IUser, Model } from "./schema";
-import { createLink } from "./auth/strategies/util";
+import { config } from "../common";
+import { IUser, Model } from "../schema";
+import { createLink } from "../auth/strategies/util";
+import { verifyEmailMarkdown } from "./markdown";
 
 // eslint-disable-next-line camelcase, @typescript-eslint/no-var-requires
 const Email = require("email-templates");
@@ -16,29 +17,18 @@ sendgrid.setApiKey(config.email.key);
 
 const email = new Email({
   views: {
-    root: path.resolve("src/emails/"),
+    root: path.resolve("src/email/"),
   },
   juice: true,
   juiceResources: {
     preserveImportant: true,
     webResources: {
-      relativeTo: path.join(__dirname, "emails", "email-template"),
+      relativeTo: path.join(__dirname, "email", "template"),
     },
   },
 });
 
-export interface IMailObject {
-  to: string;
-  from: string;
-  subject: string;
-  html: string;
-  text: string;
-}
-// Union types don't work well with overloaded method resolution in TypeScript so we split into two methods
-export async function sendMailAsync(mail: IMailObject) {
-  return sendgrid.send(mail);
-}
-export function sanitize(input?: string): string {
+function sanitize(input?: string): string {
   if (!input || typeof input !== "string") {
     return "";
   }
@@ -55,7 +45,7 @@ singleLineRenderer.link = (href, title, text) =>
   `<a target="_blank" href="${href}" title="${title || ""}">${text}</a>`;
 singleLineRenderer.paragraph = text => text;
 
-export async function renderMarkdown(
+async function renderMarkdown(
   markdown: string,
   options?: marked.MarkedOptions,
   singleLine = false
@@ -85,7 +75,7 @@ async function templateMarkdown(markdown: string, user: IUser): Promise<string> 
     .replace(/{{lastName}}/g, sanitize(user.name.last));
 }
 
-export async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
+async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
   const templatedMarkdown = await templateMarkdown(markdown, user);
   const renderedMarkdown = await renderMarkdown(templatedMarkdown);
 
@@ -99,7 +89,7 @@ export async function renderEmailHTML(markdown: string, user: IUser): Promise<st
   });
 }
 
-export async function renderEmailText(markdown: string, user: IUser): Promise<string> {
+async function renderEmailText(markdown: string, user: IUser): Promise<string> {
   const templatedMarkdown = await templateMarkdown(markdown, user);
   const renderedHtml = await renderMarkdown(templatedMarkdown);
   return htmlToText(renderedHtml);
@@ -110,6 +100,16 @@ export function resendVerificationEmailLink(request: Request, uuid: string): str
   return `Haven't gotten it? <a href="${link}">Resend verification email</a>.`;
 }
 
+export async function sendMailAsync(user: IUser, subject: string, markdown: string) {
+  return sendgrid.send({
+    from: config.email.from,
+    to: user.email,
+    html: await renderEmailHTML(markdown, user),
+    text: await renderEmailText(markdown, user),
+    subject,
+  });
+}
+
 export async function sendVerificationEmail(request: Request, user: Model<IUser>) {
   if (user.verifiedEmail) return;
 
@@ -118,22 +118,6 @@ export async function sendVerificationEmail(request: Request, user: Model<IUser>
   await user.save();
 
   // Send verification email (hostname validated by previous middleware)
-  const link = createLink(request, `/auth/verify/${user.emailVerificationCode}`);
-  const markdown = `Hi {{name}},
-
-Thanks for creating an account with ${config.server.name}! To verify your email, please [click here](${link}).
-
-If you are registering for a ${config.server.name} event, please note that this does **not** complete your registration. After verifying your email, you will be directed to the event registration portal to submit an application.
-
-Sincerely,
-
-The ${config.server.name} Team.`;
-
-  await sendMailAsync({
-    from: config.email.from,
-    to: user.email,
-    subject: `[${config.server.name}] - Verify your email`,
-    html: await renderEmailHTML(markdown, user),
-    text: await renderEmailText(markdown, user),
-  });
+  const markdown = verifyEmailMarkdown(request, user.emailVerificationCode);
+  await sendMailAsync(user, `[${config.server.name}] - Verify your email`, markdown);
 }

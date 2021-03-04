@@ -11,16 +11,15 @@ import PasswordValidator from "password-validator";
 import { config } from "../../common";
 import { authenticateWithRedirect, rateLimit, verifyRecaptcha } from "../../routes/middleware";
 import { User, createNew, IUser } from "../../schema";
-import { checkAndSetAdmin, createLink, validateAndCacheHostName } from "./util";
+import { checkAndSetAdmin, validateAndCacheHostName } from "./util";
 import { OAuthStrategy } from "./OAuthStrategy";
 import { PassportDone, RegistrationStrategy, StrategyOptions, Strategy } from "./types";
 import {
   sendVerificationEmail,
   resendVerificationEmailLink,
   sendMailAsync,
-  renderEmailHTML,
-  renderEmailText,
-} from "../../email";
+} from "../../email/email";
+import { passwordResetMarkdown } from "../../email/markdown";
 
 export const PBKDF2_ROUNDS = 300000;
 
@@ -247,34 +246,11 @@ export class Local implements RegistrationStrategy {
         user.local.resetCode = crypto.randomBytes(32).toString("hex");
 
         // Send reset email (hostname validated by previous middleware)
-        const link = createLink(request, `/login/forgot/${user.local.resetCode}`);
-        const markdown = `Hi {{name}},
+        const markdown = passwordResetMarkdown(request, user.local.resetCode);
 
-You (or someone who knows your email address) recently asked to reset the password for this account: {{email}}.
-
-You can update your password by [clicking here](${link}).
-
-If you don't use this link within ${moment
-          .duration(config.server.passwordResetExpiration, "milliseconds")
-          .humanize()}, it will expire and you will have to [request a new one](${createLink(
-          request,
-          "/login/forgot"
-        )}).
-
-If you didn't request a password reset, you can safely disregard this email and no changes will be made to your account.
-
-Sincerely,
-
-The ${config.server.name} Team.`;
         try {
           await user.save();
-          await sendMailAsync({
-            from: config.email.from,
-            to: email,
-            subject: `[${config.server.name}] - Password reset request`,
-            html: await renderEmailHTML(markdown, user),
-            text: await renderEmailText(markdown, user),
-          });
+          await sendMailAsync(user, `[${config.server.name}] - Password reset request`, markdown);
           request.flash(
             "success",
             "Please check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder."

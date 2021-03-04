@@ -2,7 +2,7 @@ import express from "express";
 import passport from "passport";
 
 import { IUser, User, AccessToken } from "../../schema";
-import { formatName } from "../../email";
+import { formatName } from "../../email/email";
 import { rateLimit } from "../middleware";
 
 export const userRouter = express.Router();

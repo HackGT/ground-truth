@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 
 import { config, IConfig } from "../../common";
 import { createNew, IUser, Model, User } from "../../schema";
-import { sendVerificationEmail, resendVerificationEmailLink } from "../../email";
+import { sendVerificationEmail, resendVerificationEmailLink } from "../../email/email";
 import { OAuthStrategy } from "./OAuthStrategy";
 import { PassportDone } from "./types";
 

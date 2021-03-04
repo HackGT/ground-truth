@@ -7,7 +7,7 @@ import { User } from "../schema";
 import { strategies } from "../auth/strategies/index";
 import { RegistrationStrategy } from "../auth/strategies/types";
 import { validateAndCacheHostName } from "../auth/strategies/util";
-import { sendVerificationEmail, resendVerificationEmailLink } from "../email";
+import { sendVerificationEmail, resendVerificationEmailLink } from "../email/email";
 import { rateLimit } from "./middleware";
 
 export const authRouter = express.Router();

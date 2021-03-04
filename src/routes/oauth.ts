@@ -9,7 +9,7 @@ import { authenticateWithRedirect, rateLimit } from "./middleware";
 import { Model, IUser, AccessToken, IOAuthClient, OAuthClient, IScope, Scope } from "../schema";
 import { AuthorizeTemplate } from "../templates";
 import { server } from "../auth/server";
-import { formatName } from "../email";
+import { formatName } from "../email/email";
 
 type IScopeWithValue = IScope & { value?: string };
 
