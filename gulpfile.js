@@ -44,11 +44,11 @@ gulp.task('copy:favicon', () => gulp.src('src/views/static/favicon.ico')
 gulp.task('copy:default-config', () => gulp.src('src/config/default.json')
   .pipe(gulp.dest('dist/config')));
 
-gulp.task('copy:templates', () => gulp.src('src/templates/**')
-  .pipe(gulp.dest('dist/templates')));
+gulp.task('copy:templates', () => gulp.src('src/views/templates/**')
+  .pipe(gulp.dest('dist/views/templates')));
 
-gulp.task('copy:emails', () => gulp.src('src/emails/**')
-  .pipe(gulp.dest('dist/email')));
+gulp.task('copy:emails', () => gulp.src('src/email/template/**')
+  .pipe(gulp.dest('dist/email/template')));
 
 gulp.task('copy', gulp.parallel(
   'copy:css',
