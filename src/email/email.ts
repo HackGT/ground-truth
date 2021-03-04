@@ -79,7 +79,7 @@ async function renderEmailHTML(markdown: string, user: IUser): Promise<string> {
   const templatedMarkdown = await templateMarkdown(markdown, user);
   const renderedMarkdown = await renderMarkdown(templatedMarkdown);
 
-  return email.render("email-template/html", {
+  return email.render("template/html", {
     emailHeaderImage: config.email.headerImage,
     twitterHandle: config.email.twitterHandle,
     facebookHandle: config.email.facebookHandle,
