@@ -10,7 +10,7 @@ const tsProject = ts.createProject('./tsconfig.json');
 gulp.task('clean', () => del('dist'));
 
 // Build js and css
-gulp.task('build:js', () => gulp.src('src/static/js/*')
+gulp.task('build:js', () => gulp.src('src/views/static/js/*')
   .pipe(babel({
     presets: [[
       "@babel/preset-env",
@@ -23,7 +23,7 @@ gulp.task('build:js', () => gulp.src('src/static/js/*')
       }
     ]]
   }))
-  .pipe(gulp.dest('dist/static/js')));
+  .pipe(gulp.dest('dist/views/static/js')));
 
 gulp.task('build:ts', () => tsProject.src()
   .pipe(tsProject())
@@ -35,11 +35,11 @@ gulp.task('build', gulp.parallel(
 ));
 
 // Copy files
-gulp.task('copy:css', () => gulp.src('src/static/css/**')
-  .pipe(gulp.dest('dist/static/css')));
+gulp.task('copy:css', () => gulp.src('src/views/static/css/**')
+  .pipe(gulp.dest('dist/views/static/css')));
 
-gulp.task('copy:favicon', () => gulp.src('src/static/favicon.ico')
-  .pipe(gulp.dest('dist/static')));
+gulp.task('copy:favicon', () => gulp.src('src/views/static/favicon.ico')
+  .pipe(gulp.dest('dist/views/static')));
 
 gulp.task('copy:default-config', () => gulp.src('src/config/default.json')
   .pipe(gulp.dest('dist/config')));

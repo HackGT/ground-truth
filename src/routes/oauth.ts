@@ -7,7 +7,7 @@ import csrf from "csurf";
 import { config } from "../common";
 import { authenticateWithRedirect, rateLimit } from "./middleware";
 import { Model, IUser, AccessToken, IOAuthClient, OAuthClient, IScope, Scope } from "../schema";
-import { AuthorizeTemplate } from "../templates";
+import { AuthorizeTemplate } from "../views/templates";
 import { server } from "../auth/server";
 import { formatName } from "../email/email";
 

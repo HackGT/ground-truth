@@ -12,7 +12,7 @@ import {
   LoginTemplate,
   ErrorTemplate,
   ResetPasswordTemplate,
-} from "../templates";
+} from "../views/templates";
 
 export const uiRoutes = express.Router();
 

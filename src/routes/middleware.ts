@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 
 import { IUser, User } from "../schema";
 import { config, IConfig, mongoose } from "../common";
-import { ErrorTemplate } from "../templates";
+import { ErrorTemplate } from "../views/templates";
 
 export async function bestLoginMethod(email?: string): Promise<IConfig.Services | "unknown"> {
   let type: IConfig.Services | "unknown" = "unknown";

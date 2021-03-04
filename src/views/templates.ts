@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as Handlebars from "handlebars";
 
-import { config } from "./common";
-import { IUser } from "./schema";
-import { formatName } from "./email/email";
+import { config } from "../common";
+import { IUser } from "../schema";
+import { formatName } from "../email/email";
 
 //
 // Template schema

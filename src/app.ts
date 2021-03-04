@@ -12,7 +12,7 @@ import helmet from "helmet";
 import favicon from "serve-favicon";
 
 import { PORT, VERSION_NUMBER, VERSION_HASH, COOKIE_OPTIONS, config } from "./common";
-import { ErrorTemplate } from "./templates";
+import { ErrorTemplate } from "./views/templates";
 
 // Set up Express and its middleware
 export const app = express();
@@ -86,7 +86,7 @@ app.use(
 );
 app.use(compression());
 app.use(express.urlencoded({ extended: false }));
-app.use(favicon(path.join(__dirname, "static", "favicon.ico")));
+app.use(favicon(path.join(__dirname, "views", "static", "favicon.ico")));
 app.use(cookieParser(undefined, COOKIE_OPTIONS as cookieParser.CookieParseOptions));
 app.use(morgan("hackgt"));
 app.use(flash());
@@ -121,7 +121,7 @@ app.use("/api/scopes", scopesRouter);
 app.use("/api/client", clientRouter);
 app.use("/api/user", userRouter);
 
-app.use("/static", express.static(path.join(__dirname, "static")));
+app.use("/static", express.static(path.join(__dirname, "views", "static")));
 
 app.route("/version").get((request, response) => {
   response.json({
