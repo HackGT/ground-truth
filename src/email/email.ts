@@ -23,7 +23,7 @@ const email = new Email({
   juiceResources: {
     preserveImportant: true,
     webResources: {
-      relativeTo: path.join(__dirname, "email", "template"),
+      relativeTo: path.join(__dirname, "template"),
     },
   },
 });
