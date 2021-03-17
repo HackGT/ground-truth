@@ -20,9 +20,9 @@
       }
     },
     "gatech": {
-      "url": "https://login.gatech.edu/cas",
+      "url": "https://sso.gatech.edu/cas",
       "emailDomain": "gatech.edu",
-      "logoutLink": "https://login.gatech.edu/cas/logout"
+      "logoutLink": "https://sso.gatech.edu/cas/logout"
     },
     "sentryDSN": ""
   },
