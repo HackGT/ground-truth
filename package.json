@@ -46,7 +46,7 @@
     "moment": "^2.29.1",
     "mongoose": "^5.11.8",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "oauth2orize": "^1.11.0",
     "oauth2orize-pkce": "^0.1.2",
     "passport": "^0.4.1",
