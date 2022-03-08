@@ -27,7 +27,7 @@
     "sentryDSN": ""
   },
   "email": {
-    "from": "HackGT Team <hello@hackgt.com>",
+    "from": "HexLabs Team <hello@hexlabs.org>",
     "key": "<SendGrid API key>",
     "headerImage": "https://storage.googleapis.com/hackgt6-public/banner.pn",
     "twitterHandle": "TheHackGT",
