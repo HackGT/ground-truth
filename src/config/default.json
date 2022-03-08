@@ -29,20 +29,20 @@
   "email": {
     "from": "HexLabs Team <hello@hexlabs.org>",
     "key": "<SendGrid API key>",
-    "headerImage": "https://storage.googleapis.com/hackgt6-public/banner.pn",
-    "twitterHandle": "TheHackGT",
-    "facebookHandle": "thehackgt",
-    "contactAddress": "hello@hack.gt"
+    "headerImage": "https://storage.googleapis.com/hackgt6-public/banner.png",
+    "twitterHandle": "TheHexLabs",
+    "facebookHandle": "TheHexLabs",
+    "contactAddress": "hello@hexlabs.org"
   },
   "server": {
-    "name": "HackGT",
+    "name": "HexLabs",
     "isProduction": false,
     "port": 3000,
     "cookieMaxAge": 15552000000,
     "cookieSecureOnly": false,
     "passwordResetExpiration": 3600000,
     "defaultTimezone": "America/New_York",
-    "adminDomains": ["hack.gt"],
+    "adminDomains": ["hack.gt", "hexlabs.org"],
     "admins": []
   },
   "database": {
