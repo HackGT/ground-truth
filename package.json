@@ -36,7 +36,7 @@
     "core-js": "^3.8.1",
     "csurf": "^1.11.0",
     "email-templates": "^8.0.2",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-session": "^1.17.1",
     "git-rev-sync": "^3.0.1",
     "handlebars": "^4.7.6",
