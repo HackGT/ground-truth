@@ -44,7 +44,7 @@
     "html-to-text": "^6.0.0",
     "marked": "^2.0.0",
     "moment": "^2.29.1",
-    "mongoose": "^5.11.8",
+    "mongoose": "^5.13.15",
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1",
     "oauth2orize": "^1.11.0",
